@@ -1,11 +1,11 @@
 /** Buoy renderer. Body form, colour bands and topmark all come from the data. */
 
-export const HEX = {
+const HEX = {
   red: '#D0231C', green: '#0E9E4F', yellow: '#F2C200',
   black: '#141A1E', white: '#F6F4EE', blue: '#1B5FBF'
 };
 
-export function bandRects(bands, x, y, w, h) {
+function bandRects(bands, x, y, w, h) {
   if (bands.length === 1 && bands[0].includes('vertical')) {
     const cols = bands[0].startsWith('red') ? ['red', 'white'] : ['blue', 'yellow'];
     const n = 6, sw = w / n;
@@ -17,7 +17,7 @@ export function bandRects(bands, x, y, w, h) {
     `<rect x="${x}" y="${y + i * sh}" width="${w}" height="${sh}" fill="${HEX[b] || '#888'}"/>`).join('');
 }
 
-export function body(mark) {
+function body(mark) {
   const y = -10, h = 62, w = 46, x = -w / 2;
   const clip = {
     can: `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`,
@@ -25,12 +25,13 @@ export function body(mark) {
     sphere: `<circle cx="0" cy="${y + h / 2}" r="${w / 2 + 2}"/>`,
     pillar: `<path d="M ${x + 8} ${y} L ${-x - 8} ${y} L ${-x} ${y + h} L ${x} ${y + h} Z"/>`
   }[mark.body];
-  return `<defs><clipPath id="bodyClip">${clip}</clipPath></defs>
-    <g clip-path="url(#bodyClip)">${bandRects(mark.bands, x - 4, y - 4, w + 8, h + 8)}</g>
+  const cid = `clip-${mark.id}`;
+  return `<defs><clipPath id="${cid}">${clip}</clipPath></defs>
+    <g clip-path="url(#${cid})">${bandRects(mark.bands, x - 4, y - 4, w + 8, h + 8)}</g>
     <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6">${clip}</g>`;
 }
 
-export function topmark(tm) {
+function topmark(tm) {
   if (!tm) return '';
   const f = HEX[tm.color], baseY = -18;
   switch (tm.form) {

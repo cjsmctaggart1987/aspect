@@ -48,6 +48,7 @@ select{padding:7px 8px;border:1px solid var(--ink);background:var(--paper);color
 label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink-soft);margin-top:6px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:13px;color:var(--ink-soft)}
 .legend span{display:flex;align-items:center;gap:6px;font-family:var(--data);font-size:11.5px}
+.legend span.none{font-family:var(--note);font-style:italic;font-size:14px;color:var(--magenta);max-width:64ch}
 .dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 7px currentColor}
 .meta{margin-top:16px;border-top:1px solid var(--rule);padding-top:12px}
 .meta .rule{font-family:var(--data);font-size:11px;letter-spacing:.12em;color:var(--magenta);text-transform:uppercase}
@@ -162,9 +163,10 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 <script type="module">
 import { VESSEL_STATES, ASPECT_BANDS } from './data/vessel-states.js';
 import { MARKS } from './data/buoyage.js';
-import { norm, visibleLights, makeQuestion, questionSpace } from './src/engine.js';
-import { LIGHT_HEX, renderScene, renderDial } from './src/render-lights.js';
+import { visibleLights, makeQuestion, questionSpace, norm } from './src/engine.js';
+import { renderScene, renderDial, LIGHT_HEX, SHAPE_NAMES } from './src/render-lights.js';
 import { renderBuoy } from './src/render-buoy.js';
+
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
 
@@ -173,7 +175,8 @@ $('space').textContent = `${space.pictures} pictures / ${space.questions} questi
 
 VESSEL_STATES.forEach(s => {
   const o = document.createElement('option');
-  o.value = s.id; o.textContent = s.name;
+  o.value = s.id;
+  o.textContent = s.name + ((s.dayShapes && s.dayShapes.length) ? ' \u25AA' : '');
   $('stateSel').appendChild(o);
 });
 
@@ -194,10 +197,19 @@ function draw() {
   $('bandRead').textContent = nearestBand(aspect).label;
 
   const seen = visibleLights(current, aspect, makingWay);
-  $('legend').innerHTML = seen.length
+  const shapes = current.dayShapes || [];
+
+  let legend = seen.length
     ? seen.slice().reverse().map(l =>
         `<span><i class="dot" style="background:${LIGHT_HEX[l.color]};color:${LIGHT_HEX[l.color]}"></i>${l.name}</span>`).join('')
     : '<span>No lights visible from this aspect</span>';
+
+  if (mode === 'day') {
+    legend = shapes.length
+      ? shapes.map(sh => `<span><i class="dot" style="background:#0B1116;color:transparent"></i>${SHAPE_NAMES[sh.form] || sh.form}</span>`).join('')
+      : '<span class="none">Rules 21 to 31 prescribe no day signal for this vessel. She is identified by her hull and her behaviour alone.</span>';
+  }
+  $('legend').innerHTML = legend;
 
   if (!drill) {
     $('mRule').textContent = current.rule;

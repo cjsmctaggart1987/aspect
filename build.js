@@ -39,6 +39,7 @@ function debundle(source) {
     .split('\n')
     .map(line => {
       if (/^import\b[^;]*;\s*$/.test(line)) return '';        // blank, do not delete
+      if (/^export\s*\{[^}]*\}\s*;?\s*$/.test(line)) return ''; // `export { LIGHT_HEX };`
       return line.replace(/^export (?=(const|let|var|function|class|async)\b)/, '');
     })
     .join('\n')
