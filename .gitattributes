@@ -1,0 +1,3 @@
+# LF everywhere: build.js reproduces the bundle byte for byte, and CRLF
+# checkout would silently break that.
+* text=auto eol=lf
