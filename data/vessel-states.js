@@ -260,7 +260,7 @@ export const VESSEL_STATES = [
       ...sidelights(3, 5, 4, true),
       stern(-10, 4, true)
     ],
-    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14)],
+    dayShapes: [shape('cones-apex', 2, 13.5)],
     summary: 'All-round green over white. Masthead light abaft of and higher than the green, optional under 50m. Sidelights and sternlight when making way.',
     dutyHint: 'Green over white, trawling tonight. Rule 18: keep out of her way.'
   },
@@ -274,7 +274,7 @@ export const VESSEL_STATES = [
       allRound('green', 2, 15, 'All-round green, upper'),
       allRound('white', 2, 12, 'All-round white, lower')
     ],
-    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14)],
+    dayShapes: [shape('cones-apex', 2, 13.5)],
     summary: 'Green over white alone. No sidelights or sternlight because she is not making way.',
     dutyHint: 'Underway but stopped. Still a vessel engaged in fishing under Rule 18.'
   },
@@ -290,7 +290,7 @@ export const VESSEL_STATES = [
       ...sidelights(3, 5, 4, true),
       stern(-10, 4, true)
     ],
-    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14)],
+    dayShapes: [shape('cones-apex', 2, 13.5)],
     summary: 'All-round red over white, sidelights and sternlight when making way. No masthead light.',
     dutyHint: 'Red over white, fishing at night.'
   },

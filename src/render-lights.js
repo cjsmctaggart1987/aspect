@@ -109,20 +109,46 @@ function silhouette(state, aspect, k, mode, lights, shapes) {
   return `${stalks}${hull}${house}`;
 }
 
-function dayShape(form, x, y) {
+/**
+ * Nominal day shape diameter, metres.
+ *
+ * Annex I puts the minimum at 0.6 m for a vessel of 20 m or more, and gives a
+ * cone a height equal to its diameter. Real fits are larger than the minimum,
+ * and 0.6 m would be two or three pixels here, so the figure below is
+ * representative rather than minimal and SHAPE_FLOOR_PX keeps it readable when
+ * the whole ship has been scaled down to fit the frame.
+ */
+const SHAPE_D_M = 1.5;
+const SHAPE_FLOOR_PX = 14;
+
+/** Shape diameter in user units: metres through the state scale, floored. */
+const shapeSize = k => Math.max(SHAPE_FLOOR_PX, SHAPE_D_M * k);
+
+function dayShape(form, sx, sy, k) {
   const f = '#0B1116';
+  const d = shapeSize(k);            // diameter, and a cone's height
+  const r = d / 2;
+  const x = +sx.toFixed(1), y = +sy.toFixed(1);
+  const n = v => v.toFixed(1);
   switch (form) {
     case 'ball':
     case 'sphere':
-      return `<circle cx="${x}" cy="${y}" r="9" fill="${f}"/>`;
+      return `<circle cx="${x}" cy="${y}" r="${n(r)}" fill="${f}"/>`;
     case 'diamond':
-      return `<path d="M ${x} ${y - 12} L ${Number(x) + 9} ${y} L ${x} ${Number(y) + 12} L ${Number(x) - 9} ${y} Z" fill="${f}"/>`;
+      return `<path d="M ${x} ${n(y - d * 0.67)} L ${n(x + r)} ${y} L ${x} ${n(y + d * 0.67)} L ${n(x - r)} ${y} Z" fill="${f}"/>`;
     case 'cone-up':
-      return `<path d="M ${x} ${y - 11} L ${Number(x) + 9} ${Number(y) + 7} L ${Number(x) - 9} ${Number(y) + 7} Z" fill="${f}"/>`;
+      return `<path d="M ${x} ${n(y - d * 0.61)} L ${n(x + r)} ${n(y + d * 0.39)} L ${n(x - r)} ${n(y + d * 0.39)} Z" fill="${f}"/>`;
     case 'cone-down':
-      return `<path d="M ${x} ${Number(y) + 11} L ${Number(x) + 9} ${y - 7} L ${Number(x) - 9} ${y - 7} Z" fill="${f}"/>`;
+      return `<path d="M ${x} ${n(y + d * 0.61)} L ${n(x + r)} ${n(y - d * 0.39)} L ${n(x - r)} ${n(y - d * 0.39)} Z" fill="${f}"/>`;
+    case 'cones-apex':
+      // One mounting height, two cones meeting exactly on it: the lower cone
+      // apex up, the upper cone apex down, both apexes on y. Rule 26(b) and
+      // 26(c) day signal, and the reason the pair is a single shape rather
+      // than two that have to be positioned to touch.
+      return `<path d="M ${x} ${y} L ${n(x + r)} ${n(y + d)} L ${n(x - r)} ${n(y + d)} Z" fill="${f}"/>`
+           + `<path d="M ${x} ${y} L ${n(x + r)} ${n(y - d)} L ${n(x - r)} ${n(y - d)} Z" fill="${f}"/>`;
     case 'cylinder':
-      return `<rect x="${Number(x) - 7}" y="${y - 11}" width="14" height="22" fill="${f}"/>`;
+      return `<rect x="${n(x - d * 0.39)}" y="${n(y - d * 0.61)}" width="${n(d * 0.78)}" height="${n(d * 1.22)}" fill="${f}"/>`;
     default:
       return '';
   }
@@ -155,7 +181,7 @@ export function renderScene(state, aspect, makingWay = true, mode = 'night') {
   }).join('');
 
   const daySigns = shapes
-    .map(s => dayShape(s.form, (s.sx * k).toFixed(1), (-s.sy * k).toFixed(1)))
+    .map(s => dayShape(s.form, s.sx * k, -s.sy * k, k))
     .join('');
 
   return `<svg viewBox="${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}" xmlns="http://www.w3.org/2000/svg"
@@ -210,6 +236,7 @@ export const SHAPE_NAMES = {
   diamond: 'Diamond',
   'cone-up': 'Cone, apex up',
   'cone-down': 'Cone, apex down',
+  'cones-apex': 'Two cones, apexes together',
   cylinder: 'Cylinder'
 };
 
