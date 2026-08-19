@@ -1,0 +1,120 @@
+# Aspect
+
+A study aid for COLREGs lights and shapes and IALA buoyage. Every picture is
+generated from a rule and an aspect. Nothing is a stored drawing.
+
+## The conventions that are easy to break by accident
+
+Read this section before touching `src/engine.js` or either renderer.
+
+### Aspect
+
+**Aspect is the bearing of the observer from the target vessel's bow, measured
+clockwise.**
+
+- `0` — head-on. She is coming at you.
+- `90` — her starboard beam.
+- `180` — dead astern of her. She is going away.
+- `270` — her port beam.
+
+Aspect is a property of *her* orientation relative to *you*, not of your
+heading. It is not a relative bearing and it is not a course.
+
+### Ship coordinates
+
+Metres, origin at the waterline amidships:
+
+- `x` positive **forward**, negative aft
+- `y` positive **to starboard**, negative to port
+- `z` **above the waterline**
+
+### The projection
+
+```js
+screen_x = x * sin(aspect) - y * cos(aspect)
+```
+
+**This sign convention is verified and correct. Do not "fix" it.**
+
+The check, which you can run in your head: at aspect 0 the terms collapse to
+`screen_x = -y`. Her starboard sidelight sits at `y = +beam`, so it lands at
+negative screen x — that is, **viewed head-on, her green starboard sidelight
+appears on the observer's LEFT**. That is what you see from a real bridge wing,
+and it is what the negative cosine term is there to produce.
+
+The term looks inverted if you read it as a heading rotation, which is why it
+gets "corrected" and why this note exists. `project()` in `src/engine.js`
+carries the same derivation in a comment. Keep both.
+
+### Light arcs
+
+Arcs are **computed in `src/engine.js`, never stored per state.** A vessel state
+records which arc a light has; `lightVisible()` turns arc plus aspect into a
+visibility test.
+
+| Arc                  | Sector  | Extent                                     |
+| -------------------- | ------- | ------------------------------------------ |
+| Masthead             | 225 deg | ahead to 22.5 abaft the beam, both sides   |
+| Sidelight, each side | 112.5   | ahead to 22.5 abaft that beam              |
+| Sternlight           | 135     | 67.5 from right aft, each side             |
+| All-round            | 360     | —                                          |
+
+Adding a `deg` field to a light in `data/vessel-states.js` and reading it in the
+renderer would be the wrong fix for anything. The single source is the arc name.
+
+## Sources and licensing
+
+Rule text is worked from **33 CFR Subchapter E** and buoyage from **33 CFR Part
+62**. Both are US Government works.
+
+**Never copy IALA or IMO publication text or diagrams.** IALA is a
+non-governmental association and R1001/G1001 are its copyright. IMO
+publications are likewise copyright. The US regulations describe the same
+system and are safe to draw from; the CFR is the source of truth here.
+
+**All diagrams are generated** from the data tables at run time. Do not
+introduce a bitmap, an SVG asset copied from a publication, or a hand-drawn
+picture of a light configuration. If a picture cannot be generated from the
+rule, it does not belong in the app.
+
+## Layout
+
+```
+index.html              head, CSS, markup, and the app script as an ES module
+data/vessel-states.js   COLREGs Part C states, Rules 20 to 31
+data/buoyage.js         IALA marks, Regions A and B
+src/engine.js           arcs, projection, question generation
+src/render-lights.js    scene and aspect dial renderers
+src/render-buoy.js      buoy renderer
+build.js                regenerates the single-file bundle
+aspect-standalone.html  build output, committed
+```
+
+Dependency order is `data/vessel-states.js`, `data/buoyage.js`,
+`src/engine.js`, `src/render-lights.js`, `src/render-buoy.js`. Nothing may
+reference anything later in that list. `build.js` concatenates in exactly this
+order, so a backward import will produce a bundle that throws at load even
+though the module build runs fine.
+
+## Build
+
+```
+npm run dev      serve the folder; open index.html over http, not file://
+npm run build    regenerate aspect-standalone.html
+```
+
+`build.js` strips `export ` from top-level declarations and **blanks import
+lines rather than deleting them**, so bundle line numbers still match source
+line numbers. The build is reproducible byte for byte: a clean checkout builds
+a bundle identical to the committed one. If `npm run build` produces a diff you
+did not intend, that is a real regression, not build noise.
+
+`aspect-standalone.html` is a build artifact but is committed on purpose — it
+is the form that gets handed to someone on a vessel with no network.
+
+## Checks worth running by hand
+
+- Aspect 135 on a large power-driven vessel: **one white sternlight, nothing
+  else.** Masthead and both sidelights are cut off past 112.5.
+- Daylight, trawler: **two cones on the mast**, apexes together.
+- Buoyage, either region: **cones are cone-shaped and spheres are round.**

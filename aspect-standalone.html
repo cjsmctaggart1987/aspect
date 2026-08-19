@@ -1,0 +1,1443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aspect — COLREGs and IALA drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E7EEF0; --land:#E3D6B4; --ink:#10222C; --ink-soft:#4A626E;
+  --magenta:#C3006B; --night:#04070C; --rule:rgba(16,34,44,.16);
+  --label:'Barlow Semi Condensed',system-ui,sans-serif;
+  --note:'Spectral',Georgia,serif;
+  --data:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink); font-family:var(--label);
+  font-size:16px; line-height:1.45;
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:64px 64px; background-position:-1px -1px;
+}
+.wrap{max-width:1140px;margin:0 auto;padding:26px 20px 72px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  border-bottom:1.5px solid var(--ink);padding-bottom:12px;margin-bottom:22px}
+h1{font-size:34px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;margin:0}
+.sub{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:15px;max-width:44ch}
+.tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--ink);width:max-content}
+.tabs button{font-family:var(--label);font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+  background:transparent;border:0;border-right:1px solid var(--ink);padding:9px 20px;cursor:pointer;color:var(--ink)}
+.tabs button:last-child{border-right:0}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.grid{display:grid;grid-template-columns:250px 1fr;gap:26px;align-items:start}
+.panel{border:1px solid var(--ink);background:rgba(255,255,255,.5)}
+.panel h2{font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin:0;padding:8px 12px;
+  border-bottom:1px solid var(--rule);color:var(--ink-soft);font-weight:600}
+.panel .body{padding:14px}
+#dialSvg{width:100%;height:auto;touch-action:none;cursor:grab}
+#dialSvg:active{cursor:grabbing}
+.readout{font-family:var(--data);font-size:12px;display:flex;justify-content:space-between;margin-top:8px;color:var(--ink-soft)}
+.readout b{color:var(--magenta);font-weight:500}
+.scene{background:var(--night);border:1px solid var(--ink)}
+.scene svg{display:block;width:100%;height:auto}
+select,input[type=range]{width:100%;font-family:var(--label);font-size:15px}
+select{padding:7px 8px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);margin-bottom:10px}
+label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink-soft);margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:13px;color:var(--ink-soft)}
+.legend span{display:flex;align-items:center;gap:6px;font-family:var(--data);font-size:11.5px}
+.dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 7px currentColor}
+.meta{margin-top:16px;border-top:1px solid var(--rule);padding-top:12px}
+.meta .rule{font-family:var(--data);font-size:11px;letter-spacing:.12em;color:var(--magenta);text-transform:uppercase}
+.meta h3{margin:3px 0 6px;font-size:21px;font-weight:500}
+.meta p{margin:0 0 6px;max-width:66ch}
+.meta .hint{font-family:var(--note);font-style:italic;color:var(--ink-soft)}
+.drill{margin-top:22px}
+.q{font-size:19px;margin:0 0 12px}
+.opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.opts button{text-align:left;font-family:var(--label);font-size:15px;padding:11px 13px;
+  background:transparent;border:1px solid var(--ink);cursor:pointer;color:var(--ink)}
+.opts button:hover{background:var(--land)}
+.opts button.right{background:#0E9E4F;border-color:#0E9E4F;color:#fff}
+.opts button.wrong{background:var(--magenta);border-color:var(--magenta);color:#fff}
+.opts button:disabled{cursor:default}
+.verdict{margin-top:12px;font-family:var(--note);font-style:italic;font-size:16px;max-width:72ch}
+.btn{font-family:var(--label);text-transform:uppercase;letter-spacing:.14em;font-size:12px;
+  background:var(--ink);color:var(--paper);border:0;padding:10px 18px;cursor:pointer;margin-top:14px}
+.marks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+.mark{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px}
+.mark svg{width:100%;height:150px}
+.mark h4{margin:6px 0 2px;font-size:16px;font-weight:500}
+.mark .rhythm{font-family:var(--data);font-size:11px;color:var(--magenta)}
+.mark p{margin:6px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.mark .mem{font-family:var(--note);font-style:italic;margin-top:6px;font-size:13.5px}
+.regions{display:flex;gap:0;border:1px solid var(--ink);width:max-content;margin-bottom:18px}
+.regions button{font-family:var(--label);font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+  background:transparent;border:0;border-right:1px solid var(--ink);padding:8px 16px;cursor:pointer;color:var(--ink)}
+.regions button:last-child{border-right:0}
+.regions button[aria-pressed="true"]{background:var(--magenta);color:#fff}
+.hidden{display:none}
+footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
+@media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+:focus-visible{outline:2px solid var(--magenta);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Aspect</h1>
+    <p class="sub">Every picture below is generated from the rule, not drawn. Drag the observer round the dial and watch the arcs do the work.</p>
+  </div>
+  <div class="readout" style="min-width:180px"><span>Question space</span><b id="space">—</b></div>
+</header>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="tab-lights" aria-selected="true">Lights and shapes</button>
+  <button role="tab" id="tab-buoys" aria-selected="false">Buoyage</button>
+</div>
+
+<section id="view-lights">
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Observer</h2>
+        <div class="body">
+          <div id="dial"></div>
+          <div class="readout"><span>Aspect</span><b id="aspectRead">000°</b></div>
+          <div class="readout"><span>You are</span><b id="bandRead">—</b></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <h2>Target</h2>
+        <div class="body">
+          <select id="stateSel"></select>
+          <label class="chk"><input type="checkbox" id="makingWay" checked> Making way through the water</label>
+          <label class="chk"><input type="checkbox" id="dayMode"> Daylight, show shapes</label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="scene" id="scene"></div>
+      <div class="legend" id="legend"></div>
+      <div class="meta">
+        <div class="rule" id="mRule"></div>
+        <h3 id="mName"></h3>
+        <p id="mSummary"></p>
+        <p class="hint" id="mHint"></p>
+      </div>
+
+      <div class="drill panel">
+        <h2>Drill</h2>
+        <div class="body">
+          <p class="q" id="qPrompt">Press start to be shown a picture with no label.</p>
+          <div class="opts" id="qOpts"></div>
+          <p class="verdict" id="qVerdict"></p>
+          <button class="btn" id="qNext">Start a drill</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="view-buoys" class="hidden">
+  <div class="regions">
+    <button id="regA" aria-pressed="false">Region A</button>
+    <button id="regB" aria-pressed="true">Region B</button>
+  </div>
+  <div class="marks" id="marks"></div>
+</section>
+
+<footer>
+  Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
+  33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
+  publications. Study aid only. It is not a substitute for the Navigation Rules.
+</footer>
+</div>
+
+<script>
+
+/* ===== data/vessel-states.js ===== */
+/**
+ * COLREGs Part C vessel states (Rules 20 to 31, International).
+ *
+ * Ship coordinate system, metres:
+ *   x  positive forward, negative aft
+ *   y  positive to starboard, negative to port
+ *   z  height above waterline
+ *
+ * Every light carries an arc name. The engine turns arc + observer aspect
+ * into a visibility test, so nothing here is drawn by hand.
+ *
+ * makingWayOnly: light is shown only when making way through the water.
+ * Source of truth for rule text: 33 CFR Subchapter E (US Government work).
+ */
+
+const ARC = {
+  MASTHEAD: 'masthead',        // 225 deg, ahead to 22.5 abaft the beam both sides
+  STBD: 'sidelight-stbd',      // 112.5 deg, ahead to 22.5 abaft the starboard beam
+  PORT: 'sidelight-port',      // 112.5 deg, ahead to 22.5 abaft the port beam
+  STERN: 'stern',              // 135 deg, 67.5 from right aft each side
+  TOWING: 'towing',            // as sternlight, yellow
+  ALLROUND: 'allround',        // 360 deg
+  SPECIAL_FLASH: 'special-flashing' // Inland only, 180 to 225 deg forward
+};
+
+// --- light builders -------------------------------------------------------
+
+const masthead = (x, z, name = 'Masthead light') =>
+  ({ color: 'white', arc: ARC.MASTHEAD, x, y: 0, z, name });
+
+const sidelights = (x, z, beam = 6, makingWayOnly = false) => ([
+  { color: 'green', arc: ARC.STBD, x, y: beam, z, name: 'Starboard sidelight', makingWayOnly },
+  { color: 'red', arc: ARC.PORT, x, y: -beam, z, name: 'Port sidelight', makingWayOnly }
+]);
+
+const stern = (x, z, makingWayOnly = false) =>
+  ({ color: 'white', arc: ARC.STERN, x, y: 0, z, name: 'Sternlight', makingWayOnly });
+
+const towingLight = (x, z) =>
+  ({ color: 'yellow', arc: ARC.TOWING, x, y: 0, z, name: 'Towing light' });
+
+const allRound = (color, x, z, name, extra = {}) =>
+  ({ color, arc: ARC.ALLROUND, x, y: 0, z, name, ...extra });
+
+const shape = (form, x, z, y = 0) => ({ form, x, y, z });
+
+// --- standard fits --------------------------------------------------------
+
+// Under 50m: single masthead permitted, second optional.
+const SMALL = {
+  mast: [6, 11],
+  side: [2, 5],
+  stern: [-9, 4],
+  beam: 4
+};
+
+// 50m and over: two masthead lights, after one higher.
+const LARGE = {
+  fwdMast: [18, 15],
+  aftMast: [-12, 23],
+  side: [9, 8],
+  stern: [-24, 6],
+  beam: 7
+};
+
+const powerSmall = () => [
+  masthead(...SMALL.mast),
+  ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
+  stern(...SMALL.stern)
+];
+
+const powerLarge = () => [
+  masthead(LARGE.fwdMast[0], LARGE.fwdMast[1], 'Forward masthead light'),
+  masthead(LARGE.aftMast[0], LARGE.aftMast[1], 'After masthead light'),
+  ...sidelights(LARGE.side[0], LARGE.side[1], LARGE.beam),
+  stern(...LARGE.stern)
+];
+
+// --- the states -----------------------------------------------------------
+
+const VESSEL_STATES = [
+  {
+    id: 'pd-under50',
+    name: 'Power-driven vessel underway, under 50m',
+    rule: 'Rule 23(a)',
+    group: 'Power-driven',
+    length: 'under50',
+    lights: powerSmall(),
+    dayShapes: [],
+    summary: 'Masthead light, sidelights, sternlight. A second masthead light is optional under 50m.',
+    dutyHint: 'Ordinary power-driven vessel. Rules 13 to 15 apply on their normal terms.'
+  },
+  {
+    id: 'pd-50plus',
+    name: 'Power-driven vessel underway, 50m or more',
+    rule: 'Rule 23(a)',
+    group: 'Power-driven',
+    length: '50plus',
+    lights: powerLarge(),
+    dayShapes: [],
+    summary: 'Two masthead lights in a fore and aft line, the after one higher. Sidelights and sternlight.',
+    dutyHint: 'The range between the masthead lights is your best aspect cue at a distance.'
+  },
+  {
+    id: 'pd-under12',
+    name: 'Power-driven vessel underway, under 12m',
+    rule: 'Rule 23(c)',
+    group: 'Power-driven',
+    length: 'under12',
+    lights: [
+      allRound('white', 1, 7, 'All-round white light'),
+      ...sidelights(1.5, 3, 2)
+    ],
+    dayShapes: [],
+    summary: 'May show an all-round white light and sidelights in place of the Rule 23(a) fit.',
+    dutyHint: 'Easily mistaken for a vessel at anchor until you pick up the sidelights.'
+  },
+  {
+    id: 'pd-under7',
+    name: 'Power-driven vessel under 7m, max speed under 7 knots',
+    rule: 'Rule 23(c)(ii)',
+    group: 'Power-driven',
+    length: 'under12',
+    lights: [allRound('white', 0, 5, 'All-round white light')],
+    dayShapes: [],
+    summary: 'All-round white light. Sidelights if practicable.',
+    dutyHint: 'Gives you no aspect information at all. Assume nothing about her heading.'
+  },
+  {
+    id: 'tow-astern-short',
+    name: 'Towing astern, length of tow 200m or less',
+    rule: 'Rule 24(a)',
+    group: 'Towing',
+    length: 'under50',
+    lights: [
+      masthead(6, 11, 'Masthead light, lower'),
+      masthead(6, 15, 'Masthead light, upper'),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
+      stern(-9, 4),
+      towingLight(-9, 7)
+    ],
+    dayShapes: [],
+    summary: 'Two masthead lights in a vertical line, sidelights, sternlight, and a yellow towing light above the sternlight.',
+    dutyHint: 'The yellow over white astern is the giveaway. There is something behind her.'
+  },
+  {
+    id: 'tow-astern-long',
+    name: 'Towing astern, length of tow more than 200m',
+    rule: 'Rule 24(a)(i)',
+    group: 'Towing',
+    length: 'under50',
+    lights: [
+      masthead(6, 11, 'Masthead light, lower'),
+      masthead(6, 15, 'Masthead light, middle'),
+      masthead(6, 19, 'Masthead light, upper'),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
+      stern(-9, 4),
+      towingLight(-9, 7)
+    ],
+    dayShapes: [shape('diamond', 0, 20)],
+    summary: 'Three masthead lights in a vertical line. By day, a diamond shape where it can best be seen.',
+    dutyHint: 'Three in a vertical line means a tow over 200m. Do not attempt to pass between.'
+  },
+  {
+    id: 'towed',
+    name: 'Vessel being towed',
+    rule: 'Rule 24(e)',
+    group: 'Towing',
+    length: 'under50',
+    lights: [
+      ...sidelights(SMALL.side[0], 4, SMALL.beam),
+      stern(-9, 3)
+    ],
+    dayShapes: [shape('diamond', 0, 12)],
+    summary: 'Sidelights and sternlight only. Diamond shape by day if the tow exceeds 200m.',
+    dutyHint: 'No masthead light. If you see sidelights with no masthead light, look ahead of her.'
+  },
+  {
+    id: 'pushing-alongside',
+    name: 'Pushing ahead or towing alongside',
+    rule: 'Rule 24(c)',
+    group: 'Towing',
+    length: 'under50',
+    lights: [
+      masthead(6, 11, 'Masthead light, lower'),
+      masthead(6, 15, 'Masthead light, upper'),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
+      stern(-9, 4)
+    ],
+    dayShapes: [],
+    summary: 'Two masthead lights in a vertical line, sidelights and sternlight. No yellow towing light.',
+    dutyHint: 'Two vertical masthead lights with no yellow astern separates this from towing astern.'
+  },
+  {
+    id: 'sailing',
+    name: 'Sailing vessel underway',
+    rule: 'Rule 25(a)',
+    group: 'Sailing',
+    length: 'under50',
+    lights: [
+      ...sidelights(2, 4, 3),
+      stern(-7, 3)
+    ],
+    dayShapes: [],
+    summary: 'Sidelights and sternlight. No masthead light.',
+    dutyHint: 'Rule 18: a power-driven vessel keeps out of the way of a sailing vessel.'
+  },
+  {
+    id: 'sailing-rg',
+    name: 'Sailing vessel with optional masthead lights',
+    rule: 'Rule 25(c)',
+    group: 'Sailing',
+    length: 'under50',
+    lights: [
+      ...sidelights(2, 4, 3),
+      stern(-7, 3),
+      allRound('red', 0, 16, 'All-round red, upper'),
+      allRound('green', 0, 13, 'All-round green, lower')
+    ],
+    dayShapes: [],
+    summary: 'Red over green at or near the masthead, in addition to sidelights and sternlight.',
+    dutyHint: 'Red over green, sailing machine. Never shown with the Rule 25(b) combined lantern.'
+  },
+  {
+    id: 'sailing-under7',
+    name: 'Sailing vessel under 7m or vessel under oars',
+    rule: 'Rule 25(d)',
+    group: 'Sailing',
+    length: 'under12',
+    lights: [allRound('white', 0, 3, 'White light or torch shown in time to prevent collision')],
+    dayShapes: [],
+    summary: 'An electric torch or lighted lantern showing a white light, exhibited in sufficient time to prevent collision.',
+    dutyHint: 'Expect it late and expect it low. Nothing about it tells you her aspect.'
+  },
+  {
+    id: 'sailing-and-power',
+    name: 'Sailing vessel also propelled by machinery',
+    rule: 'Rule 25(e)',
+    group: 'Sailing',
+    length: 'under50',
+    lights: [
+      masthead(4, 10),
+      ...sidelights(2, 4, 3),
+      stern(-7, 3)
+    ],
+    dayShapes: [shape('cone-down', 3, 9)],
+    summary: 'Lit as a power-driven vessel. By day, a cone apex downwards forward.',
+    dutyHint: 'She is a power-driven vessel for the purposes of the steering and sailing rules.'
+  },
+  {
+    id: 'trawling-making-way',
+    name: 'Vessel trawling, making way',
+    rule: 'Rule 26(b)',
+    group: 'Fishing',
+    length: 'under50',
+    lights: [
+      allRound('green', 2, 15, 'All-round green, upper'),
+      allRound('white', 2, 12, 'All-round white, lower'),
+      masthead(-8, 19, 'Masthead light, abaft and higher'),
+      ...sidelights(3, 5, 4, true),
+      stern(-10, 4, true)
+    ],
+    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14)],
+    summary: 'All-round green over white. Masthead light abaft of and higher than the green, optional under 50m. Sidelights and sternlight when making way.',
+    dutyHint: 'Green over white, trawling tonight. Rule 18: keep out of her way.'
+  },
+  {
+    id: 'trawling-stopped',
+    name: 'Vessel trawling, not making way',
+    rule: 'Rule 26(b)',
+    group: 'Fishing',
+    length: 'under50',
+    lights: [
+      allRound('green', 2, 15, 'All-round green, upper'),
+      allRound('white', 2, 12, 'All-round white, lower')
+    ],
+    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14)],
+    summary: 'Green over white alone. No sidelights or sternlight because she is not making way.',
+    dutyHint: 'Underway but stopped. Still a vessel engaged in fishing under Rule 18.'
+  },
+  {
+    id: 'fishing-other-making-way',
+    name: 'Vessel fishing other than trawling, making way',
+    rule: 'Rule 26(c)',
+    group: 'Fishing',
+    length: 'under50',
+    lights: [
+      allRound('red', 2, 15, 'All-round red, upper'),
+      allRound('white', 2, 12, 'All-round white, lower'),
+      ...sidelights(3, 5, 4, true),
+      stern(-10, 4, true)
+    ],
+    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14)],
+    summary: 'All-round red over white, sidelights and sternlight when making way. No masthead light.',
+    dutyHint: 'Red over white, fishing at night.'
+  },
+  {
+    id: 'fishing-gear-150',
+    name: 'Vessel fishing with outlying gear over 150m',
+    rule: 'Rule 26(c)(ii)',
+    group: 'Fishing',
+    length: 'under50',
+    lights: [
+      allRound('red', 2, 15, 'All-round red, upper'),
+      allRound('white', 2, 12, 'All-round white, lower'),
+      { color: 'white', arc: ARC.ALLROUND, x: 2, y: 12, z: 9, name: 'All-round white in the direction of the gear' },
+      ...sidelights(3, 5, 4, true),
+      stern(-10, 4, true)
+    ],
+    dayShapes: [shape('cone-up', 2, 10), shape('cone-down', 2, 14), shape('cone-up', 2, 9, 12)],
+    summary: 'Red over white, plus an all-round white light in the direction of the gear, and by day a cone apex upwards in that direction.',
+    dutyHint: 'The offset white light tells you which side her gear extends. Do not pass that side.'
+  },
+  {
+    id: 'nuc-making-way',
+    name: 'Vessel not under command, making way',
+    rule: 'Rule 27(a)',
+    group: 'Restricted',
+    length: 'under50',
+    lights: [
+      allRound('red', 0, 15, 'All-round red, upper'),
+      allRound('red', 0, 12, 'All-round red, lower'),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam, true),
+      stern(-9, 4, true)
+    ],
+    dayShapes: [shape('ball', 0, 15), shape('ball', 0, 12)],
+    summary: 'Two all-round red lights in a vertical line, plus sidelights and sternlight when making way. Two balls by day.',
+    dutyHint: 'Two reds in a row, the skipper is below. Never shows a masthead light.'
+  },
+  {
+    id: 'nuc-stopped',
+    name: 'Vessel not under command, not making way',
+    rule: 'Rule 27(a)',
+    group: 'Restricted',
+    length: 'under50',
+    lights: [
+      allRound('red', 0, 15, 'All-round red, upper'),
+      allRound('red', 0, 12, 'All-round red, lower')
+    ],
+    dayShapes: [shape('ball', 0, 15), shape('ball', 0, 12)],
+    summary: 'Two all-round red lights only.',
+    dutyHint: 'Distinguish from a vessel aground, which also shows anchor lights.'
+  },
+  {
+    id: 'ram-making-way',
+    name: 'Vessel restricted in her ability to manoeuvre, making way',
+    rule: 'Rule 27(b)',
+    group: 'Restricted',
+    length: 'under50',
+    lights: [
+      allRound('red', 0, 18, 'All-round red, upper'),
+      allRound('white', 0, 15, 'All-round white, middle'),
+      allRound('red', 0, 12, 'All-round red, lower'),
+      masthead(6, 22),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam, true),
+      stern(-9, 4, true)
+    ],
+    dayShapes: [shape('ball', 0, 18), shape('diamond', 0, 15), shape('ball', 0, 12)],
+    summary: 'Red, white, red in a vertical line. Masthead lights, sidelights and sternlight when making way. Ball, diamond, ball by day.',
+    dutyHint: 'Red white red, restricted ahead.'
+  },
+  {
+    id: 'ram-anchored',
+    name: 'Vessel restricted in her ability to manoeuvre, at anchor',
+    rule: 'Rule 27(b)(iv)',
+    group: 'Restricted',
+    length: 'under50',
+    lights: [
+      allRound('red', 0, 18, 'All-round red, upper'),
+      allRound('white', 0, 15, 'All-round white, middle'),
+      allRound('red', 0, 12, 'All-round red, lower'),
+      allRound('white', 14, 10, 'Anchor light, forward')
+    ],
+    dayShapes: [shape('ball', 0, 18), shape('diamond', 0, 15), shape('ball', 0, 12)],
+    summary: 'Red, white, red plus the anchor lights of Rule 30. No masthead or sidelights.',
+    dutyHint: 'RAM lights with anchor lights and no sidelights means she is anchored, not stopped.'
+  },
+  {
+    id: 'dredging',
+    name: 'Vessel engaged in dredging with an obstruction',
+    rule: 'Rule 27(d)',
+    group: 'Restricted',
+    length: 'under50',
+    lights: [
+      allRound('red', 0, 18, 'All-round red, upper'),
+      allRound('white', 0, 15, 'All-round white, middle'),
+      allRound('red', 0, 12, 'All-round red, lower'),
+      { color: 'red', arc: ARC.ALLROUND, x: 1, y: -8, z: 11, name: 'All-round red, obstruction side' },
+      { color: 'red', arc: ARC.ALLROUND, x: 1, y: -8, z: 8, name: 'All-round red, obstruction side' },
+      { color: 'green', arc: ARC.ALLROUND, x: 1, y: 8, z: 11, name: 'All-round green, clear side' },
+      { color: 'green', arc: ARC.ALLROUND, x: 1, y: 8, z: 8, name: 'All-round green, clear side' }
+    ],
+    dayShapes: [
+      shape('ball', 0, 18), shape('diamond', 0, 15), shape('ball', 0, 12),
+      shape('ball', 1, 11, -8), shape('ball', 1, 8, -8),
+      shape('diamond', 1, 11, 8), shape('diamond', 1, 8, 8)
+    ],
+    summary: 'RAM lights plus two all-round reds on the obstructed side and two all-round greens on the side you may pass.',
+    dutyHint: 'Pass on the green side. Two reds means the obstruction is there.'
+  },
+  {
+    id: 'mine-clearance',
+    name: 'Vessel engaged in mine clearance',
+    rule: 'Rule 27(f)',
+    group: 'Restricted',
+    length: 'under50',
+    lights: [
+      masthead(6, 11),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
+      stern(-9, 4),
+      { color: 'green', arc: ARC.ALLROUND, x: 6, y: 0, z: 18, name: 'All-round green, foremast head' },
+      { color: 'green', arc: ARC.ALLROUND, x: 5, y: -7, z: 14, name: 'All-round green, port fore yard' },
+      { color: 'green', arc: ARC.ALLROUND, x: 5, y: 7, z: 14, name: 'All-round green, starboard fore yard' }
+    ],
+    dayShapes: [shape('ball', 6, 18), shape('ball', 5, 14, -7), shape('ball', 5, 14, 7)],
+    summary: 'Three all-round green lights in a triangle, plus the ordinary power-driven lights.',
+    dutyHint: 'Keep 1000 metres clear. That distance is in the rule itself.'
+  },
+  {
+    id: 'cbd',
+    name: 'Vessel constrained by her draught',
+    rule: 'Rule 28',
+    group: 'Restricted',
+    length: '50plus',
+    lights: [
+      ...powerLarge(),
+      allRound('red', 2, 26, 'All-round red, upper'),
+      allRound('red', 2, 23, 'All-round red, middle'),
+      allRound('red', 2, 20, 'All-round red, lower')
+    ],
+    dayShapes: [shape('cylinder', 2, 22)],
+    summary: 'Three all-round red lights in a vertical line, in addition to the lights for a power-driven vessel. A cylinder by day.',
+    dutyHint: 'International only. There is no equivalent in the Inland Rules.'
+  },
+  {
+    id: 'pilot-underway',
+    name: 'Pilot vessel on duty, underway',
+    rule: 'Rule 29(a)',
+    group: 'Special',
+    length: 'under50',
+    lights: [
+      allRound('white', 5, 15, 'All-round white, upper'),
+      allRound('red', 5, 12, 'All-round red, lower'),
+      ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
+      stern(-9, 4)
+    ],
+    dayShapes: [],
+    summary: 'All-round white over red at or near the masthead, plus sidelights and sternlight when underway.',
+    dutyHint: 'White over red, pilot ahead. No masthead light.'
+  },
+  {
+    id: 'pilot-anchored',
+    name: 'Pilot vessel on duty, at anchor',
+    rule: 'Rule 29(a)(ii)',
+    group: 'Special',
+    length: 'under50',
+    lights: [
+      allRound('white', 5, 15, 'All-round white, upper'),
+      allRound('red', 5, 12, 'All-round red, lower'),
+      allRound('white', -6, 7, 'Anchor light')
+    ],
+    dayShapes: [shape('ball', 8, 9)],
+    summary: 'White over red plus the anchor lights of Rule 30.',
+    dutyHint: 'The extra low white with no sidelights is the anchor light.'
+  },
+  {
+    id: 'anchored-under50',
+    name: 'Vessel at anchor, under 50m',
+    rule: 'Rule 30(a)',
+    group: 'Anchored',
+    length: 'under50',
+    lights: [allRound('white', 0, 9, 'All-round white anchor light')],
+    dayShapes: [shape('ball', 6, 9)],
+    summary: 'One all-round white light where it can best be seen. One ball forward by day.',
+    dutyHint: 'A single all-round white can also be a small power-driven vessel. Watch for sidelights.'
+  },
+  {
+    id: 'anchored-50plus',
+    name: 'Vessel at anchor, 50m or more',
+    rule: 'Rule 30(a)',
+    group: 'Anchored',
+    length: '50plus',
+    lights: [
+      allRound('white', 20, 14, 'Forward anchor light'),
+      allRound('white', -20, 7, 'After anchor light, lower')
+    ],
+    dayShapes: [shape('ball', 22, 12)],
+    summary: 'An all-round white forward and another aft, the after light lower. Vessels of 100m and over must also light their decks.',
+    dutyHint: 'Two whites at different heights with no sidelights. The high one is forward.'
+  },
+  {
+    id: 'aground',
+    name: 'Vessel aground',
+    rule: 'Rule 30(d)',
+    group: 'Anchored',
+    length: '50plus',
+    lights: [
+      allRound('white', 20, 14, 'Forward anchor light'),
+      allRound('white', -20, 7, 'After anchor light, lower'),
+      allRound('red', 2, 20, 'All-round red, upper'),
+      allRound('red', 2, 17, 'All-round red, lower')
+    ],
+    dayShapes: [shape('ball', 2, 20), shape('ball', 2, 17), shape('ball', 2, 14)],
+    summary: 'Anchor lights plus two all-round red lights in a vertical line. Three balls by day.',
+    dutyHint: 'Two reds plus anchor lights is aground. Two reds alone is not under command.'
+  },
+  {
+    id: 'air-cushion',
+    name: 'Air-cushion vessel in non-displacement mode',
+    rule: 'Rule 23(b)',
+    group: 'Special',
+    length: 'under50',
+    lights: [
+      ...powerSmall(),
+      allRound('yellow', 4, 14, 'All-round flashing yellow', { flash: 'fast' })
+    ],
+    dayShapes: [],
+    summary: 'Power-driven lights plus an all-round flashing yellow light.',
+    dutyHint: 'Treat her as a power-driven vessel. The yellow flash only warns you of her speed.'
+  },
+  {
+    id: 'wig',
+    name: 'WIG craft taking off, landing or in flight near the surface',
+    rule: 'Rule 23(c)',
+    group: 'Special',
+    length: 'under50',
+    lights: [
+      ...powerSmall(),
+      allRound('red', 4, 14, 'High intensity all-round flashing red', { flash: 'fast' })
+    ],
+    dayShapes: [],
+    summary: 'Power-driven lights plus a high intensity all-round flashing red light.',
+    dutyHint: 'Rule 18(f): a WIG craft keeps well clear of all other vessels when taking off, landing or in flight.'
+  }
+];
+
+const ASPECT_BANDS = [
+  { deg: 0, label: 'Head-on' },
+  { deg: 45, label: 'Fine on your port bow, her starboard bow to you' },
+  { deg: 90, label: 'Her starboard beam' },
+  { deg: 135, label: 'Her starboard quarter' },
+  { deg: 180, label: 'Dead astern of her' },
+  { deg: 225, label: 'Her port quarter' },
+  { deg: 270, label: 'Her port beam' },
+  { deg: 315, label: 'Her port bow' }
+];
+
+
+/* ===== data/buoyage.js ===== */
+/**
+ * IALA Maritime Buoyage System, Regions A and B.
+ *
+ * Region is a single field on lateral and preferred-channel marks. Everything
+ * else is identical between regions, which is exactly the teaching point.
+ *
+ * The system is described here as fact. Do not copy IALA's own diagrams or
+ * publication text: IALA is a non-governmental association and R1001/G1001 are
+ * its copyright. The US description at 33 CFR Part 62 is a US Government work
+ * and is safe to draw from.
+ *
+ * bands: painted top to bottom.
+ * topmark: null, or { form, color, count }.
+ */
+
+const REGION_A = 'A';
+const REGION_B = 'B';
+
+const MARKS = [
+  {
+    id: 'lat-port-a',
+    region: REGION_A,
+    type: 'Lateral',
+    name: 'Port hand mark, Region A',
+    body: 'can',
+    bands: ['red'],
+    topmark: { form: 'can', color: 'red', count: 1 },
+    lightColor: 'red',
+    rhythm: 'Any, other than the composite group flashing (2+1)',
+    meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
+    memory: 'Red can, port hand, going upstream in Region A.'
+  },
+  {
+    id: 'lat-stbd-a',
+    region: REGION_A,
+    type: 'Lateral',
+    name: 'Starboard hand mark, Region A',
+    body: 'cone',
+    bands: ['green'],
+    topmark: { form: 'cone-up', color: 'green', count: 1 },
+    lightColor: 'green',
+    rhythm: 'Any, other than the composite group flashing (2+1)',
+    meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
+    memory: 'Green cone, starboard hand.'
+  },
+  {
+    id: 'lat-port-b',
+    region: REGION_B,
+    type: 'Lateral',
+    name: 'Port hand mark, Region B',
+    body: 'can',
+    bands: ['green'],
+    topmark: { form: 'can', color: 'green', count: 1 },
+    lightColor: 'green',
+    rhythm: 'Any, other than the composite group flashing (2+1)',
+    meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
+    memory: 'Region B inverts the lateral colours. Red right returning.'
+  },
+  {
+    id: 'lat-stbd-b',
+    region: REGION_B,
+    type: 'Lateral',
+    name: 'Starboard hand mark, Region B',
+    body: 'cone',
+    bands: ['red'],
+    topmark: { form: 'cone-up', color: 'red', count: 1 },
+    lightColor: 'red',
+    rhythm: 'Any, other than the composite group flashing (2+1)',
+    meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
+    memory: 'Red right returning. Cayman, the Americas and Japan are Region B.'
+  },
+  {
+    id: 'pref-stbd-a',
+    region: REGION_A,
+    type: 'Preferred channel',
+    name: 'Preferred channel to starboard, Region A',
+    body: 'can',
+    bands: ['red', 'green', 'red'],
+    topmark: { form: 'can', color: 'red', count: 1 },
+    lightColor: 'red',
+    rhythm: 'Fl (2+1) R',
+    meaning: 'A port hand mark with a green band. The main channel lies to starboard of the mark.',
+    memory: 'The body colour tells you which lateral mark it primarily is. The band tells you the secondary channel.'
+  },
+  {
+    id: 'pref-port-a',
+    region: REGION_A,
+    type: 'Preferred channel',
+    name: 'Preferred channel to port, Region A',
+    body: 'cone',
+    bands: ['green', 'red', 'green'],
+    topmark: { form: 'cone-up', color: 'green', count: 1 },
+    lightColor: 'green',
+    rhythm: 'Fl (2+1) G',
+    meaning: 'A starboard hand mark with a red band. The main channel lies to port of the mark.',
+    memory: 'Composite group flashing (2+1) always means a channel divides here.'
+  },
+  {
+    id: 'pref-stbd-b',
+    region: REGION_B,
+    type: 'Preferred channel',
+    name: 'Preferred channel to starboard, Region B',
+    body: 'can',
+    bands: ['green', 'red', 'green'],
+    topmark: { form: 'can', color: 'green', count: 1 },
+    lightColor: 'green',
+    rhythm: 'Fl (2+1) G',
+    meaning: 'A port hand mark with a red band. The main channel lies to starboard of the mark.',
+    memory: 'Same logic as Region A with the lateral colours swapped.'
+  },
+  {
+    id: 'pref-port-b',
+    region: REGION_B,
+    type: 'Preferred channel',
+    name: 'Preferred channel to port, Region B',
+    body: 'cone',
+    bands: ['red', 'green', 'red'],
+    topmark: { form: 'cone-up', color: 'red', count: 1 },
+    lightColor: 'red',
+    rhythm: 'Fl (2+1) R',
+    meaning: 'A starboard hand mark with a green band. The main channel lies to port of the mark.',
+    memory: 'Body colour first, band second.'
+  },
+  {
+    id: 'card-n',
+    region: 'both',
+    type: 'Cardinal',
+    name: 'North cardinal mark',
+    body: 'pillar',
+    bands: ['black', 'yellow'],
+    topmark: { form: 'cones-up', color: 'black', count: 2 },
+    lightColor: 'white',
+    rhythm: 'VQ or Q, continuous',
+    meaning: 'Safe water lies to the north of the mark.',
+    memory: 'Both cones point up, and the black band is up. Continuous quick flashing, like twelve o clock.'
+  },
+  {
+    id: 'card-e',
+    region: 'both',
+    type: 'Cardinal',
+    name: 'East cardinal mark',
+    body: 'pillar',
+    bands: ['black', 'yellow', 'black'],
+    topmark: { form: 'cones-base', color: 'black', count: 2 },
+    lightColor: 'white',
+    rhythm: 'VQ (3) 5s or Q (3) 10s',
+    meaning: 'Safe water lies to the east of the mark.',
+    memory: 'Topmark is egg shaped. Three flashes, like three o clock.'
+  },
+  {
+    id: 'card-s',
+    region: 'both',
+    type: 'Cardinal',
+    name: 'South cardinal mark',
+    body: 'pillar',
+    bands: ['yellow', 'black'],
+    topmark: { form: 'cones-down', color: 'black', count: 2 },
+    lightColor: 'white',
+    rhythm: 'VQ (6) + LFl 10s or Q (6) + LFl 15s',
+    meaning: 'Safe water lies to the south of the mark.',
+    memory: 'Both cones point down, black band down. Six flashes, like six o clock, and the long flash confirms you counted six not nine.'
+  },
+  {
+    id: 'card-w',
+    region: 'both',
+    type: 'Cardinal',
+    name: 'West cardinal mark',
+    body: 'pillar',
+    bands: ['yellow', 'black', 'yellow'],
+    topmark: { form: 'cones-point', color: 'black', count: 2 },
+    lightColor: 'white',
+    rhythm: 'VQ (9) 10s or Q (9) 15s',
+    meaning: 'Safe water lies to the west of the mark.',
+    memory: 'Topmark is wine glass shaped. West is a wine glass. Nine flashes, like nine o clock.'
+  },
+  {
+    id: 'isolated',
+    region: 'both',
+    type: 'Isolated danger',
+    name: 'Isolated danger mark',
+    body: 'pillar',
+    bands: ['black', 'red', 'black'],
+    topmark: { form: 'spheres', color: 'black', count: 2 },
+    lightColor: 'white',
+    rhythm: 'Fl (2)',
+    meaning: 'Stationed on or moored above an isolated danger with navigable water all round it.',
+    memory: 'Two black balls, two white flashes.'
+  },
+  {
+    id: 'safe-water',
+    region: 'both',
+    type: 'Safe water',
+    name: 'Safe water mark',
+    body: 'sphere',
+    bands: ['red-white-vertical'],
+    topmark: { form: 'sphere', color: 'red', count: 1 },
+    lightColor: 'white',
+    rhythm: 'Iso, Occ, LFl 10s or Mo (A)',
+    meaning: 'Navigable water all round the mark. Often a landfall or mid-channel mark.',
+    memory: 'Red and white vertical stripes. The only mark with a single red sphere topmark.'
+  },
+  {
+    id: 'special',
+    region: 'both',
+    type: 'Special',
+    name: 'Special mark',
+    body: 'pillar',
+    bands: ['yellow'],
+    topmark: { form: 'cross', color: 'yellow', count: 1 },
+    lightColor: 'yellow',
+    rhythm: 'Any rhythm not used for white lights',
+    meaning: 'Indicates a special area or feature. Not primarily a navigational mark.',
+    memory: 'All yellow, yellow X, yellow light. Spoil grounds, cables, recreation zones.'
+  },
+  {
+    id: 'ewmb',
+    region: 'both',
+    type: 'Emergency wreck',
+    name: 'Emergency wreck marking buoy',
+    body: 'pillar',
+    bands: ['blue-yellow-vertical'],
+    topmark: { form: 'cross', color: 'yellow', count: 1 },
+    lightColor: 'blue and yellow',
+    rhythm: 'Al Oc Bu Y 3s',
+    meaning: 'Marks a new danger, normally a wreck, until the danger is charted and permanently marked.',
+    memory: 'Blue and yellow vertical stripes, alternating blue and yellow light. Nothing else looks like it.'
+  }
+];
+
+const REGIONS = [REGION_A, REGION_B];
+
+
+/* ===== src/engine.js ===== */
+/**
+ * Engine: arc visibility, aspect projection, question generation.
+ *
+ * Aspect convention used throughout:
+ *   aspect = the bearing of the observer FROM the target vessel's bow,
+ *   measured clockwise (toward the target's starboard side), 0 to 360.
+ *
+ *   aspect 0   observer dead ahead of her, she is coming at you
+ *   aspect 90  observer on her starboard beam
+ *   aspect 180 observer dead astern of her, she is going away
+ *   aspect 270 observer on her port beam
+ */
+
+const norm = d => ((d % 360) + 360) % 360;
+
+/** Signed bearing in the range -180 to +180. */
+const signed = d => {
+  const n = norm(d);
+  return n > 180 ? n - 360 : n;
+};
+
+/** Is a light with this arc visible to an observer at this aspect? */
+function lightVisible(light, aspect) {
+  const a = signed(aspect);
+  switch (light.arc) {
+    case ARC.ALLROUND:
+      return true;
+    case ARC.MASTHEAD:
+    case ARC.SPECIAL_FLASH:
+      return Math.abs(a) <= 112.5;
+    case ARC.STBD:
+      return a >= 0 && a <= 112.5;
+    case ARC.PORT:
+      return a <= 0 && a >= -112.5;
+    case ARC.STERN:
+    case ARC.TOWING:
+      return Math.abs(a) > 112.5;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Project a point in ship coordinates onto the observer's screen.
+ *
+ * Derivation: with x forward and y to starboard, the observer's screen-right
+ * unit vector in plan is (sin a, -cos a). So screen_x = x sin a - y cos a.
+ * Check: at a = 0 (head-on) her starboard appears on your left, which is what
+ * the negative cosine term gives you.
+ */
+function project(point, aspect) {
+  const r = (aspect * Math.PI) / 180;
+  return {
+    sx: point.x * Math.sin(r) - point.y * Math.cos(r),
+    sy: point.z
+  };
+}
+
+/** Lights actually seen, sorted for stable rendering (far to near, low to high). */
+function visibleLights(state, aspect, makingWay = true) {
+  return state.lights
+    .filter(l => (makingWay || !l.makingWayOnly))
+    .filter(l => lightVisible(l, aspect))
+    .map(l => ({ ...l, ...project(l, aspect) }))
+    .sort((a, b) => a.sy - b.sy);
+}
+
+function visibleShapes(state, aspect) {
+  return (state.dayShapes || []).map(s => ({ ...s, ...project(s, aspect) }));
+}
+
+/** A colour signature used to find plausible distractors. */
+function signature(state) {
+  const counts = {};
+  state.lights
+    .filter(l => l.arc === ARC.ALLROUND)
+    .forEach(l => { counts[l.color] = (counts[l.color] || 0) + 1; });
+  return counts;
+}
+
+function similarity(a, b) {
+  const sa = signature(a), sb = signature(b);
+  const keys = new Set([...Object.keys(sa), ...Object.keys(sb)]);
+  let score = 0;
+  keys.forEach(k => { score -= Math.abs((sa[k] || 0) - (sb[k] || 0)); });
+  if (a.group === b.group) score += 2;
+  if (a.length === b.length) score += 0.5;
+  return score;
+}
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/**
+ * Distractors are chosen by light-signature similarity rather than at random.
+ * A question whose wrong answers are obviously wrong teaches nothing.
+ */
+function distractors(state, pool, n = 3) {
+  return pool
+    .filter(s => s.id !== state.id)
+    .map(s => ({ s, score: similarity(state, s) + Math.random() * 0.4 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map(d => d.s);
+}
+
+const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+
+/**
+ * Question types:
+ *   identify  what vessel is this
+ *   aspect    which way is she heading relative to you
+ *   action    what do you do about it  (dutyHint only for now, see README)
+ */
+function makeQuestion(pool, aspectBands, type = 'identify') {
+  const state = pick(pool);
+  const band = pick(aspectBands);
+  const makingWay = state.lights.some(l => l.makingWayOnly) ? Math.random() > 0.35 : true;
+
+  if (type === 'aspect') {
+    const wrong = shuffle(aspectBands.filter(b => b.deg !== band.deg)).slice(0, 3);
+    return {
+      type,
+      state, aspect: band.deg, makingWay,
+      prompt: 'From what aspect are you viewing her?',
+      options: shuffle([band, ...wrong]).map(b => ({ id: String(b.deg), text: b.label })),
+      answerId: String(band.deg),
+      explain: `${state.name}. ${state.summary}`
+    };
+  }
+
+  const wrong = distractors(state, pool, 3);
+  return {
+    type: 'identify',
+    state, aspect: band.deg, makingWay,
+    prompt: 'What are you looking at?',
+    options: shuffle([state, ...wrong]).map(s => ({ id: s.id, text: s.name })),
+    answerId: state.id,
+    explain: `${state.rule}. ${state.summary} ${state.dutyHint}`
+  };
+}
+
+/** How large is the question space from the current data? */
+function questionSpace(pool, aspectBands) {
+  const pictures = pool.length * aspectBands.length;
+  return { states: pool.length, aspects: aspectBands.length, pictures, questions: pictures * 2 };
+}
+
+
+/* ===== src/render-lights.js ===== */
+/**
+ * Renderers. Nothing here is a stored picture: every scene is generated from
+ * the vessel state table plus an aspect, which is why adding a state adds
+ * eight new pictures for free.
+ */
+
+const LIGHT_HEX = {
+  white: '#FFF3D6',
+  red: '#FF3B30',
+  green: '#00E06B',
+  yellow: '#FFD400',
+  blue: '#3AA0FF'
+};
+
+const SCALE = 4.2; // px per metre
+
+const polar = (cx, cy, r, deg) => {
+  const a = (deg * Math.PI) / 180;
+  return [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+};
+
+const arcPath = (cx, cy, r, from, to) => {
+  const [x1, y1] = polar(cx, cy, r, from);
+  const [x2, y2] = polar(cx, cy, r, to);
+  const large = norm(to - from) > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+};
+
+/** Hull silhouette, projected so she foreshortens as the aspect closes. */
+function hull(state, aspect) {
+  const long = state.length === '50plus' ? 30 : state.length === 'under12' ? 5 : 12;
+  const beam = state.length === '50plus' ? 8 : state.length === 'under12' ? 2 : 4.5;
+  const plan = [
+    { x: long, y: 0, z: 0 }, { x: long * 0.6, y: beam, z: 0 },
+    { x: -long, y: beam, z: 0 }, { x: -long, y: -beam, z: 0 },
+    { x: long * 0.6, y: -beam, z: 0 }
+  ];
+  const xs = plan.map(p => project(p, aspect).sx * SCALE);
+  return { left: Math.min(...xs), right: Math.max(...xs) };
+}
+
+function renderScene(state, aspect, makingWay = true, mode = 'night') {
+  const lights = visibleLights(state, aspect, makingWay);
+  const shapes = mode === 'day' ? visibleShapes(state, aspect) : [];
+  const { left, right } = hull(state, aspect);
+  const deck = 0;
+  const sky = mode === 'day' ? '#B9CBD3' : '#04070C';
+  const sea = mode === 'day' ? '#7E96A2' : '#070C13';
+  const hullFill = mode === 'day' ? '#1B2B34' : '#0C1219';
+
+  const glow = lights.map((l, i) => `
+    <radialGradient id="g${i}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="${LIGHT_HEX[l.color]}" stop-opacity=".85"/>
+      <stop offset="100%" stop-color="${LIGHT_HEX[l.color]}" stop-opacity="0"/>
+    </radialGradient>`).join('');
+
+  const bulbs = lights.map((l, i) => {
+    const x = l.sx * SCALE, y = -l.sy * SCALE;
+    const flash = l.flash ? `<animate attributeName="opacity" values="1;1;0;0" dur="0.7s" repeatCount="indefinite"/>` : '';
+    return `<g opacity="${mode === 'day' ? 0.15 : 1}">
+      ${mode === 'night' ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="19" fill="url(#g${i})"/>` : ''}
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="${LIGHT_HEX[l.color]}">${flash}</circle>
+    </g>`;
+  }).join('');
+
+  const dayShapes = shapes.map(s => {
+    const x = s.sx * SCALE, y = -s.sy * SCALE;
+    switch (s.form) {
+      case 'ball':
+      case 'sphere':
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="#0A1116"/>`;
+      case 'diamond':
+        return `<path d="M ${x} ${y - 8} L ${x + 6} ${y} L ${x} ${y + 8} L ${x - 6} ${y} Z" fill="#0A1116"/>`;
+      case 'cone-up':
+        return `<path d="M ${x} ${y - 8} L ${x + 6} ${y + 4} L ${x - 6} ${y + 4} Z" fill="#0A1116"/>`;
+      case 'cone-down':
+        return `<path d="M ${x} ${y + 8} L ${x + 6} ${y - 4} L ${x - 6} ${y - 4} Z" fill="#0A1116"/>`;
+      case 'cylinder':
+        return `<rect x="${x - 5}" y="${y - 8}" width="10" height="16" fill="#0A1116"/>`;
+      default:
+        return '';
+    }
+  }).join('');
+
+  // Masts drawn only as faint verticals so the eye reads height, not structure.
+  const masts = mode === 'night' ? lights
+    .filter(l => l.sy > 4)
+    .map(l => `<line x1="${(l.sx * SCALE).toFixed(1)}" y1="${deck}" x2="${(l.sx * SCALE).toFixed(1)}" y2="${(-l.sy * SCALE).toFixed(1)}" stroke="#0E151D" stroke-width="1.2"/>`)
+    .join('') : '';
+
+  return `<svg viewBox="-250 -140 500 210" xmlns="http://www.w3.org/2000/svg" role="img"
+    aria-label="Simulated view of ${state.name} at ${Math.round(aspect)} degrees aspect">
+    <defs>${glow}</defs>
+    <rect x="-250" y="-140" width="500" height="210" fill="${sky}"/>
+    <rect x="-250" y="0" width="500" height="70" fill="${sea}"/>
+    <line x1="-250" y1="0" x2="250" y2="0" stroke="${mode === 'day' ? '#5E7783' : '#101922'}" stroke-width="1"/>
+    ${masts}
+    <path d="M ${left - 6} 0 L ${right + 6} 0 L ${right} 9 L ${left} 9 Z" fill="${hullFill}"/>
+    ${dayShapes}
+    ${bulbs}
+  </svg>`;
+}
+
+/**
+ * The aspect dial. This is the point of the whole tool: the arcs are the rule,
+ * and dragging the observer round shows you why the picture changes.
+ */
+function renderDial(aspect) {
+  const c = 0;
+  const rings = [
+    { r: 78, from: -112.5, to: 112.5, stroke: '#FFF3D6', label: 'Masthead 225' },
+    { r: 64, from: 0, to: 112.5, stroke: '#00E06B', label: 'Starboard 112.5' },
+    { r: 64, from: -112.5, to: 0, stroke: '#FF3B30', label: 'Port 112.5' },
+    { r: 50, from: 112.5, to: 247.5, stroke: '#FFF3D6', label: 'Stern 135' }
+  ];
+  const arcs = rings.map(g =>
+    `<path d="${arcPath(c, c, g.r, g.from, g.to)}" fill="none" stroke="${g.stroke}"
+       stroke-width="7" stroke-linecap="butt" opacity=".82"/>`).join('');
+
+  const ticks = [0, 45, 90, 135, 180, 225, 270, 315].map(d => {
+    const [x1, y1] = polar(c, c, 86, d);
+    const [x2, y2] = polar(c, c, 92, d);
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+      stroke="#10222C" stroke-width="1" opacity=".5"/>`;
+  }).join('');
+
+  const [ox, oy] = polar(c, c, 98, aspect);
+  return `<svg viewBox="-115 -115 230 230" xmlns="http://www.w3.org/2000/svg" id="dialSvg"
+    role="img" aria-label="Aspect dial, observer at ${Math.round(aspect)} degrees">
+    <circle cx="0" cy="0" r="98" fill="none" stroke="#10222C" stroke-width="1" opacity=".25"/>
+    ${ticks}${arcs}
+    <path d="M 0 -34 L 13 22 L 0 15 L -13 22 Z" fill="#10222C"/>
+    <line x1="0" y1="0" x2="${ox.toFixed(1)}" y2="${oy.toFixed(1)}" stroke="#C3006B" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="${ox.toFixed(1)}" cy="${oy.toFixed(1)}" r="8" fill="#C3006B"/>
+    <circle cx="${ox.toFixed(1)}" cy="${oy.toFixed(1)}" r="13" fill="none" stroke="#C3006B" stroke-width="1" opacity=".45"/>
+  </svg>`;
+}
+
+
+/* ===== src/render-buoy.js ===== */
+/** Buoy renderer. Body form, colour bands and topmark all come from the data. */
+
+const HEX = {
+  red: '#D0231C', green: '#0E9E4F', yellow: '#F2C200',
+  black: '#141A1E', white: '#F6F4EE', blue: '#1B5FBF'
+};
+
+function bandRects(bands, x, y, w, h) {
+  if (bands.length === 1 && bands[0].includes('vertical')) {
+    const cols = bands[0].startsWith('red') ? ['red', 'white'] : ['blue', 'yellow'];
+    const n = 6, sw = w / n;
+    return Array.from({ length: n }, (_, i) =>
+      `<rect x="${x + i * sw}" y="${y}" width="${sw}" height="${h}" fill="${HEX[cols[i % 2]]}"/>`).join('');
+  }
+  const sh = h / bands.length;
+  return bands.map((b, i) =>
+    `<rect x="${x}" y="${y + i * sh}" width="${w}" height="${sh}" fill="${HEX[b] || '#888'}"/>`).join('');
+}
+
+function body(mark) {
+  const y = -10, h = 62, w = 46, x = -w / 2;
+  const clip = {
+    can: `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`,
+    cone: `<path d="M 0 ${y} L ${w / 2} ${y + h} L ${-w / 2} ${y + h} Z"/>`,
+    sphere: `<circle cx="0" cy="${y + h / 2}" r="${w / 2 + 2}"/>`,
+    pillar: `<path d="M ${x + 8} ${y} L ${-x - 8} ${y} L ${-x} ${y + h} L ${x} ${y + h} Z"/>`
+  }[mark.body];
+  return `<defs><clipPath id="bodyClip">${clip}</clipPath></defs>
+    <g clip-path="url(#bodyClip)">${bandRects(mark.bands, x - 4, y - 4, w + 8, h + 8)}</g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6">${clip}</g>`;
+}
+
+function topmark(tm) {
+  if (!tm) return '';
+  const f = HEX[tm.color], baseY = -18;
+  switch (tm.form) {
+    case 'can': return `<rect x="-11" y="${baseY - 20}" width="22" height="22" fill="${f}"/>`;
+    case 'cone-up': return `<path d="M 0 ${baseY - 22} L 12 ${baseY} L -12 ${baseY} Z" fill="${f}"/>`;
+    case 'sphere': return `<circle cx="0" cy="${baseY - 11}" r="12" fill="${f}"/>`;
+    case 'spheres': return `<circle cx="0" cy="${baseY - 10}" r="9" fill="${f}"/>
+      <circle cx="0" cy="${baseY - 30}" r="9" fill="${f}"/>`;
+    case 'cones-up': return `<path d="M 0 ${baseY - 20} L 11 ${baseY} L -11 ${baseY} Z" fill="${f}"/>
+      <path d="M 0 ${baseY - 42} L 11 ${baseY - 22} L -11 ${baseY - 22} Z" fill="${f}"/>`;
+    case 'cones-down': return `<path d="M 0 ${baseY} L 11 ${baseY - 20} L -11 ${baseY - 20} Z" fill="${f}"/>
+      <path d="M 0 ${baseY - 22} L 11 ${baseY - 42} L -11 ${baseY - 42} Z" fill="${f}"/>`;
+    case 'cones-base': return `<path d="M 0 ${baseY - 42} L 11 ${baseY - 21} L -11 ${baseY - 21} Z" fill="${f}"/>
+      <path d="M 0 ${baseY} L 11 ${baseY - 21} L -11 ${baseY - 21} Z" fill="${f}"/>`;
+    case 'cones-point': return `<path d="M 0 ${baseY - 21} L 11 ${baseY - 42} L -11 ${baseY - 42} Z" fill="${f}"/>
+      <path d="M 0 ${baseY - 21} L 11 ${baseY} L -11 ${baseY} Z" fill="${f}"/>`;
+    case 'cross': return `<path d="M -12 ${baseY - 24} L 0 ${baseY - 13} L 12 ${baseY - 24} L 5 ${baseY - 12}
+      L 12 ${baseY} L 0 ${baseY - 11} L -12 ${baseY} L -5 ${baseY - 12} Z" fill="${f}"/>`;
+    default: return '';
+  }
+}
+
+function renderBuoy(mark) {
+  return `<svg viewBox="-70 -90 140 180" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="${mark.name}">
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <g>${topmark(mark.topmark)}${body(mark)}</g>
+  </svg>`;
+}
+
+
+/* ===== app ===== */
+
+
+
+
+
+const $ = id => document.getElementById(id);
+let aspect = 20, current = VESSEL_STATES[0], drill = null;
+
+const space = questionSpace(VESSEL_STATES, ASPECT_BANDS);
+$('space').textContent = `${space.pictures} pictures / ${space.questions} questions`;
+
+VESSEL_STATES.forEach(s => {
+  const o = document.createElement('option');
+  o.value = s.id; o.textContent = s.name;
+  $('stateSel').appendChild(o);
+});
+
+function nearestBand(a) {
+  return ASPECT_BANDS.reduce((best, b) => {
+    const d = Math.min(norm(b.deg - a), norm(a - b.deg));
+    return d < best.d ? { d, b } : best;
+  }, { d: 999, b: ASPECT_BANDS[0] }).b;
+}
+
+function draw() {
+  const makingWay = $('makingWay').checked;
+  const mode = $('dayMode').checked ? 'day' : 'night';
+  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode);
+  $('dial').innerHTML = renderDial(aspect);
+  bindDial();
+  $('aspectRead').textContent = String(Math.round(aspect)).padStart(3, '0') + '°';
+  $('bandRead').textContent = nearestBand(aspect).label;
+
+  const seen = visibleLights(current, aspect, makingWay);
+  $('legend').innerHTML = seen.length
+    ? seen.slice().reverse().map(l =>
+        `<span><i class="dot" style="background:${LIGHT_HEX[l.color]};color:${LIGHT_HEX[l.color]}"></i>${l.name}</span>`).join('')
+    : '<span>No lights visible from this aspect</span>';
+
+  if (!drill) {
+    $('mRule').textContent = current.rule;
+    $('mName').textContent = current.name;
+    $('mSummary').textContent = current.summary;
+    $('mHint').textContent = current.dutyHint;
+  }
+}
+
+function bindDial() {
+  const svg = $('dialSvg');
+  if (!svg) return;
+  const move = e => {
+    const r = svg.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const p = e.touches ? e.touches[0] : e;
+    aspect = norm(Math.atan2(p.clientX - cx, cy - p.clientY) * 180 / Math.PI);
+    draw();
+  };
+  const stop = () => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', stop);
+  };
+  svg.addEventListener('pointerdown', e => {
+    e.preventDefault(); move(e);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  });
+}
+
+$('stateSel').addEventListener('change', e => {
+  current = VESSEL_STATES.find(s => s.id === e.target.value);
+  drill = null; $('qOpts').innerHTML = ''; $('qVerdict').textContent = '';
+  $('qPrompt').textContent = 'Press start to be shown a picture with no label.';
+  $('qNext').textContent = 'Start a drill';
+  draw();
+});
+$('makingWay').addEventListener('change', draw);
+$('dayMode').addEventListener('change', draw);
+
+$('qNext').addEventListener('click', () => {
+  drill = makeQuestion(VESSEL_STATES, ASPECT_BANDS, Math.random() > 0.72 ? 'aspect' : 'identify');
+  current = drill.state; aspect = drill.aspect;
+  $('stateSel').value = current.id;
+  $('makingWay').checked = drill.makingWay;
+  $('mRule').textContent = ''; $('mName').textContent = 'Unidentified contact';
+  $('mSummary').textContent = ''; $('mHint').textContent = '';
+  $('qPrompt').textContent = drill.prompt;
+  $('qVerdict').textContent = '';
+  $('qNext').textContent = 'Next';
+  $('qOpts').innerHTML = '';
+  drill.options.forEach(o => {
+    const b = document.createElement('button');
+    b.textContent = o.text;
+    b.addEventListener('click', () => {
+      [...$('qOpts').children].forEach(c => { c.disabled = true; });
+      b.classList.add(o.id === drill.answerId ? 'right' : 'wrong');
+      if (o.id !== drill.answerId) {
+        [...$('qOpts').children].find(c => c.textContent ===
+          drill.options.find(x => x.id === drill.answerId).text)?.classList.add('right');
+      }
+      $('qVerdict').textContent = drill.explain;
+      $('mName').textContent = drill.state.name;
+      $('mRule').textContent = drill.state.rule;
+      drill = null;
+    });
+    $('qOpts').appendChild(b);
+  });
+  draw();
+});
+
+// --- buoyage --------------------------------------------------------------
+let region = 'B';
+function drawMarks() {
+  const list = MARKS.filter(m => m.region === region || m.region === 'both');
+  $('marks').innerHTML = list.map(m => `
+    <div class="mark">
+      ${renderBuoy(m)}
+      <h4>${m.name}</h4>
+      <div class="rhythm">${m.lightColor} · ${m.rhythm}</div>
+      <p>${m.meaning}</p>
+      <p class="mem">${m.memory}</p>
+    </div>`).join('');
+}
+$('regA').addEventListener('click', () => { region = 'A'; sync(); });
+$('regB').addEventListener('click', () => { region = 'B'; sync(); });
+function sync() {
+  $('regA').setAttribute('aria-pressed', region === 'A');
+  $('regB').setAttribute('aria-pressed', region === 'B');
+  drawMarks();
+}
+
+$('tab-lights').addEventListener('click', () => switchTab('lights'));
+$('tab-buoys').addEventListener('click', () => switchTab('buoys'));
+function switchTab(t) {
+  $('view-lights').classList.toggle('hidden', t !== 'lights');
+  $('view-buoys').classList.toggle('hidden', t !== 'buoys');
+  $('tab-lights').setAttribute('aria-selected', t === 'lights');
+  $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
+}
+
+draw(); sync();
+</script>
+</body>
+</html>
