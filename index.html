@@ -56,6 +56,14 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .meta p{margin:0 0 6px;max-width:66ch}
 .meta .hint{font-family:var(--note);font-style:italic;color:var(--ink-soft)}
 .drill{margin-top:22px}
+.drillbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.progress{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:16px;
+  border-top:1px solid var(--rule);padding-top:10px;font-family:var(--data);font-size:11.5px;color:var(--ink-soft)}
+.progress b{color:var(--magenta);font-weight:500}
+.linkbtn{margin-left:auto;font-family:var(--data);font-size:11.5px;background:none;border:0;padding:0;
+  color:var(--ink-soft);text-decoration:underline;cursor:pointer}
+.linkbtn:hover{color:var(--magenta)}
 .q{font-size:19px;margin:0 0 12px}
 .opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .opts button{text-align:left;font-family:var(--label);font-size:15px;padding:11px 13px;
@@ -138,7 +146,16 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
           <p class="q" id="qPrompt">Press start to be shown a picture with no label.</p>
           <div class="opts" id="qOpts"></div>
           <p class="verdict" id="qVerdict"></p>
-          <button class="btn" id="qNext">Start a drill</button>
+          <div class="drillbar">
+            <button class="btn" id="qNext">Start a drill</button>
+            <button class="btn ghost hidden" id="qEasy">That was easy</button>
+          </div>
+          <div class="progress">
+            <span>Seen <b id="pSeen">0</b> of <b id="pTotal">0</b></span>
+            <span>Due today <b id="pDue">0</b></span>
+            <span>Streak <b id="pStreak">0</b></span>
+            <button class="linkbtn" id="pReset">Reset progress</button>
+          </div>
         </div>
       </div>
     </div>
@@ -163,9 +180,10 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 <script type="module">
 import { VESSEL_STATES, ASPECT_BANDS } from './data/vessel-states.js';
 import { MARKS } from './data/buoyage.js';
-import { visibleLights, makeQuestion, questionSpace, norm } from './src/engine.js';
+import { visibleLights, questionSpace, norm, distractors, shuffle } from './src/engine.js';
 import { renderScene, renderDial, LIGHT_HEX, SHAPE_NAMES } from './src/render-lights.js';
 import { renderBuoy } from './src/render-buoy.js';
+import { cardKey, selectCard, grade, regradeLast, canRegrade, stats, reset, GRADE } from './src/scheduler.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -245,13 +263,62 @@ $('stateSel').addEventListener('change', e => {
   drill = null; $('qOpts').innerHTML = ''; $('qVerdict').textContent = '';
   $('qPrompt').textContent = 'Press start to be shown a picture with no label.';
   $('qNext').textContent = 'Start a drill';
+  $('qEasy').classList.add('hidden');
   draw();
 });
 $('makingWay').addEventListener('change', draw);
 $('dayMode').addEventListener('change', draw);
 
-$('qNext').addEventListener('click', () => {
-  drill = makeQuestion(VESSEL_STATES, ASPECT_BANDS, Math.random() > 0.72 ? 'aspect' : 'identify');
+// --- drill ----------------------------------------------------------------
+
+// The full card space the scheduler picks from.
+const QUESTION_TYPES = ['identify', 'aspect'];
+const UNIVERSE = VESSEL_STATES.flatMap(s =>
+  ASPECT_BANDS.flatMap(b => QUESTION_TYPES.map(t => ({ stateId: s.id, aspect: b.deg, questionType: t }))));
+$('pTotal').textContent = UNIVERSE.length;
+
+/**
+ * makeQuestion picks its own state and aspect at random, which is exactly what
+ * the scheduler exists to override. Rather than change engine.js, build the
+ * question for the card we were told to ask, reusing the engine's own
+ * distractor and shuffle logic so the options are chosen the same way.
+ */
+function questionFor({ stateId, aspect: deg, questionType }) {
+  const state = VESSEL_STATES.find(s => s.id === stateId);
+  const band = ASPECT_BANDS.find(b => b.deg === deg);
+  const makingWay = state.lights.some(l => l.makingWayOnly) ? Math.random() > 0.35 : true;
+
+  if (questionType === 'aspect') {
+    const wrong = shuffle(ASPECT_BANDS.filter(b => b.deg !== band.deg)).slice(0, 3);
+    return {
+      type: 'aspect', state, aspect: band.deg, makingWay,
+      prompt: 'From what aspect are you viewing her?',
+      options: shuffle([band, ...wrong]).map(b => ({ id: String(b.deg), text: b.label })),
+      answerId: String(band.deg),
+      explain: `${state.name}. ${state.summary}`
+    };
+  }
+  const wrong = distractors(state, VESSEL_STATES, 3);
+  return {
+    type: 'identify', state, aspect: band.deg, makingWay,
+    prompt: 'What are you looking at?',
+    options: shuffle([state, ...wrong]).map(s => ({ id: s.id, text: s.name })),
+    answerId: state.id,
+    explain: `${state.rule}. ${state.summary} ${state.dutyHint}`
+  };
+}
+
+function showProgress() {
+  const s = stats();
+  $('pSeen').textContent = s.seen;
+  $('pDue').textContent = s.dueToday;
+  $('pStreak').textContent = s.streak;
+}
+
+function nextQuestion() {
+  const card = selectCard(UNIVERSE);
+  const key = cardKey(card.stateId, card.aspect, card.questionType);
+  drill = questionFor(card);
   current = drill.state; aspect = drill.aspect;
   $('stateSel').value = current.id;
   $('makingWay').checked = drill.makingWay;
@@ -260,17 +327,23 @@ $('qNext').addEventListener('click', () => {
   $('qPrompt').textContent = drill.prompt;
   $('qVerdict').textContent = '';
   $('qNext').textContent = 'Next';
+  $('qEasy').classList.add('hidden');
   $('qOpts').innerHTML = '';
   drill.options.forEach(o => {
     const b = document.createElement('button');
     b.textContent = o.text;
     b.addEventListener('click', () => {
       [...$('qOpts').children].forEach(c => { c.disabled = true; });
-      b.classList.add(o.id === drill.answerId ? 'right' : 'wrong');
-      if (o.id !== drill.answerId) {
+      const right = o.id === drill.answerId;
+      b.classList.add(right ? 'right' : 'wrong');
+      if (!right) {
         [...$('qOpts').children].find(c => c.textContent ===
           drill.options.find(x => x.id === drill.answerId).text)?.classList.add('right');
       }
+      // One attempt per card: right first time is Good, anything else Again.
+      grade(key, right ? GRADE.GOOD : GRADE.AGAIN);
+      $('qEasy').classList.toggle('hidden', !right);
+      showProgress();
       $('qVerdict').textContent = drill.explain;
       $('mName').textContent = drill.state.name;
       $('mRule').textContent = drill.state.rule;
@@ -279,7 +352,26 @@ $('qNext').addEventListener('click', () => {
     $('qOpts').appendChild(b);
   });
   draw();
+}
+
+$('qNext').addEventListener('click', nextQuestion);
+
+// Replaces the Good just recorded, rather than reviewing the card twice.
+$('qEasy').addEventListener('click', () => {
+  if (!canRegrade()) return;
+  regradeLast(GRADE.EASY);
+  $('qEasy').classList.add('hidden');
+  showProgress();
 });
+
+$('pReset').addEventListener('click', () => {
+  if (!confirm('Clear all review progress on this device? This cannot be undone.')) return;
+  reset();
+  showProgress();
+  $('qEasy').classList.add('hidden');
+});
+
+showProgress();
 
 // --- buoyage --------------------------------------------------------------
 let region = 'B';

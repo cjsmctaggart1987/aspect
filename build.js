@@ -24,11 +24,13 @@ const OUT = path.join(ROOT, 'aspect-standalone.html');
 
 // Dependency order. Nothing here may reference anything below it.
 const MODULES = [
+  'vendor/ts-fsrs.js',
   'data/vessel-states.js',
   'data/buoyage.js',
   'src/engine.js',
   'src/render-lights.js',
-  'src/render-buoy.js'
+  'src/render-buoy.js',
+  'src/scheduler.js'
 ];
 
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');

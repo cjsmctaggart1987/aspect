@@ -6,9 +6,13 @@
   "type": "commonjs",
   "scripts": {
     "dev": "serve --listen 5173 .",
-    "build": "node build.js"
+    "build": "node build.js",
+    "vendor": "node vendor.js"
   },
   "devDependencies": {
     "serve": "^14.2.6"
+  },
+  "dependencies": {
+    "ts-fsrs": "^5.4.1"
   }
 }
