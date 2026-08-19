@@ -55,10 +55,18 @@ const arcPath = (cx, cy, r, from, to) => {
 /** Hull plan outline, projected, so she foreshortens as the aspect closes. */
 function hullExtent(state, aspect, k) {
   const d = dims(state);
+  // A few states carry lights well outboard of the class beam: the obstruction
+  // and clear-side lights when dredging, the fore yard lights in mine
+  // clearance, the gear light on a fishing vessel. Head-on the projection
+  // collapses to screen_x = -y, so lateral offset is the whole picture and a
+  // class-constant beam leaves those lights hanging off the hull. Widen the
+  // plan to cover them.
+  const outboard = Math.max(0, ...state.lights.map(l => Math.abs(l.y)));
+  const beam = Math.max(d.beam, outboard + 1);
   const plan = [
-    { x: d.long, y: 0 }, { x: d.long * 0.72, y: d.beam }, { x: -d.long * 0.9, y: d.beam },
-    { x: -d.long, y: d.beam * 0.55 }, { x: -d.long, y: -d.beam * 0.55 },
-    { x: -d.long * 0.9, y: -d.beam }, { x: d.long * 0.72, y: -d.beam }
+    { x: d.long, y: 0 }, { x: d.long * 0.72, y: beam }, { x: -d.long * 0.9, y: beam },
+    { x: -d.long, y: beam * 0.55 }, { x: -d.long, y: -beam * 0.55 },
+    { x: -d.long * 0.9, y: -beam }, { x: d.long * 0.72, y: -beam }
   ];
   const xs = plan.map(p => project({ x: p.x, y: p.y, z: 0 }, aspect).sx * k);
   return { left: Math.min(...xs), right: Math.max(...xs), deck: -d.free * k };
