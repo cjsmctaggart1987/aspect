@@ -11,7 +11,7 @@
  */
 
 import { DISTRESS_SIGNALS, DISTRESS_MODALITIES } from '../data/distress-signals.js';
-import { MORSE_CHARACTERS, morseSignal, morseFor } from '../data/morse.js';
+import { MORSE_CHARACTERS, morseSignal, morseFor, DEFAULT_WPM } from '../data/morse.js';
 
 export const DISTRESS_QUESTION_TYPES = ['distress-identify', 'distress-select'];
 export const MORSE_QUESTION_TYPES = ['morse-hear', 'morse-see'];
@@ -119,6 +119,47 @@ export function distressQuestionFor({ stateId, questionType }) {
     answerId: signal.id,
     explain: `${signal.rule}. ${signal.memory}`
   };
+}
+
+/**
+ * What can actually be played for a distress signal.
+ *
+ * Audible entries carry their own pattern. SOS carries a morse field instead,
+ * because its timing belongs to Morse, so it is assembled here at the current
+ * speed. Everything else is silent and returns null rather than a pattern of
+ * nothing: a flare has no sound and pretending otherwise would be a lie the
+ * play button tells.
+ */
+export function audibleFor(signal, { wpm = DEFAULT_WPM } = {}) {
+  if (!signal) return null;
+  if (signal.pattern) return signal;
+  if (signal.morse) return morseSignal(signal.morse, { wpm });
+  return null;
+}
+
+/**
+ * How a question should be delivered, given whether motion is allowed.
+ *
+ * morse-see flashes a lamp, and the lamp is SMIL. prefers-reduced-motion does
+ * not stop SMIL by itself, so the app suppresses it by hand — which would leave
+ * a morse-see question showing a lamp that never flashes and asking what
+ * character it is. That is unanswerable, and showing nothing while pretending
+ * the question still works is worse than not asking it.
+ *
+ * So the delivery is substituted: the same character, sent as sound, with the
+ * substitution stated on screen rather than done quietly behind the reader.
+ */
+export function deliveryFor(question, { motion = true } = {}) {
+  const wantsLight = question && question.asLight;
+  if (wantsLight && !motion) {
+    return {
+      mode: 'sound',
+      substituted: true,
+      note: 'Your system asks for reduced motion, so the lamp is not flashed. '
+          + 'The same character is sent as sound instead.'
+    };
+  }
+  return { mode: wantsLight ? 'light' : 'sound', substituted: false, note: '' };
 }
 
 export const distressSpace = () => ({

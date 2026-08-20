@@ -14,6 +14,7 @@ import silhouette from './silhouette.test.js';
 import buoyage from './buoyage.test.js';
 import sound from './sound.test.js';
 import distress from './distress.test.js';
+import ui from './ui.test.js';
 
 const suites = [
   ['engine — arcs, and lights on the hull', engine],
@@ -21,6 +22,7 @@ const suites = [
   ['buoyage — patterns, strips and the night lamp', buoyage],
   ['sound — signals, timings, cards and strips', sound],
   ['distress — Annex IV, Morse timing and prosigns', distress],
+  ['ui — every section reachable, nothing stranded', ui],
   // Reads build.cjs's own module list, so adding a module to the bundle
   // automatically brings it under this check.
   ['bundle — one shared scope', t => checkBundleNamespace(t, f => readFileSync(f, 'utf8'), MODULES)]
