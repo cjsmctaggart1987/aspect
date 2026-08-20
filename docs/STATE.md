@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 32 commits.
+- **State:** working tree clean, 48 commits.
 
 ---
 
@@ -47,6 +47,29 @@ diagrams are generated at runtime; no bitmaps, no traced figures.
 
 ---
 
+**The rule text is not quoted anywhere in this repo.** `data/rule-text.js` holds 162
+addressable paragraphs and every one carries `text: null, status: 'pending-source'`.
+That is deliberate. This is the only section of the app that quotes rather than
+paraphrases, which is exactly why it could not be written from memory: everywhere else
+an approximation is a paraphrase and is honest about being one, but here an
+approximation is a misquoted regulation presented as the regulation, and a reader
+would have no way to tell which paragraphs were right. Fill `text` from 33 CFR
+Subchapter E — a US Government work, not subject to copyright — paragraph by
+paragraph, setting `status: 'verified'` as you go. Do not bulk-fill it from memory or
+from a model, and do not paraphrase into that field.
+
+**Citations are load-bearing strings.** `citationToId()` turns "Rule 26(b)(i)" into
+`rule-26-b-i` and returns null rather than guessing, so a citation that does not
+resolve shows up as a dead link rather than silently landing on the parent rule. A
+test sweeps every string in every data module, finds every rule reference in it and
+checks it resolves — 110 references at last count. Change how a rule is written in any
+data file and that test tells you immediately.
+
+**Cloze blanks are authored, never computed.** An algorithm choosing which words to
+remove has no idea which words carry the rule, so it produces cards asking for "the"
+and "of" — busywork that feels like study. `CLOZE_POLICY` records this. There are no
+blanks yet and there should be none until the text is in and somebody has read it.
+
 ## Layout and dependency order
 
 Nothing may reference anything later in this list. `build.cjs` concatenates in exactly
@@ -54,32 +77,38 @@ this order, so a backward import produces a bundle that throws on load even thou
 module build runs fine.
 
 ```
-index.html              markup, styling, app as an ES module      436 lines
-vendor/ts-fsrs.js       vendored FSRS lib, generated               60 KB
-data/vessel-states.js   30 vessel states                           576
-data/buoyage.js         16 buoyage marks                           270
-data/sound-signals.js   18 sound signals, Rules 32 to 35            305
-data/morse.js           A-Z, 0-9, SOS prosign, timing               112
-data/distress-signals.js 13 distress signals, Annex IV              190
-data/flags.js           40 code flags, ICS                          260
-data/manoeuvre-scenarios.js 22 worked situations                   250
-src/manoeuvre-engine.js Rules 11 to 18 as a decision engine        400
-data/definitions.js     Part A, 21 terms + 13 boundary cases        330
-src/engine.js           arcs, projection, question generation      146
-src/render-lights.js    scene and aspect dial renderers            393
-src/render-buoy.js      buoy renderer                              140
-src/render-signal.js    blast timelines                            135
-src/audio.js            synthesised whistle, bell and gong         200
-src/render-flag.js      code flags from geometry                   210
-src/render-distress.js  square and ball, arm signal, NC halyard    110
-src/buoyage-questions.js buoyage drill questions                   120
-src/sound-questions.js  sound drill questions                      146
-src/distress-questions.js distress and Morse questions             130
-src/scheduler.js        spaced repetition (FSRS)                   171
-build.cjs               regenerates the single-file bundle          85
-vendor.cjs              refreshes vendor/ts-fsrs.js                 41
-aspect-standalone.html  build output, committed on purpose        141 KB
-docs/                   review material, never loaded by the app
+index.html                  markup, styling, app as an ES module    1522 lines
+vendor/ts-fsrs.js           vendored FSRS lib, generated              60 KB
+data/vessel-states.js       30 vessel states                          576
+data/buoyage.js             16 buoyage marks                          291
+data/sound-signals.js       18 sound signals, Rules 32 to 35          298
+data/morse.js               A-Z, 0-9, SOS prosign, timing             113
+data/distress-signals.js    13 distress signals, Annex IV             178
+data/flags.js               40 code flags, ICS                        224
+src/manoeuvre-engine.js     Rules 11 to 18 as a decision engine       441
+data/manoeuvre-scenarios.js 22 worked situations                      270
+data/definitions.js         Part A, 21 terms + 13 boundary cases      532
+data/rule-text.js           162 addressable paragraphs, text pending  285
+src/engine.js               arcs, projection, question generation     146
+src/render-lights.js        scene and aspect dial renderers           403
+src/render-buoy.js          buoy renderer                             140
+src/render-signal.js        blast timelines                           181
+src/render-manoeuvre.js     two vessels on a plan view                 80
+src/render-flag.js          code flags from geometry                  214
+src/render-distress.js      square and ball, arm signal, NC halyard    108
+src/audio.js                whistle, bell, gong, Morse tone, gun       347
+src/buoyage-questions.js    buoyage drill questions                   127
+src/sound-questions.js      sound drill questions                     146
+src/distress-questions.js   distress and Morse questions              170
+src/flag-questions.js       flag drill questions                      120
+src/manoeuvre-questions.js  manoeuvre drill questions                 158
+src/definition-questions.js Part A drill questions                    121
+src/rule-text-questions.js  rule text drill questions                 146
+src/scheduler.js            spaced repetition (FSRS)                  171
+build.cjs                   regenerates the single-file bundle        131
+vendor.cjs                  refreshes vendor/ts-fsrs.js                41
+aspect-standalone.html      build output, committed on purpose       362 KB
+docs/                       review material, never loaded by the app
 ```
 
 `aspect-standalone.html` is a build artifact committed deliberately: it is the form you
@@ -115,7 +144,7 @@ To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 32, all pushed
+## Commits — 48, all pushed
 
 | | |
 |---|---|
@@ -262,13 +291,18 @@ the repo root. Currently green:
   matches the pattern, all 51 card keys unique
 - Morse ratios exact, SOS carries no character gap, all 100 distress and Morse
   card keys unique, every Annex IV signal attributable
-- **Reachability**: all five tabs exist and switch, each surfaces its own data, all
-  nine declared question types reach the scheduler, every renderer is called, and no
-  drill plays anything outside a click
-- **The built bundle is parsed as a classic script**, and no two of its sixteen parts
-  declare the same top-level name
+- **Reachability**: all nine tabs exist and switch, each surfaces its own data, every
+  declared question type reaches the scheduler bar the two openly waiting on the rule
+  text, every renderer is called, and no drill plays anything outside a click
+- **The rule text layer**: every citation in every data module resolves to a real
+  paragraph, parent chains are valid with no orphans, and no rule or explanation is
+  printed anywhere without passing through the link layer
+- **The built bundle is parsed as a classic script** — with `vm.Script`, because
+  `node --check` accepts ESM and once passed a bundle containing a bare `import` — then
+  started behind a DOM stub to prove the app actually comes up, and no two of its
+  twenty-eight parts declare the same top-level name
 
-Run them with `npm test`. 38 checks. The suite reports the offending state and aspect
+Run them with `npm test`. 359 checks. The suite reports the offending state and aspect
 rather than a bare boolean, two checks guard the matchers themselves, and it has been
 confirmed to fail and exit 1 when a real regression is introduced.
 
@@ -288,6 +322,11 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
 2. **Nothing visual has been reviewed by eye.** The silhouettes and rhythm strips are verified
    geometrically only. No assertion can settle whether a cargo ship reads as a cargo
    ship. Contact sheets: `docs/silhouettes.html`, `docs/buoyage.html`.
+3. **The rule text itself is missing.** All 162 paragraphs are addressable, every
+   citation in the app links to the right one, the index and search work off the
+   headings, and the section says plainly on screen that the wording is not there. Two
+   of the three question types deal nothing until it is. This is the one open item that
+   needs a source in front of it rather than more code.
 
 ## Closed — accepted and documented
 
@@ -316,7 +355,7 @@ them as bugs.
    the real modules from the repo root. Confirmed the suite fails and exits 1 when a real
    regression is introduced.
 
-## The five tabs
+## The nine tabs
 
 | Tab | Data | Drill types |
 |---|---|---|
@@ -328,9 +367,15 @@ them as bugs.
 | Code flags | 40 flags | flag-identify, flag-select, flag-signal |
 | Manoeuvres | 22 scenarios | manoeuvre-role, -obligation, -hierarchy, -standon-stage |
 | Definitions | 21 terms | definition-term, -meaning, -applies, -boundary |
+| Rule text | 162 paragraphs | text-which-rule (text-complete-list and text-cloze pending) |
 
-Twenty-three question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
-needed to change.
+Twenty-six question types declared. Twenty-four deal cards; `text-complete-list` and
+`text-cloze` are built, wired and deal nothing, because both need the verbatim rule text
+and it has not been supplied. All keyed `x:y:z`, so `scheduler.js` has never needed to
+change.
+
+**This is the final content section.** The app now covers Parts A to E, the annexes and
+the rule text. Anything further is depth, not coverage.
 
 **The middle slot.** For lights it is the aspect and for buoyage it is the mode,
 `day` or `night` — both carry meaning. For sound, distress and Morse it is the
