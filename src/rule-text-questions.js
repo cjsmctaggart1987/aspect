@@ -13,7 +13,8 @@
  * list is half-remembered teaches a half-remembered list.
  */
 
-import { RULE_TEXT, paragraphById, citationToId, CLOZE_POLICY } from '../data/rule-text.js';
+import { RULE_TEXT, paragraphById, citationToId, listUnder, listParagraphs, CLOZE_POLICY }
+  from '../data/rule-text.js';
 import { DEFINITIONS } from '../data/definitions.js';
 import { SOUND_SIGNALS } from '../data/sound-signals.js';
 import { DISTRESS_SIGNALS } from '../data/distress-signals.js';
@@ -43,10 +44,15 @@ export function whichRuleSources() {
 
 const SOURCES = whichRuleSources();
 
-/** Paragraphs that could carry a completion question once text exists. */
-export const completableParagraphs = () =>
-  RULE_TEXT.filter(p => p.text && Array.isArray(p.listItems) && p.listItems.length >= 3
-    && p.listClosed === true);
+/**
+ * Paragraphs that carry a completion question.
+ *
+ * A paragraph qualifies when it introduces an enumerated list and has three or
+ * more subparagraphs under it — "A vessel not under command shall exhibit:"
+ * followed by (i), (ii), (iii). The list is the rule's own, so nothing has to
+ * be transcribed twice and the question can never disagree with the text.
+ */
+export const completableParagraphs = () => listParagraphs();
 
 /** Paragraphs with authored blanks. Empty until a human writes some. */
 export const clozeParagraphs = () => RULE_TEXT.filter(p => (p.blanks || []).length > 0);
@@ -86,18 +92,27 @@ export function ruleTextQuestionFor({ stateId, aspect, questionType }) {
 
   if (questionType === 'text-complete-list') {
     const p = paragraphById(stateId);
-    if (!p || !p.text || !Array.isArray(p.listItems)) return null;
-    const missing = p.listItems[p.listItems.length - 1];
-    const shown = p.listItems.slice(0, -1);
-    const wrong = rtShuffle(RULE_TEXT.filter(q => Array.isArray(q.listItems) && q.id !== p.id)
-      .flatMap(q => q.listItems)).slice(0, 3);
+    const items = listUnder(stateId);
+    if (!p || !items) return null;
+    const missing = items[items.length - 1];
+    const shown = items.slice(0, -1);
+    // Distractors are items from other lists, so every option is a real
+    // requirement from somewhere in the rules. An invented one would be
+    // eliminable on style alone.
+    const pool = [...new Set(listParagraphs()
+      .filter(q => q.id !== p.id)
+      .flatMap(q => listUnder(q.id))
+      .filter(t => !items.includes(t)))];
+    const wrong = rtShuffle(pool).slice(0, 3);
+    if (wrong.length < 3) return null;
     return {
       type: 'text-complete-list',
-      paragraph: p,
-      prompt: `${p.citation} lists: ${shown.join('; ')}. What completes the list?`,
+      paragraph: p, items,
+      prompt: `${p.text} ${shown.map((t, i) => `(${['i', 'ii', 'iii', 'iv', 'v', 'vi'][i]}) ${t}`).join(' ')}`
+        + ' What completes the list?',
       options: rtShuffle([missing, ...wrong]).map((t, i) => ({ id: `o${i}`, text: t })),
       answerId: null,   // set below, once shuffled ids are known
-      explain: `${p.citation}. ${p.text}`,
+      explain: `${p.citation}. ${p.text} ${items.join(' ')}`,
       _answerText: missing
     };
   }
@@ -138,6 +153,7 @@ export function resolveAnswerId(question) {
 
 export const ruleTextSpace = () => ({
   paragraphs: RULE_TEXT.length,
+  withText: RULE_TEXT.filter(p => p.text).length,
   whichRule: SOURCES.length,
   completable: completableParagraphs().length,
   cloze: clozeParagraphs().length,

@@ -1,46 +1,40 @@
 /**
  * The rule text, as addressable paragraphs.
  *
- * THE TEXT IS NOT SUPPLIED. READ THIS BEFORE ADDING ANY.
+ * WHERE THE TEXT COMES FROM
  *
- * Every entry below carries `text: null` and `status: 'pending-source'`. That is
- * deliberate and it is not an oversight.
+ * `data/rule-text-source.js`, which is generated — never hand-edited — by
+ * `node tools/import-rule-text.cjs <file.txt> --write`. The structure comes
+ * from the source too: the parser reads the markers and builds the paragraph
+ * list, rather than fitting the source into a shape somebody remembered. That
+ * matters, because the shape somebody remembered was wrong in two places, and
+ * the import is what found them.
  *
- * This is the one section of the app that quotes rather than paraphrases, which
- * is exactly why it cannot be written from memory. Everywhere else an
- * approximation is a paraphrase and is honest about being one; here an
- * approximation is a misquotation of a regulation, presented as the regulation.
- * A reader would have no way to tell which paragraphs were right. So the
- * structure is built and the text is left for someone with 33 CFR Subchapter E
- * in front of them.
+ * This is the only section of the app that quotes rather than paraphrases.
+ * Everywhere else an approximation is a paraphrase and says so; here it would
+ * be a misquoted regulation presented as the regulation. So nothing in this
+ * file is written from memory, and `status` records exactly how good the text
+ * is rather than implying it is authoritative.
  *
- * TO SUPPLY IT
+ * STATUS VALUES
  *
- * Fill `text` and set `status: 'verified'` on each entry, from 33 CFR
- * Subchapter E (a US Government work, not subject to copyright). Do not
- * paraphrase into this field — every other file in the project is the place for
- * that. Do not bulk-fill from memory or from a model: fill from the source,
- * paragraph by paragraph, or leave it pending.
+ *   imported          text came from the source file, unedited, uncollated
+ *   pending-source    no text: the source did not cover it
+ *   pending-amendment no text: the source predates the amendment that added it
  *
- * WHAT IS BUILT
- *
- * The structure: ids, parts, paths, parent chains and headings. That is what
- * citations resolve against, so the link layer works today — tapping "Rule
- * 26(b)" in a lights answer opens the right paragraph, and shows that its text
- * is pending rather than showing something invented.
+ * There is no `verified` status in use. Nothing here has been read against an
+ * official copy line by line, and pretending otherwise is the failure this
+ * file exists to avoid. Read SOURCE_CAVEATS before trusting a paragraph.
  *
  * ID SCHEME
  *
- * `rule-26-b-i` for Rule 26(b)(i); `annex-3-1` for Annex III paragraph 1. It
- * matches the granularity of the citations already used across the app, which
- * is the point: store coarser than the citations and every link lands in the
- * wrong place.
- *
- * BLANKS
- *
- * `blanks` is empty on every entry and stays that way until a human authors
- * them. See the note on CLOZE_POLICY below.
+ * `rule-26-b-i` for Rule 26(b)(i); `annex-4-2` for Annex IV paragraph 2. It
+ * matches the granularity of the citations used across the app, which is the
+ * point: store coarser than the citations and every link lands in the wrong
+ * place.
  */
+
+import { RULE_SOURCE, RULE_SOURCE_META } from './rule-text-source.js';
 
 export const RULE_PARTS = [
   { id: 'A', name: 'Part A — General', rules: [1, 2, 3] },
@@ -57,9 +51,55 @@ export const RULE_SECTIONS = [
 ];
 
 /**
- * Rule headings. Structure and headings are recalled far more reliably than
- * wording, and they are what the index and the search need to be usable before
- * any text exists. They are still marked unverified.
+ * What is wrong with the text that is in here.
+ *
+ * Recorded in the data rather than in a commit message, because the app shows
+ * it to the reader. A study aid that quietly serves a superseded regulation is
+ * worse than one that admits it is quoting an old copy.
+ */
+export const SOURCE_CAVEATS = [
+  {
+    id: 'pre-2001',
+    summary: 'The transcription predates the 2001 amendments',
+    detail: 'It carries no wing-in-ground craft provisions. Rule 3(m) and Rule 18(f) are '
+      + 'therefore absent, and both are cited elsewhere in the app. They are kept as '
+      + 'addressable paragraphs with no text, so their links still work.'
+  },
+  {
+    id: 'us-rendering',
+    summary: 'It is a US rendering, not the IMO wording',
+    detail: 'It reads "maneuver", "meters" and "draft" where the IMO text reads '
+      + '"manoeuvre", "metres" and "draught". The wording is not otherwise known to '
+      + 'differ, but it has not been collated against an official copy.'
+  },
+  {
+    id: 'rule-38-g',
+    summary: 'Rule 38(g) cites Annex II where it should cite Annex III',
+    detail: 'Annex III is the one about sound signal appliances. This is an error in the '
+      + 'transcription, left as it stands rather than silently corrected: editing a text '
+      + 'that is presented as quoted is how a study aid stops being trustworthy.'
+  },
+  {
+    id: 'typos',
+    summary: 'It carries the odd transcription slip',
+    detail: 'Rule 6(b)(ii) reads "constrains" where it should read "constraints". A scan '
+      + 'for the usual scanning damage found nothing else, which is not the same as there '
+      + 'being nothing else. Slips are left as they stand, for the reason above.'
+  },
+  {
+    id: 'annexes',
+    summary: 'The annexes are not in the source at all',
+    detail: 'Annexes I to IV are addressable but have no text. Annex IV matters most, '
+      + 'because the distress section cites it by paragraph.'
+  }
+];
+
+/**
+ * Rule headings, in the app's own spelling.
+ *
+ * A heading is a title, not regulatory text, so it follows the rest of the app
+ * rather than the source's Americanised capitals. The importer reports any
+ * heading that differs from the source by more than spelling.
  */
 const RULE_HEADINGS = {
   1: 'Application', 2: 'Responsibility', 3: 'General definitions',
@@ -87,45 +127,29 @@ export const ANNEXES = [
 ];
 
 /**
- * Subparagraph structure, declared only where the app cites it or where the
- * shape is needed to hold a citation's parent chain.
+ * Paragraphs the app cites that the source does not contain.
  *
- * Deliberately not invented wholesale. A subparagraph declared here that does
- * not exist in the regulation would be a fabricated citation target, which is
- * the same class of error as fabricated text.
+ * Both were added by the 2001 amendments. They are declared so their citations
+ * still resolve — a link that goes nowhere is worse than a paragraph that
+ * admits it has no text.
+ *
+ * Rule 23(d) and Rule 35(k) used to be declared here too, and have been
+ * dropped. Nothing cited them; they were guesses at a structure that the
+ * source settles.
  */
-const SUBPARAGRAPHS = {
-  2: ['a', 'b'],
-  3: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'],
-  12: ['a', 'b'],
-  13: ['a', 'b', 'c', 'd'],
-  14: ['a', 'b', 'c'],
-  17: ['a', 'b', 'c', 'd'],
-  18: ['a', 'b', 'c', 'd', 'e', 'f'],
-  23: ['a', 'b', 'c', 'd'],
-  24: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'],
-  25: ['a', 'b', 'c', 'd', 'e'],
-  26: ['a', 'b', 'c', 'd', 'e'],
-  27: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
-  29: ['a', 'b'],
-  30: ['a', 'b', 'c', 'd', 'e'],
-  34: ['a', 'b', 'c', 'd', 'e', 'f'],
-  35: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
-};
+const AMENDMENT_GAPS = [
+  { id: 'rule-3-m', citation: 'Rule 3(m)', rule: 3, path: ['m'], parentId: 'rule-3' },
+  { id: 'rule-18-f', citation: 'Rule 18(f)', rule: 18, path: ['f'], parentId: 'rule-18' }
+];
 
-/** Third-level structure, again only where cited. */
-const SUBSUB = {
-  '3-g': ['i', 'ii', 'iii', 'iv', 'v', 'vi'],
-  '12-a': ['i', 'ii', 'iii'],
-  '17-a': ['i', 'ii'],
-  '23-c': ['i', 'ii'],
-  '24-a': ['i', 'ii', 'iii'],
-  '26-b': ['i', 'ii', 'iii'],
-  '26-c': ['i', 'ii'],
-  '27-b': ['i', 'ii', 'iii', 'iv'],
-  '29-a': ['i', 'ii'],
-  '34-c': ['i', 'ii']
-};
+const partFor = n => (RULE_PARTS.find(p => p.rules.includes(n)) || {}).id || null;
+const sectionFor = n => (RULE_SECTIONS.find(s => s.rules.includes(n)) || {}).name || null;
+
+/** `rule-26-b-i` -> { rule: 26, path: ['b', 'i'] } */
+function readId(id) {
+  const bits = id.split('-');
+  return { rule: Number(bits[1]), path: bits.slice(2) };
+}
 
 const paragraph = e => ({
   text: null,
@@ -138,42 +162,39 @@ const paragraph = e => ({
 
 function build() {
   const out = [];
-  for (const part of RULE_PARTS) {
-    for (const n of part.rules) {
-      const section = RULE_SECTIONS.find(s => s.part === part.id && s.rules.includes(n));
-      out.push(paragraph({
-        id: `rule-${n}`,
-        rule: n,
-        part: part.id,
-        section: section ? section.name : null,
-        path: [],
-        citation: `Rule ${n}`,
-        heading: RULE_HEADINGS[n] || null
-      }));
-      for (const a of SUBPARAGRAPHS[n] || []) {
-        out.push(paragraph({
-          id: `rule-${n}-${a}`,
-          rule: n,
-          part: part.id,
-          section: section ? section.name : null,
-          path: [a],
-          citation: `Rule ${n}(${a})`,
-          parentId: `rule-${n}`
-        }));
-        for (const r of SUBSUB[`${n}-${a}`] || []) {
-          out.push(paragraph({
-            id: `rule-${n}-${a}-${r}`,
-            rule: n,
-            part: part.id,
-            section: section ? section.name : null,
-            path: [a, r],
-            citation: `Rule ${n}(${a})(${r})`,
-            parentId: `rule-${n}-${a}`
-          }));
-        }
-      }
-    }
+
+  for (const src of RULE_SOURCE) {
+    const { rule, path } = readId(src.id);
+    out.push(paragraph({
+      id: src.id,
+      rule,
+      part: partFor(rule),
+      section: sectionFor(rule),
+      path,
+      citation: src.citation,
+      parentId: path.length ? ['rule', rule, ...path.slice(0, -1)].join('-') : null,
+      heading: path.length ? null : (RULE_HEADINGS[rule] || null),
+      text: src.text || null,
+      status: src.text ? 'imported' : 'pending-source'
+    }));
   }
+
+  // Spliced in after the last subparagraph of their rule rather than appended,
+  // so Rule 3(m) reads after Rule 3(l) instead of turning up at the end.
+  for (const gap of AMENDMENT_GAPS) {
+    const entry = paragraph({
+      ...gap,
+      part: partFor(gap.rule),
+      section: sectionFor(gap.rule),
+      status: 'pending-amendment'
+    });
+    let at = out.length;
+    for (let i = 0; i < out.length; i++) {
+      if (out[i].rule === gap.rule) at = i + 1;
+    }
+    out.splice(at, 0, entry);
+  }
+
   for (const ax of ANNEXES) {
     out.push(paragraph({
       id: `annex-${ax.number}`,
@@ -186,19 +207,20 @@ function build() {
     }));
     // Annex IV is cited by paragraph in the distress section.
     if (ax.number === 4) {
-      for (const p of [1, 2, 3]) {
+      for (const n of [1, 2, 3]) {
         out.push(paragraph({
-          id: `annex-4-${p}`,
+          id: `annex-4-${n}`,
           rule: null,
           part: 'Annex',
           section: null,
-          path: [String(p)],
-          citation: `Annex IV(${p})`,
+          path: [String(n)],
+          citation: `Annex IV(${n})`,
           parentId: 'annex-4'
         }));
       }
     }
   }
+
   return out;
 }
 
@@ -206,6 +228,33 @@ export const RULE_TEXT = build();
 
 const BY_ID = new Map(RULE_TEXT.map(p => [p.id, p]));
 export const paragraphById = id => BY_ID.get(id) || null;
+
+/** The paragraphs directly beneath one, in order. */
+export const childrenOf = id => RULE_TEXT.filter(p => p.parentId === id);
+
+/**
+ * Whether a paragraph introduces an enumerated list, and what is in it.
+ *
+ * Derived from the structure rather than stored: a paragraph whose own text
+ * ends in a colon or semicolon and which has three or more subparagraphs is
+ * introducing a list, and those subparagraphs are its items. Rule 27(a) — "A
+ * vessel not under command shall exhibit:" — is one. Rule 8(f), which has no
+ * text of its own and simply runs (f)(i), (f)(ii), is not.
+ *
+ * The colon test is what keeps the completion drill honest. Without it the
+ * drill would ask what completes lists that were never lists.
+ */
+const LIST_ITEM_LIMIT = 300;
+
+export function listUnder(id) {
+  const parent = paragraphById(id);
+  if (!parent || !parent.text || !/[:;]\s*$/.test(parent.text)) return null;
+  const items = childrenOf(id);
+  if (items.length < 3 || !items.every(i => i.text && i.text.length <= LIST_ITEM_LIMIT)) return null;
+  return items.map(i => i.text);
+}
+
+export const listParagraphs = () => RULE_TEXT.filter(p => listUnder(p.id));
 
 /**
  * Turn a citation as written anywhere in the app into a paragraph id.
@@ -263,8 +312,9 @@ export function searchRuleText(query) {
   return direct ? [direct, ...hits.filter(p => p.id !== direct.id)] : hits;
 }
 
-export const paragraphsPending = () => RULE_TEXT.filter(p => p.status === 'pending-source');
+export const paragraphsPending = () => RULE_TEXT.filter(p => !p.text);
 export const paragraphsWithText = () => RULE_TEXT.filter(p => p.text);
+export const SOURCE_META = RULE_SOURCE_META;
 
 /**
  * Cloze policy, recorded here so it is not quietly reversed later.
@@ -275,8 +325,8 @@ export const paragraphsWithText = () => RULE_TEXT.filter(p => p.text);
  * word the paragraph turns on: "more than 22.5 degrees abaft her beam", "shall",
  * "may", "not under command".
  *
- * There are no blanks yet, and there should be none until the text is in and
- * somebody has read it.
+ * There are still no blanks. Now that there is text to author them against,
+ * that is a job for somebody who has read it, not for a generator.
  */
 export const CLOZE_POLICY = {
   authored: true,
