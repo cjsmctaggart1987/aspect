@@ -179,6 +179,82 @@ function morseTone(at, seconds, nodes) {
 const BELL = { base: 620, ratios: [[1, 0.5], [2.02, 0.3], [2.98, 0.18], [4.2, 0.1], [5.4, 0.06]], decay: 1, strike: 0.25 };
 const GONG = { base: 190, ratios: [[1, 0.5], [1.48, 0.32], [2.1, 0.22], [2.9, 0.14], [3.7, 0.09], [5.1, 0.05]], decay: 1, strike: 0.18 };
 
+/**
+ * A gun, or any explosive signal.
+ *
+ * This was originally built from the gong voice, which was simply wrong: a
+ * gong is a set of inharmonic partials ringing for a second or more, so it has
+ * a pitch you can hum. A report has no pitch at all. What it has is a very
+ * fast pressure rise, a body that drops in frequency as it expands, and noise
+ * that darkens as it travels — the high frequencies are absorbed first, which
+ * is why a distant gun is a thump and a near one is a crack.
+ *
+ * Three layers, no oscillator ringing anywhere:
+ *
+ *   crack   broadband noise through a lowpass sweeping 5 kHz down to 200 Hz,
+ *           gone in a fifth of a second
+ *   body    a sine falling from 110 Hz to 30 Hz, which is the expansion
+ *   tail    quiet low noise rolling away behind it
+ *
+ * `distance` moves it away: the crack loses level and the sweep starts lower,
+ * so the same voice covers a signal gun close by and one heard across water.
+ */
+function report(at, nodes, { distance = 0.35 } = {}) {
+  const near = 1 - distance;
+
+  const out = ctx.createGain();
+  out.gain.value = 0.9;
+  out.connect(master);
+  nodes.push(out);
+
+  // Crack: the pressure front. Fast enough that its attack is the sound.
+  const crack = ctx.createBufferSource();
+  crack.buffer = noiseBuffer(0.5);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(1200 + 3800 * near, at);
+  lp.frequency.exponentialRampToValueAtTime(200, at + 0.22);
+  lp.Q.value = 0.6;
+  const cg = ctx.createGain();
+  cg.gain.setValueAtTime(0.0001, at);
+  cg.gain.linearRampToValueAtTime(0.55 + 0.35 * near, at + 0.002);   // ~2 ms rise
+  cg.gain.exponentialRampToValueAtTime(0.0001, at + 0.26);
+  crack.connect(lp).connect(cg).connect(out);
+  crack.start(at);
+  crack.stop(at + 0.5);
+  nodes.push(crack, lp, cg);
+
+  // Body: the expansion. A falling sine, not a ringing one.
+  const body = ctx.createOscillator();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(110, at);
+  body.frequency.exponentialRampToValueAtTime(30, at + 0.3);
+  const bg = ctx.createGain();
+  bg.gain.setValueAtTime(0.0001, at);
+  bg.gain.linearRampToValueAtTime(0.75, at + 0.006);
+  bg.gain.exponentialRampToValueAtTime(0.0001, at + 0.42);
+  body.connect(bg).connect(out);
+  body.start(at);
+  body.stop(at + 0.5);
+  nodes.push(body, bg);
+
+  // Tail: what rolls away over the water afterwards.
+  const tail = ctx.createBufferSource();
+  tail.buffer = noiseBuffer(0.9);
+  const tlp = ctx.createBiquadFilter();
+  tlp.type = 'lowpass';
+  tlp.frequency.setValueAtTime(420, at);
+  tlp.frequency.exponentialRampToValueAtTime(120, at + 0.8);
+  const tg = ctx.createGain();
+  tg.gain.setValueAtTime(0.0001, at);
+  tg.gain.linearRampToValueAtTime(0.16 + 0.14 * distance, at + 0.03);
+  tg.gain.exponentialRampToValueAtTime(0.0001, at + 0.85);
+  tail.connect(tlp).connect(tg).connect(out);
+  tail.start(at);
+  tail.stop(at + 0.95);
+  nodes.push(tail, tlp, tg);
+}
+
 /** Rapid ringing: repeated strikes for the span, rather than one long note. */
 function ringing(at, seconds, voice, nodes, every = 0.28) {
   for (let t = 0; t < seconds - 0.05; t += every) {
@@ -217,8 +293,8 @@ export async function play(signal, { lengthBand } = {}) {
         morseTone(t, span.seconds, nodes);
         break;
       case 'report':
-        // A gun: a transient, not a tone. The gong body carries the boom.
-        struck(t, Math.min(2.2, span.seconds + 1.4), GONG, nodes);
+        // A gun: a pressure transient with no pitch. Not a struck instrument.
+        report(t, nodes);
         break;
       case 'continuous':
         // Fog apparatus held down, which is what makes it a distress signal
