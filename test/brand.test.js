@@ -117,9 +117,11 @@ export default function run(t) {
     /rel="icon" href="brand\/aspect-favicon\.svg" sizes="any" type="image\/svg\+xml"/.test(page) &&
     /rel="icon" href="brand\/aspect-mark-512\.png" sizes="512x512" type="image\/png"/.test(page));
   t.ok('iOS gets its own 180', /rel="apple-touch-icon" href="brand\/apple-touch-icon-180\.png" sizes="180x180"/.test(page));
-  t.ok('the manifest is linked and the theme colour set',
+  t.ok('the manifest is linked, and a theme colour is given for each palette',
     /rel="manifest" href="brand\/aspect\.webmanifest"/.test(page) &&
-    /name="theme-color" content="#0E1F28"/.test(page));
+    /theme-color" content="#E7EEF0" media="\(prefers-color-scheme: light\)"/.test(page) &&
+    /theme-color" content="#0B141B" media="\(prefers-color-scheme: dark\)"/.test(page),
+    'the browser chrome should not stay pale behind a dark page');
   t.ok('there is a canonical link', /rel="canonical" href="https:\/\//.test(page));
   t.ok('Open Graph and Twitter point at the social card at 1200 by 630',
     /property="og:image" content="https:\/\/[^"]+aspect-social\.png"/.test(page) &&

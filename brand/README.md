@@ -51,6 +51,16 @@ Night variants brighten the lights so they hold up on a dark ground —
 `#00B86E` and `#E02B22` — and swap the ink for paper. Same geometry, different
 palette; `aspect-mark-night.svg` is the reference.
 
+The header mark takes those colours from `:root[data-theme="night"]`, so it
+follows the app's night mode rather than carrying a class of its own.
+
+**Accents are fills, not text colours.** `--good`, `--warn` and `--magenta` all
+have text sitting on them, so brightening them for a dark page makes that text
+harder to read, not easier. The night palette brightens them and flips the text
+to ink via `--on-accent`; the day palette keeps white text on deeper fills. A
+test computes the WCAG ratio for every such pair in both palettes and fails
+below 4.5:1, which is what caught this being done backwards the first time.
+
 `aspect-mark-mono.svg` and `aspect-mark-reversed.svg` exist for the cases where
 colour is not available at all: one ink, or one paper. They drop the white
 sector to an outline rather than filling it, because a white fill on a one

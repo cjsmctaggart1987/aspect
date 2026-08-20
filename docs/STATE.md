@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 53 commits.
+- **State:** working tree clean, 54 commits.
 
 ---
 
@@ -79,6 +79,19 @@ rather than embedded as an image, so the mark can take the night palette from CS
 properties, and a test asserts every path in it is a path from `brand/aspect-mark.svg`.
 Three PNGs cannot be rebuilt here at all, because rasterising an SVG needs a renderer this
 machine does not have; `brand/README.md` records their sizes for whoever can.
+
+**Night mode flips the chrome and nothing else.** The renderers read no CSS custom
+property — a test asserts it — so a theme cannot recolour a diagram. That separation is
+the whole design: `--night` is the sea at night in the lights panel and means the same in
+both palettes, while `--paper`, `--ink` and the rest are the room the reader is in. The
+app already had per-section night controls for depictions before it had a theme; do not
+merge the two.
+
+**Accent tokens are fills with text on them.** Brightening `--good` or `--magenta` for a
+dark page makes the text on them worse, not better. Night brightens the fill and flips the
+text to ink through `--on-accent`. `test/ui.test.js` computes the WCAG ratio for all eight
+text-on-fill pairs in both palettes and fails below 4.5:1 — it was written after getting
+this backwards, and it catches it.
 
 **Citations are load-bearing strings.** `citationToId()` turns "Rule 26(b)(i)" into
 `rule-26-b-i` and returns null rather than guessing, so a citation that does not
@@ -171,7 +184,7 @@ To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 53, all pushed
+## Commits — 54, all pushed
 
 | | |
 |---|---|
@@ -325,6 +338,10 @@ the repo root. Currently green:
   paragraph, parent chains are valid with no orphans, no rule or explanation is printed
   anywhere without passing through the link layer, no paragraph claims to be verified,
   and every completion question's list is the rule's own subparagraphs
+- **Both palettes**: eight text-on-fill pairs per theme clear 4.5:1, no custom property
+  is defined in terms of itself, every night token overrides a day token and differs from
+  it, and no renderer reads a token — confirmed to fail when the accents are brightened
+  without flipping the text on them
 - **The brand**: the three sectors measure 112.5, 112.5 and 135 and sum to 360 in all
   three favicon levels, no asset invents a colour outside the palette, every path in the
   header lockup is a path from the generated mark, and the built bundle loads no image
@@ -334,7 +351,7 @@ the repo root. Currently green:
   started behind a DOM stub to prove the app actually comes up, and no two of its
   twenty-eight parts declare the same top-level name
 
-Run them with `npm test`. 410 checks. The suite reports the offending state and aspect
+Run them with `npm test`. 423 checks. The suite reports the offending state and aspect
 rather than a bare boolean, two checks guard the matchers themselves, and it has been
 confirmed to fail and exit 1 when a real regression is introduced.
 

@@ -48,6 +48,27 @@ const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags', 'manoeuv
  */
 const PENDING_TYPES = ['text-cloze'];
 
+const renderSources = ['render-lights', 'render-buoy', 'render-signal', 'render-manoeuvre',
+  'render-flag', 'render-distress'].map(m => readFileSync(`src/${m}.js`, 'utf8'));
+
+/**
+ * WCAG relative luminance and contrast ratio.
+ *
+ * Worth having here because the night palette got this exactly backwards on the
+ * first attempt: the accents are fills with text sitting on them, so
+ * brightening them for a dark page made the white text on them worse rather
+ * than better. Eyeballing a palette does not catch that. Arithmetic does.
+ */
+const luminance = hex => {
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255)
+    .map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a, b) => {
+  const [x, y] = [luminance(a), luminance(b)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+};
+
 export default function run(t) {
   const page = html();
   const app = appScript();
@@ -176,6 +197,88 @@ export default function run(t) {
     app.includes("$('textNote').innerHTML") && /SOURCE_CAVEATS/.test(app) &&
     /SOURCE_META.file/.test(app) && /not been collated/.test(app),
     'a study aid that hides a bad source is worse than one with no source');
+
+  t.section('night mode');
+  // A self-referential token — --wash:var(--wash) — shipped once and nothing
+  // caught it: CSS resolves a cycle to nothing, so the hover tint silently
+  // vanished in day mode while every other check stayed green.
+  const css = page.slice(page.indexOf('<style>'), page.indexOf('</style>'));
+  const cyclic = [...css.matchAll(/(--[\w-]+)\s*:\s*var\(\s*\1\s*[,)]/g)].map(m => m[1]);
+  t.ok('no custom property is defined in terms of itself', cyclic.length === 0,
+    cyclic.join(', ') || 'CSS resolves a cycle to nothing, in silence');
+
+  const tokens = block => {
+    const at = css.indexOf(block);
+    const body = css.slice(at, css.indexOf('}', at));
+    return new Map([...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map(m => [m[1], m[2].trim()]));
+  };
+  const day = tokens(':root{');
+  const night = tokens(':root[data-theme="night"]{');
+  t.ok('the night palette redefines the chrome tokens',
+    ['--paper', '--ink', '--ink-soft', '--rule', '--card', '--magenta', '--good', '--warn']
+      .every(k => night.has(k)),
+    [...night.keys()].length + ' overridden');
+  t.ok('every night token is one the day palette already declares',
+    [...night.keys()].every(k => day.has(k)),
+    [...night.keys()].filter(k => !day.has(k)).join(', ') || 'no orphans');
+  t.ok('every night token actually differs from its day value',
+    [...night].every(([k, v]) => day.get(k) !== v),
+    [...night].filter(([k, v]) => day.get(k) === v).map(([k]) => k).join(', '));
+
+  // --night is the sea at night in the lights panel. It means the same thing in
+  // both themes, and flipping it would darken a diagram that is already dark.
+  t.ok('--night is left alone, because it is a depiction and not a theme colour',
+    !night.has('--night'));
+  t.ok('no renderer reads a CSS custom property',
+    renderSources.every(src => !/var\(--/.test(src)),
+    'every diagram colours itself, so a theme cannot recolour a buoy');
+
+  t.ok('the chrome hardcodes no colour that would have to flip',
+    !/(background|border-color)\s*:\s*rgba\(255,255,255/.test(
+      css.replace(/--card[\w-]*\s*:\s*rgba\(255,255,255[^;]*;/g, '')),
+    'card fills go through --card');
+
+  t.ok('the theme is set before first paint, not from the module',
+    /data-theme/.test(page.slice(0, page.indexOf('<style>'))) &&
+    /localStorage\.getItem\('aspect\.theme'\)/.test(page.slice(0, page.indexOf('<style>'))),
+    'otherwise a dark page flashes white on the way in');
+  t.ok('the toggle exists, flips the attribute and remembers the choice',
+    page.includes('id="themeToggle"') &&
+    /setTheme\(themeNow\(\) === 'night' \? 'day' : 'night'\)/.test(app) &&
+    /localStorage\.setItem\('aspect\.theme', theme\)/.test(app));
+  t.ok('the toggle says what it will do and reports its state',
+    /aria-pressed/.test(app) && /aria-label/.test(app) &&
+    /textContent = theme === 'night' \? 'Day' : 'Night'/.test(app));
+  t.ok('a reader who has chosen is not overruled by the system later',
+    !/matchMedia\('\(prefers-color-scheme[^)]*\)'\)\.add(EventListener|Listener)/.test(app),
+    'no listener re-flips the page after a choice');
+
+  t.section('both palettes are readable');
+  // AA is 4.5:1 for body text. Every pair below is text a reader has to read,
+  // not decoration.
+  const pairsFor = pal => [
+    ['body text', pal['--ink'], pal['--paper']],
+    ['secondary text', pal['--ink-soft'], pal['--paper']],
+    ['citations and rule numbers', pal['--magenta'], pal['--paper']],
+    ['text on a selected tab', pal['--paper'], pal['--ink']],
+    ['text on a right answer', pal['--on-accent'], pal['--good']],
+    ['text on a wrong answer', pal['--on-accent'], pal['--magenta']],
+    ['text on a caution badge', pal['--on-accent'], pal['--warn']],
+    ['text on a role badge', pal['--on-accent'], pal['--ink-soft']]
+  ];
+  const dayPal = Object.fromEntries(day);
+  const themes = [['day', dayPal], ['night', { ...dayPal, ...Object.fromEntries(night) }]];
+  for (const [name, pal] of themes) {
+    const pairs = pairsFor(pal)
+      .filter(([, fg, bg]) => /^#[0-9A-Fa-f]{6}$/.test(fg || '') && /^#[0-9A-Fa-f]{6}$/.test(bg || ''));
+    const failures = pairs
+      .map(([what, fg, bg]) => [what, contrast(fg, bg)])
+      .filter(([, ratio]) => ratio < 4.5);
+    t.ok(`the ${name} palette clears 4.5 to 1 wherever text sits on a fill`,
+      pairs.length === 8 && failures.length === 0,
+      failures.map(([what, r]) => `${what} ${r.toFixed(2)}`).join(', ')
+        || `${pairs.length} pairs checked`);
+  }
 
   t.section('no built content is left unreachable');
   // Anything exported as a renderer should be called somewhere in the app.

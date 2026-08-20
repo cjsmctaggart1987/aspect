@@ -130,6 +130,15 @@ Progress lives in a single versioned `localStorage` key on your own device.
 There is no account, no backend and no cookie, nothing is sent anywhere, and
 "Reset progress" clears it.
 
+## Night mode
+
+A toggle in the header, remembered in `localStorage`, defaulting to whatever the
+system asks for. Only the chrome flips. Every diagram is an SVG the renderers
+colour themselves — not one of them reads a CSS custom property — so a daylight
+buoy stays a daylight buoy on a dark page. The theme is the room you are sitting
+in, not the time of day at sea, and the app already has a separate control for
+the latter.
+
 ## Sources
 
 Buoyage is described from **33 CFR Part 62**, a work of the United States
