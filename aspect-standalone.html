@@ -157,6 +157,23 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
   letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
 .flagshown{max-width:190px;margin:0 0 14px}
 .flagshown .codeflag{display:block;width:100%;height:auto}
+.mvcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.mvcard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px;display:flex;gap:12px}
+.mvcard .mvplan{flex:0 0 150px;width:150px;height:150px}
+.mvcard .body2{flex:1}
+.mvcard h4{margin:0 0 4px;font-size:15px;font-weight:500}
+.mvcard .who{font-family:var(--data);font-size:10px;color:var(--ink-soft);line-height:1.5}
+.mvcard .who .her{color:var(--magenta)}
+.mvrole{display:inline-block;font-family:var(--data);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;padding:2px 7px;color:#fff;background:var(--ink-soft);margin:5px 0}
+.mvrole.give-way{background:var(--magenta)}
+.mvrole.stand-on{background:#0E9E4F}
+.mvrole.both-give-way{background:#B45309}
+.mvcard .rules{font-family:var(--data);font-size:10px;color:var(--ink-soft);margin-bottom:5px}
+.mvcard ol{margin:0 0 6px;padding-left:16px;font-size:12.5px;color:var(--ink-soft)}
+.mvcard .why{font-family:var(--note);font-style:italic;font-size:12.5px;margin:0}
+.mvshown{max-width:230px;margin:0 0 14px}
+.mvshown .mvplan{display:block;width:100%;height:auto}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -181,6 +198,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <button role="tab" id="tab-distress" aria-selected="false">Distress</button>
   <button role="tab" id="tab-morse" aria-selected="false">Morse</button>
   <button role="tab" id="tab-flags" aria-selected="false">Code flags</button>
+  <button role="tab" id="tab-manoeuvre" aria-selected="false">Manoeuvres</button>
 </div>
 
 <section id="view-lights">
@@ -416,6 +434,35 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   </div>
 
   <div id="flagList"></div>
+</section>
+
+<section id="view-manoeuvre" class="hidden">
+  <p class="sub" style="max-width:74ch;margin:0 0 8px">
+    Rules 11 to 18, International, vessels in sight of one another. Every situation gives you
+    a role and an obligation, never an alteration: Rule 8 sets standards for action, not values.
+  </p>
+  <div class="standing" id="mvNote"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="vPrompt">Press start.</p>
+      <div id="vShown" class="mvshown"></div>
+      <div class="opts" id="vOpts"></div>
+      <p class="verdict" id="vVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="vNext">Start a drill</button>
+        <button class="btn ghost hidden" id="vEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="vSeen">0</b> of <b id="vTotal">0</b></span>
+        <span>Due today <b id="vDue">0</b></span>
+        <span>Streak <b id="vStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="mvList"></div>
 </section>
 
 <footer>
@@ -3996,6 +4043,723 @@ function flagMeaning(f, when = null) {
 const NEEDS_VERIFYING = FLAGS.filter(f => f.verify);
 
 
+/* ===== src/manoeuvre-engine.js ===== */
+/**
+ * The steering and sailing rules as a decision engine. Rules 11 to 18,
+ * International, vessels in sight of one another.
+ *
+ * WHAT THIS RETURNS, AND WHAT IT REFUSES TO
+ *
+ * It returns a situation, a role, an ordered list of obligations, and the rules
+ * they come from. It never returns an alteration. No heading, no number of
+ * degrees, no speed.
+ *
+ * That is not caution, it is the rule. Rule 8 sets standards for action — that
+ * it be positive, made in ample time, readily apparent to another vessel
+ * watching visually or by radar, and result in passing at a safe distance.
+ * Those are standards a mariner applies to the circumstances in front of them.
+ * "Alter thirty degrees to starboard" is a number the rule does not contain,
+ * and a candidate who learns a number instead of a standard has learned the
+ * wrong thing. Obligations here are therefore free of digits entirely, and a
+ * test enforces it.
+ *
+ * RULE 19 IS OUT
+ *
+ * Restricted visibility is deliberately not modelled. It has no stand-on
+ * vessel at all, so folding it in as a flag on this engine would produce
+ * something that answers "who stands on" in a situation where nobody does.
+ * Rule 11 gates the whole engine: not in sight, not applicable, see Rule 19.
+ *
+ * INLAND
+ *
+ * Every outcome carries `inland: null`. The Inland Rules differ on several of
+ * these — the crossing rule on the Great Lakes and western rivers, and the
+ * signals of Rule 34 being proposals rather than statements. That is a field to
+ * fill, not a migration to perform.
+ */
+
+// --- vessel categories under Rule 18 --------------------------------------
+
+const MANOEUVRE_CATEGORIES = [
+  'power-driven', 'sailing', 'fishing', 'ram', 'nuc', 'cbd', 'wig', 'seaplane'
+];
+
+const CATEGORY_NAMES = {
+  'power-driven': 'power-driven vessel',
+  sailing: 'sailing vessel',
+  fishing: 'vessel engaged in fishing',
+  ram: 'vessel restricted in her ability to manoeuvre',
+  nuc: 'vessel not under command',
+  cbd: 'vessel constrained by her draught',
+  wig: 'WIG craft',
+  seaplane: 'seaplane'
+};
+
+/**
+ * Rule 18 as a pairing table, expressed as rank.
+ *
+ * Higher rank means other vessels keep out of her way. It is a hierarchy
+ * between vessels, not a property of either alone: nothing here says a fishing
+ * vessel "has right of way", only that a power-driven vessel and a sailing
+ * vessel keep out of hers.
+ *
+ * Equal rank means Rule 18 does not resolve it and the situation falls through
+ * to Rule 12, 14 or 15.
+ *
+ * cbd, wig and seaplane are deliberately absent: they are not points on this
+ * ladder and are handled separately below.
+ */
+const RULE_18_RANK = {
+  nuc: 4,
+  ram: 4,
+  fishing: 3,
+  sailing: 2,
+  'power-driven': 1
+};
+
+const rankOf = c => RULE_18_RANK[c] ?? null;
+
+// --- geometry -------------------------------------------------------------
+
+const norm360 = d => ((d % 360) + 360) % 360;
+
+/** 22.5 degrees abaft the beam, which is where the sidelights end. */
+const OVERTAKING_LIMIT = 112.5;
+
+/**
+ * Is a vessel bearing `b` from another coming up from abaft her beam?
+ *
+ * Rule 13(b) says more than 22.5 degrees abaft the beam: the sector in which
+ * only her sternlight shows and neither sidelight. Strictly more than, so the
+ * boundary itself is not overtaking — but Rule 13(c) says that if there is any
+ * doubt, assume you are overtaking and act accordingly, so the boundary is
+ * reported as doubt rather than as a clean answer.
+ */
+function overtakingSector(bearing) {
+  const b = norm360(bearing);
+  const onBoundary = b === OVERTAKING_LIMIT || b === 360 - OVERTAKING_LIMIT;
+  return {
+    inSector: b > OVERTAKING_LIMIT && b < 360 - OVERTAKING_LIMIT,
+    onBoundary,
+    // 13(c): doubt resolves towards overtaking, never away from it.
+    treatAsOvertaking: onBoundary || (b > OVERTAKING_LIMIT && b < 360 - OVERTAKING_LIMIT)
+  };
+}
+
+/** Nearly reciprocal, for Rule 14. A modelling tolerance, never an output. */
+const HEAD_ON_ARC = 6;
+
+const nearlyAhead = bearing => {
+  const b = norm360(bearing);
+  return b <= HEAD_ON_ARC || b >= 360 - HEAD_ON_ARC;
+};
+
+const onOwnStarboard = bearing => {
+  const b = norm360(bearing);
+  return b > 0 && b < 180;
+};
+
+// --- the outcome shape ----------------------------------------------------
+
+const outcome = o => ({
+  situation: 'none',
+  role: null,
+  obligations: [],
+  rules: [],
+  notApplicable: null,
+  standOnStage: null,
+  doubt: false,
+  inland: null,          // the Inland fork is a field, not a migration
+  ...o
+});
+
+// --- Rule 17, the three states --------------------------------------------
+
+const STAND_ON_STAGES = ['course-and-speed', 'may-act', 'must-act'];
+
+/**
+ * Rule 17 is three states, not one, and the transition between them is the
+ * thing an examiner actually tests. A candidate who only knows "stand on"
+ * does not know Rule 17.
+ */
+function standOnObligations(stage, ownCategory, targetOnPortSide) {
+  switch (stage) {
+    case 'may-act':
+      return {
+        rules: ['Rule 17(a)(ii)'],
+        obligations: [
+          'You may take action to avoid collision by your manoeuvre alone, as soon as it '
+          + 'becomes apparent to you that the give-way vessel is not taking appropriate action.',
+          ...(ownCategory === 'power-driven' && targetOnPortSide
+            ? ['If the circumstances of the case admit, do not alter course to port: '
+               + 'she is on your own port side. (Rule 17(c))']
+            : [])
+        ]
+      };
+    case 'must-act':
+      return {
+        rules: ['Rule 17(b)'],
+        obligations: [
+          'You shall take such action as will best aid to avoid collision. You are now so '
+          + 'close that collision cannot be avoided by the give-way vessel\'s action alone.'
+        ]
+      };
+    default:
+      return {
+        rules: ['Rule 17(a)(i)'],
+        obligations: ['Keep your course and speed.']
+      };
+  }
+}
+
+// --- the engine -----------------------------------------------------------
+
+/**
+ * Resolve a situation.
+ *
+ * `own` and `target` are { category, tack, windward } — tack and windward only
+ * meaning anything for sailing vessels.
+ *
+ * `targetBearing` is the relative bearing of the target from own's head;
+ * `ownBearingFromTarget` is the relative bearing of own from the target's head.
+ * Both are needed because overtaking is defined by the second, not the first.
+ */
+function resolveManoeuvre({
+  own, target, targetBearing, ownBearingFromTarget,
+  inSight = true, standOnStage = 'course-and-speed'
+} = {}) {
+  // --- Rule 11 ------------------------------------------------------------
+  if (!inSight) {
+    return outcome({
+      notApplicable: {
+        rule: 'Rule 11',
+        reason: 'These rules apply only to vessels in sight of one another. '
+              + 'In or near an area of restricted visibility, Rule 19 governs, and it '
+              + 'gives neither vessel the right to stand on.'
+      },
+      rules: ['Rule 11', 'Rule 19']
+    });
+  }
+
+  const ownCat = own && own.category;
+  const targetCat = target && target.category;
+
+  // --- Rule 13, and it comes first ---------------------------------------
+  //
+  // "Notwithstanding anything contained in the Rules of Part B, Sections I and
+  // II" — so before Rule 18, before 14, before 15. A power-driven vessel
+  // overtaking a vessel not under command still keeps out of the way.
+  const weAreOvertaking = overtakingSector(ownBearingFromTarget);
+  const theyAreOvertaking = overtakingSector(targetBearing);
+
+  if (weAreOvertaking.treatAsOvertaking) {
+    return outcome({
+      situation: 'overtaking',
+      role: 'give-way',
+      doubt: weAreOvertaking.onBoundary,
+      rules: ['Rule 13', ...(weAreOvertaking.onBoundary ? ['Rule 13(c)'] : []), 'Rule 16'],
+      obligations: [
+        'You are the overtaking vessel. Keep out of the way of the vessel being overtaken.',
+        'Take early and substantial action to keep well clear. (Rule 16)',
+        'You remain the overtaking vessel until finally past and clear. Any subsequent '
+        + 'alteration of the bearing between you does not make you a crossing vessel or '
+        + 'relieve you of this duty.',
+        ...(weAreOvertaking.onBoundary
+          ? ['You are on the boundary of the overtaking sector. Where there is any doubt, '
+             + 'assume that you are overtaking and act accordingly. (Rule 13(c))']
+          : [])
+      ]
+    });
+  }
+
+  if (theyAreOvertaking.treatAsOvertaking) {
+    const so = standOnObligations(standOnStage, ownCat, false);
+    return outcome({
+      situation: 'overtaking',
+      role: 'stand-on',
+      standOnStage,
+      doubt: theyAreOvertaking.onBoundary,
+      rules: ['Rule 13', ...so.rules],
+      obligations: [
+        'She is overtaking you. You are the stand-on vessel.',
+        ...so.obligations,
+        'She remains bound to keep clear until finally past and clear of you.'
+      ]
+    });
+  }
+
+  // --- Rule 18(f): WIG craft ---------------------------------------------
+  if (ownCat === 'wig' || targetCat === 'wig') {
+    const weAreWig = ownCat === 'wig';
+    return outcome({
+      situation: 'crossing',
+      role: weAreWig ? 'give-way' : 'stand-on',
+      standOnStage: weAreWig ? null : standOnStage,
+      rules: ['Rule 18(f)'],
+      obligations: weAreWig
+        ? ['When taking off, landing or in flight near the surface, keep well clear of all '
+           + 'other vessels and avoid impeding their navigation.',
+           'When operating on the water surface, comply with the rules for a power-driven vessel.']
+        : ['A WIG craft taking off, landing or in flight near the surface keeps well clear of you.']
+    });
+  }
+
+  // --- Rule 18(e): seaplanes ---------------------------------------------
+  if (ownCat === 'seaplane' || targetCat === 'seaplane') {
+    const weAreSeaplane = ownCat === 'seaplane';
+    return outcome({
+      situation: 'crossing',
+      role: weAreSeaplane ? 'give-way' : 'stand-on',
+      rules: ['Rule 18(e)'],
+      obligations: weAreSeaplane
+        ? ['Keep well clear of all vessels and avoid impeding their navigation.']
+        : ['A seaplane on the water keeps well clear of you.']
+    });
+  }
+
+  // --- Rule 18(d): constrained by draught --------------------------------
+  //
+  // "Avoid impeding" is a different and lesser obligation than "keep out of the
+  // way". A vessel constrained by her draught is not a stand-on vessel and the
+  // ordinary rules still run between her and another vessel.
+  if (targetCat === 'cbd' || ownCat === 'cbd') {
+    const theyAreCbd = targetCat === 'cbd';
+    return outcome({
+      situation: 'crossing',
+      role: theyAreCbd ? 'give-way' : 'stand-on',
+      rules: ['Rule 18(d)'],
+      obligations: theyAreCbd
+        ? ['Avoid impeding the safe passage of a vessel constrained by her draught, '
+           + 'navigating with caution and having full regard to her condition.',
+           'Avoiding impeding is not the same obligation as keeping out of the way. '
+           + 'It does not make her a stand-on vessel, and the ordinary steering rules '
+           + 'still run between you.']
+        : ['Other vessels are to avoid impeding your safe passage.',
+           'This does not relieve you of your own obligations under these rules, and it '
+           + 'is not the same as their being required to keep out of your way.']
+    });
+  }
+
+  // --- Rule 18 hierarchy --------------------------------------------------
+  const ownRank = rankOf(ownCat);
+  const targetRank = rankOf(targetCat);
+
+  if (ownRank !== null && targetRank !== null && ownRank !== targetRank) {
+    const weGiveWay = ownRank < targetRank;
+    const so = weGiveWay ? null : standOnObligations(standOnStage, ownCat, onOwnStarboard(targetBearing) === false);
+    return outcome({
+      situation: 'crossing',
+      role: weGiveWay ? 'give-way' : 'stand-on',
+      standOnStage: weGiveWay ? null : standOnStage,
+      rules: ['Rule 18', ...(weGiveWay ? ['Rule 16'] : so.rules)],
+      obligations: weGiveWay
+        ? [`As a ${CATEGORY_NAMES[ownCat]} you keep out of the way of a ${CATEGORY_NAMES[targetCat]}.`,
+           'Take early and substantial action to keep well clear. (Rule 16)']
+        : [`A ${CATEGORY_NAMES[targetCat]} keeps out of your way.`, ...so.obligations]
+    });
+  }
+
+  // --- Rule 12: two sailing vessels ---------------------------------------
+  if (ownCat === 'sailing' && targetCat === 'sailing') {
+    return sailingOutcome(own, target, standOnStage);
+  }
+
+  // --- Rules 14 and 15: two power-driven vessels --------------------------
+  if (ownCat === 'power-driven' && targetCat === 'power-driven') {
+    if (nearlyAhead(targetBearing) && nearlyAhead(ownBearingFromTarget)) {
+      return outcome({
+        situation: 'head-on',
+        role: 'both-give-way',
+        rules: ['Rule 14', 'Rule 14(c)'],
+        obligations: [
+          'You are meeting on reciprocal or nearly reciprocal courses so as to involve risk '
+          + 'of collision. Each of you shall alter course to starboard so that you pass on '
+          + 'the port side of the other.',
+          'Where there is any doubt whether this is a head-on situation, assume that it '
+          + 'exists and act accordingly. (Rule 14(c))'
+        ]
+      });
+    }
+
+    if (onOwnStarboard(targetBearing)) {
+      return outcome({
+        situation: 'crossing',
+        role: 'give-way',
+        rules: ['Rule 15', 'Rule 16'],
+        obligations: [
+          'She is on your own starboard side. You keep out of the way.',
+          'If the circumstances of the case admit, avoid crossing ahead of her.',
+          'Take early and substantial action to keep well clear. (Rule 16)'
+        ]
+      });
+    }
+
+    const so = standOnObligations(standOnStage, ownCat, true);
+    return outcome({
+      situation: 'crossing',
+      role: 'stand-on',
+      standOnStage,
+      rules: ['Rule 15', ...so.rules],
+      obligations: ['She is on your own port side. She keeps out of your way.', ...so.obligations]
+    });
+  }
+
+  // --- nothing in Rules 11 to 18 resolves this ----------------------------
+  return outcome({
+    notApplicable: {
+      rule: 'Rules 11 to 18',
+      reason: 'No steering and sailing rule assigns a give-way and a stand-on vessel here. '
+            + 'Rule 5 lookout, Rule 7 risk of collision and Rule 8 action to avoid collision '
+            + 'still apply, as does Rule 2.'
+    },
+    rules: ['Rule 2', 'Rule 5', 'Rule 7', 'Rule 8']
+  });
+}
+
+/**
+ * Rule 12.
+ *
+ * Windward is defined as the side opposite that on which the mainsail is
+ * carried, which is why tack is an input rather than something derivable from
+ * a bearing.
+ */
+function sailingOutcome(own, target, standOnStage) {
+  const ownTack = own.tack;
+  const targetTack = target.tack;
+
+  // Rule 12(a)(iii): a port-tack vessel that sees a vessel to windward and
+  // cannot determine her tack keeps out of the way. Doubt resolves against her.
+  if (ownTack === 'port' && !targetTack && own.targetToWindward) {
+    return outcome({
+      situation: 'crossing',
+      role: 'give-way',
+      doubt: true,
+      rules: ['Rule 12(a)(iii)'],
+      obligations: [
+        'You have the wind on your port side and cannot determine the tack of a vessel to '
+        + 'windward. Keep out of her way.'
+      ]
+    });
+  }
+
+  if (ownTack && targetTack && ownTack !== targetTack) {
+    const weGiveWay = ownTack === 'port';
+    const so = weGiveWay ? null : standOnObligations(standOnStage, 'sailing', false);
+    return outcome({
+      situation: 'crossing',
+      role: weGiveWay ? 'give-way' : 'stand-on',
+      standOnStage: weGiveWay ? null : standOnStage,
+      rules: ['Rule 12(a)(i)', ...(weGiveWay ? ['Rule 16'] : so.rules)],
+      obligations: weGiveWay
+        ? ['You have the wind on your port side and she has it on her starboard side. '
+           + 'Keep out of her way.',
+           'Take early and substantial action to keep well clear. (Rule 16)']
+        : ['She has the wind on her port side and you have it on your starboard side. '
+           + 'She keeps out of your way.', ...so.obligations]
+    });
+  }
+
+  if (ownTack && targetTack && ownTack === targetTack) {
+    const weAreWindward = !!own.windward;
+    const so = weAreWindward ? null : standOnObligations(standOnStage, 'sailing', false);
+    return outcome({
+      situation: 'crossing',
+      role: weAreWindward ? 'give-way' : 'stand-on',
+      standOnStage: weAreWindward ? null : standOnStage,
+      rules: ['Rule 12(a)(ii)', ...(weAreWindward ? ['Rule 16'] : so.rules)],
+      obligations: weAreWindward
+        ? ['You have the wind on the same side as she does and you are to windward. '
+           + 'Keep out of her way.',
+           'The windward side is the side opposite that on which the mainsail is carried.',
+           'Take early and substantial action to keep well clear. (Rule 16)']
+        : ['You have the wind on the same side as she does and you are to leeward. '
+           + 'She keeps out of your way.', ...so.obligations]
+    });
+  }
+
+  return outcome({
+    notApplicable: {
+      rule: 'Rule 12',
+      reason: 'Rule 12 turns on which tack each vessel is on, and that is not established here.'
+    },
+    rules: ['Rule 12']
+  });
+}
+
+
+/* ===== data/manoeuvre-scenarios.js ===== */
+/**
+ * Worked situations under Rules 11 to 18. Drill content and test fixtures at
+ * once, deliberately: a scenario that stops matching the engine is either a
+ * broken scenario or a broken engine, and either way somebody should know.
+ *
+ * Bearings are relative and in degrees: 0 dead ahead, 90 the starboard beam,
+ * 180 astern, 270 the port beam. `targetBearing` is where she bears from you,
+ * `ownBearingFromTarget` is where you bear from her. Both are needed, because
+ * overtaking is defined by the second and not the first.
+ *
+ * `expect` states the outcome in the terms the engine returns. It never states
+ * an alteration, for the same reason the engine does not.
+ */
+
+const MANOEUVRE_SCENARIOS = [
+  // --- Rule 11: the gate --------------------------------------------------
+  {
+    id: 'fog-no-standon',
+    title: 'A contact in fog',
+    category: 'Rule 11',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 40, ownBearingFromTarget: 320, inSight: false,
+    expect: { situation: 'none', role: null, notApplicable: 'Rule 11' },
+    explanation: 'You have her on radar but you cannot see her. Rules 11 to 18 apply only to '
+      + 'vessels in sight of one another, so none of them governs here. Rule 19 does, and it '
+      + 'gives neither of you the right to stand on. There is no stand-on vessel in fog.'
+  },
+
+  // --- Rule 13: overtaking, and its precedence ----------------------------
+  {
+    id: 'overtaking-plain',
+    title: 'Coming up on her from astern',
+    category: 'Rule 13',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 5, ownBearingFromTarget: 180, inSight: true,
+    expect: { situation: 'overtaking', role: 'give-way', rules: ['Rule 13'] },
+    explanation: 'You are coming up on her from right astern. At night you would see her '
+      + 'sternlight and neither sidelight. You keep out of the way until finally past and clear.'
+  },
+  {
+    id: 'overtaking-boundary',
+    title: 'On the boundary of the overtaking sector',
+    category: 'Rule 13',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 20, ownBearingFromTarget: 112.5, inSight: true,
+    expect: { situation: 'overtaking', role: 'give-way', doubt: true, rules: ['Rule 13(c)'] },
+    explanation: 'You are exactly 22.5 degrees abaft her beam, on the line where her sidelight '
+      + 'would just come into view. Rule 13(c) settles it: where there is any doubt whether you '
+      + 'are overtaking, assume that you are and act accordingly.'
+  },
+  {
+    id: 'overtaking-beats-nuc',
+    title: 'Overtaking a vessel not under command',
+    category: 'Rule 13',
+    own: { category: 'power-driven' }, target: { category: 'nuc' },
+    targetBearing: 8, ownBearingFromTarget: 175, inSight: true,
+    expect: { situation: 'overtaking', role: 'give-way', rules: ['Rule 13'] },
+    explanation: 'Rule 18 would have you keep out of her way in any case, so this looks easy. '
+      + 'The point is the reverse case: Rule 13 applies notwithstanding anything in Sections I '
+      + 'and II, so it decides overtaking regardless of what either vessel is.'
+  },
+  {
+    id: 'overtaking-nuc-overtakes',
+    title: 'A vessel not under command overtaking you',
+    category: 'Rule 13',
+    own: { category: 'nuc' }, target: { category: 'power-driven' },
+    targetBearing: 178, ownBearingFromTarget: 6, inSight: true,
+    expect: { situation: 'overtaking', role: 'stand-on', rules: ['Rule 13'] },
+    explanation: 'This is the case that catches people. She is not under command, so Rule 18 '
+      + 'would have you keep clear of her — but she is overtaking you, and Rule 13 overrides '
+      + 'Rule 18. She keeps out of your way until finally past and clear.'
+  },
+  {
+    id: 'overtaking-stays-overtaking',
+    title: 'The bearing opens while overtaking',
+    category: 'Rule 13',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 30, ownBearingFromTarget: 150, inSight: true,
+    expect: { situation: 'overtaking', role: 'give-way', rules: ['Rule 13'] },
+    explanation: 'You began well abaft her beam and the bearing has drawn out as you came up. '
+      + 'It changes nothing. No subsequent alteration of the bearing between you makes you a '
+      + 'crossing vessel or relieves you of the duty to keep clear until finally past and clear.'
+  },
+
+  // --- Rule 14: head-on ---------------------------------------------------
+  {
+    id: 'head-on',
+    title: 'Meeting end on',
+    category: 'Rule 14',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 0, ownBearingFromTarget: 0, inSight: true,
+    expect: { situation: 'head-on', role: 'both-give-way', rules: ['Rule 14'] },
+    explanation: 'Two power-driven vessels meeting on reciprocal courses. Neither stands on. '
+      + 'Each alters course to starboard so that each passes on the port side of the other.'
+  },
+  {
+    id: 'head-on-doubt',
+    title: 'Nearly end on, and you are not sure',
+    category: 'Rule 14',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 4, ownBearingFromTarget: 356, inSight: true,
+    expect: { situation: 'head-on', role: 'both-give-way', rules: ['Rule 14(c)'] },
+    explanation: 'She is nearly ahead and you cannot tell whether this is truly head-on or a '
+      + 'fine crossing. Rule 14(c) removes the choice: where there is any doubt, assume a '
+      + 'head-on situation exists and act accordingly.'
+  },
+
+  // --- Rule 15: crossing --------------------------------------------------
+  {
+    id: 'crossing-give-way',
+    title: 'She is on your starboard bow',
+    category: 'Rule 15',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 50, ownBearingFromTarget: 300, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 15'] },
+    explanation: 'Two power-driven vessels crossing. She is on your own starboard side, so you '
+      + 'keep out of the way, and if the circumstances admit you avoid crossing ahead of her.'
+  },
+  {
+    id: 'crossing-stand-on',
+    title: 'She is on your port bow',
+    category: 'Rule 15',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 310, ownBearingFromTarget: 55, inSight: true,
+    standOnStage: 'course-and-speed',
+    expect: { situation: 'crossing', role: 'stand-on', rules: ['Rule 17(a)(i)'] },
+    explanation: 'You are on her starboard side, so she keeps out of your way. You keep your '
+      + 'course and speed — which is an obligation, not a permission.'
+  },
+  {
+    id: 'crossing-may-act',
+    title: 'She is not giving way',
+    category: 'Rule 17',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 310, ownBearingFromTarget: 55, inSight: true,
+    standOnStage: 'may-act',
+    expect: { situation: 'crossing', role: 'stand-on', rules: ['Rule 17(a)(ii)'] },
+    explanation: 'The range is closing and she has done nothing. You may now take action by '
+      + 'your manoeuvre alone. Note Rule 17(c): she is on your port side, so if the '
+      + 'circumstances admit you do not alter to port.'
+  },
+  {
+    id: 'crossing-must-act',
+    title: 'Too close for her action alone',
+    category: 'Rule 17',
+    own: { category: 'power-driven' }, target: { category: 'power-driven' },
+    targetBearing: 310, ownBearingFromTarget: 55, inSight: true,
+    standOnStage: 'must-act',
+    expect: { situation: 'crossing', role: 'stand-on', rules: ['Rule 17(b)'] },
+    explanation: 'You are now so close that collision cannot be avoided by her action alone. '
+      + 'The obligation has changed from may to shall: take such action as will best aid to '
+      + 'avoid collision.'
+  },
+
+  // --- Rule 18: the hierarchy ---------------------------------------------
+  {
+    id: 'power-gives-way-sail',
+    title: 'Power-driven meeting a sailing vessel',
+    category: 'Rule 18',
+    own: { category: 'power-driven' }, target: { category: 'sailing', tack: 'starboard' },
+    targetBearing: 300, ownBearingFromTarget: 60, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 18'] },
+    explanation: 'She is on your port side, which under Rule 15 would make you the stand-on '
+      + 'vessel — but Rule 15 is for two power-driven vessels. She is under sail, so Rule 18 '
+      + 'governs and you keep out of her way.'
+  },
+  {
+    id: 'sail-gives-way-fishing',
+    title: 'Sailing vessel meeting a vessel fishing',
+    category: 'Rule 18',
+    own: { category: 'sailing', tack: 'starboard' }, target: { category: 'fishing' },
+    targetBearing: 40, ownBearingFromTarget: 310, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 18'] },
+    explanation: 'Being under sail does not put you at the top of the list. A sailing vessel '
+      + 'keeps out of the way of a vessel engaged in fishing.'
+  },
+  {
+    id: 'fishing-gives-way-ram',
+    title: 'Fishing vessel meeting a vessel restricted in her ability to manoeuvre',
+    category: 'Rule 18',
+    own: { category: 'fishing' }, target: { category: 'ram' },
+    targetBearing: 60, ownBearingFromTarget: 290, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 18'] },
+    explanation: 'The hierarchy continues: a vessel engaged in fishing keeps out of the way of '
+      + 'a vessel restricted in her ability to manoeuvre, and of one not under command.'
+  },
+  {
+    id: 'ram-stands-on',
+    title: 'Restricted in ability to manoeuvre, with power-driven crossing',
+    category: 'Rule 18',
+    own: { category: 'ram' }, target: { category: 'power-driven' },
+    targetBearing: 70, ownBearingFromTarget: 290, inSight: true,
+    standOnStage: 'course-and-speed',
+    expect: { situation: 'crossing', role: 'stand-on', rules: ['Rule 18'] },
+    explanation: 'She is on your starboard side, which under Rule 15 would make you give way. '
+      + 'Rule 15 does not apply: you are restricted in your ability to manoeuvre, so she keeps '
+      + 'out of your way.'
+  },
+  {
+    id: 'cbd-avoid-impeding',
+    title: 'Meeting a vessel constrained by her draught',
+    category: 'Rule 18(d)',
+    own: { category: 'power-driven' }, target: { category: 'cbd' },
+    targetBearing: 300, ownBearingFromTarget: 60, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 18(d)'] },
+    explanation: 'You avoid impeding her safe passage, navigating with caution and having full '
+      + 'regard to her condition. That is a lesser and different obligation from keeping out of '
+      + 'the way: it does not make her a stand-on vessel, and the ordinary rules still run '
+      + 'between you.'
+  },
+  {
+    id: 'wig-keeps-clear',
+    title: 'A WIG craft in flight near the surface',
+    category: 'Rule 18(f)',
+    own: { category: 'wig' }, target: { category: 'power-driven' },
+    targetBearing: 45, ownBearingFromTarget: 315, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 18(f)'] },
+    explanation: 'When taking off, landing or in flight near the surface a WIG craft keeps well '
+      + 'clear of all other vessels. On the water surface she is simply a power-driven vessel.'
+  },
+
+  // --- Rule 12: sailing vessels -------------------------------------------
+  {
+    id: 'sail-different-tacks',
+    title: 'Two sailing vessels on different tacks',
+    category: 'Rule 12',
+    own: { category: 'sailing', tack: 'port' }, target: { category: 'sailing', tack: 'starboard' },
+    targetBearing: 50, ownBearingFromTarget: 300, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 12(a)(i)'] },
+    explanation: 'You have the wind on your port side and she has it on her starboard side. '
+      + 'You keep out of her way.'
+  },
+  {
+    id: 'sail-same-tack-windward',
+    title: 'Same tack, and you are to windward',
+    category: 'Rule 12',
+    own: { category: 'sailing', tack: 'starboard', windward: true },
+    target: { category: 'sailing', tack: 'starboard' },
+    targetBearing: 40, ownBearingFromTarget: 320, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', rules: ['Rule 12(a)(ii)'] },
+    explanation: 'Both have the wind on the same side, so tack does not separate you. The '
+      + 'windward vessel keeps out of the way, and the windward side is the side opposite that '
+      + 'on which the mainsail is carried.'
+  },
+  {
+    id: 'sail-same-tack-leeward',
+    title: 'Same tack, and you are to leeward',
+    category: 'Rule 12',
+    own: { category: 'sailing', tack: 'port', windward: false },
+    target: { category: 'sailing', tack: 'port' },
+    targetBearing: 320, ownBearingFromTarget: 40, inSight: true,
+    standOnStage: 'course-and-speed',
+    expect: { situation: 'crossing', role: 'stand-on', rules: ['Rule 12(a)(ii)'] },
+    explanation: 'Same tack again, and you are the leeward vessel. She keeps out of your way, '
+      + 'and Rule 17 governs what you do while she does it.'
+  },
+  {
+    id: 'sail-doubt-to-windward',
+    title: 'Port tack, a vessel to windward, her tack unknown',
+    category: 'Rule 12',
+    own: { category: 'sailing', tack: 'port', targetToWindward: true },
+    target: { category: 'sailing' },
+    targetBearing: 55, ownBearingFromTarget: 305, inSight: true,
+    expect: { situation: 'crossing', role: 'give-way', doubt: true, rules: ['Rule 12(a)(iii)'] },
+    explanation: 'You have the wind on your port side and you cannot make out whether she is on '
+      + 'port or starboard. Doubt resolves against you: keep out of her way.'
+  }
+];
+
+const SCENARIO_CATEGORIES = [...new Set(MANOEUVRE_SCENARIOS.map(s => s.category))];
+
+
 /* ===== src/engine.js ===== */
 /**
  * Engine: arc visibility, aspect projection, question generation.
@@ -4872,6 +5636,89 @@ function stripKey() {
     <text x="181" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">stroke</text>
     <rect x="225" y="2" width="26" height="10" fill="#10222C" opacity=".3"/>
     <text x="256" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">bell/gong</text>
+  </svg>`;
+}
+
+
+/* ===== src/render-manoeuvre.js ===== */
+/**
+ * A situation, drawn in plan.
+ *
+ * Own vessel at the centre heading up the page, the other on her bearing. The
+ * overtaking sector is marked because it is the one boundary in Rules 11 to 18
+ * that is a number, and seeing where it falls is most of understanding Rule 13.
+ *
+ * Generated, like everything else here. No arrows saying which way to turn: the
+ * engine does not produce an alteration and neither does the picture.
+ */
+
+
+
+const MV_INK = '#10222C';
+const MV_SOFT = '#4A626E';
+const MV_MARK = '#C3006B';
+
+const R = 92;
+const polarAt = (r, deg) => {
+  const a = (deg * Math.PI) / 180;
+  return [r * Math.sin(a), -r * Math.cos(a)];
+};
+
+const arc = (r, from, to) => {
+  const [x1, y1] = polarAt(r, from);
+  const [x2, y2] = polarAt(r, to);
+  const large = ((to - from + 360) % 360) > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+};
+
+/** A simple plan silhouette, pointing whichever way she heads. */
+const hullAt = (x, y, heading, fill) =>
+  `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${heading.toFixed(1)})">
+     <path d="M 0 -13 L 6 -3 L 6 11 L -6 11 L -6 -3 Z" fill="${fill}"/>
+   </g>`;
+
+/**
+ * `anonymous` keeps the categories and the outcome out of the label, so a drill
+ * can show the geometry without a screen reader reading out the answer.
+ */
+function renderManoeuvre(scenario, { width = 260, anonymous = false } = {}) {
+  const { targetBearing, ownBearingFromTarget } = scenario;
+  const [tx, ty] = polarAt(R * 0.62, targetBearing);
+
+  // Her heading, in our frame: she bears `targetBearing` from us and we bear
+  // `ownBearingFromTarget` from her, so she is turned by the difference.
+  const targetHeading = (targetBearing - ownBearingFromTarget + 180 + 360) % 360;
+
+  const label = anonymous
+    ? 'A plan view of two vessels, own vessel at the centre'
+    : `${CATEGORY_NAMES[scenario.own.category] || 'own vessel'} at the centre, `
+      + `${CATEGORY_NAMES[scenario.target.category] || 'the other vessel'} bearing `
+      + `${Math.round(targetBearing)} relative`;
+
+  return `<svg viewBox="-120 -120 240 240" width="${width}" height="${width}"
+    xmlns="http://www.w3.org/2000/svg" class="mvplan" role="img" aria-label="${label}">
+    <circle cx="0" cy="0" r="${R}" fill="none" stroke="${MV_INK}" stroke-width="1" opacity=".25"/>
+
+    <!-- the overtaking sector: abaft the beam on both sides -->
+    <path d="${arc(R, OVERTAKING_LIMIT, 360 - OVERTAKING_LIMIT)}" fill="none"
+      stroke="${MV_MARK}" stroke-width="7" opacity=".30"/>
+    <text x="0" y="${R + 18}" text-anchor="middle" font-family="ui-monospace,monospace"
+      font-size="8.5" fill="${MV_SOFT}">overtaking sector</text>
+
+    ${[0, 90, 180, 270].map(d => {
+      const [x1, y1] = polarAt(R, d), [x2, y2] = polarAt(R + 7, d);
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+        stroke="${MV_INK}" stroke-width="1" opacity=".45"/>`;
+    }).join('')}
+
+    <line x1="0" y1="0" x2="${tx.toFixed(1)}" y2="${ty.toFixed(1)}"
+      stroke="${MV_MARK}" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>
+
+    ${hullAt(0, 0, 0, MV_INK)}
+    ${hullAt(tx, ty, targetHeading, MV_MARK)}
+
+    <text x="0" y="${-R - 12}" text-anchor="middle" font-family="ui-monospace,monospace"
+      font-size="9" fill="${MV_SOFT}">ahead</text>
   </svg>`;
 }
 
@@ -6125,6 +6972,167 @@ const flagSpace = () => ({
 });
 
 
+/* ===== src/manoeuvre-questions.js ===== */
+/**
+ * Drill questions on the steering and sailing rules.
+ *
+ * Every answer comes from the engine rather than from the scenario file, so a
+ * question can never assert something the engine would not. The scenarios
+ * supply the situations and the explanations; the engine supplies the truth.
+ *
+ * No option anywhere offers an alteration. The four types ask who gives way,
+ * what the obligation is, which category yields to which, and which Rule 17
+ * state applies — because those are the things the rules actually decide.
+ */
+
+
+
+
+const MANOEUVRE_QUESTION_TYPES = [
+  'manoeuvre-role', 'manoeuvre-obligation', 'manoeuvre-hierarchy', 'manoeuvre-standon-stage'
+];
+
+const mvPick = a => a[Math.floor(Math.random() * a.length)];
+const mvShuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+
+const solve = s => resolveManoeuvre({
+  own: s.own, target: s.target,
+  targetBearing: s.targetBearing, ownBearingFromTarget: s.ownBearingFromTarget,
+  inSight: s.inSight, standOnStage: s.standOnStage || 'course-and-speed'
+});
+
+const ROLE_TEXT = {
+  'give-way': 'You are the give-way vessel.',
+  'stand-on': 'You are the stand-on vessel.',
+  'both-give-way': 'Neither stands on. Both of you give way.',
+  none: 'Neither. No steering and sailing rule assigns a role here.'
+};
+
+const STAGE_TEXT = {
+  'course-and-speed': 'Keep your course and speed. (Rule 17(a)(i))',
+  'may-act': 'You may take action by your manoeuvre alone. (Rule 17(a)(ii))',
+  'must-act': 'You shall take such action as will best aid to avoid collision. (Rule 17(b))'
+};
+
+/** Category pairs that Rule 18 actually resolves. */
+const HIERARCHY_PAIRS = (() => {
+  const ranked = ['power-driven', 'sailing', 'fishing', 'ram', 'nuc'];
+  const pairs = [];
+  for (const a of ranked) {
+    for (const b of ranked) {
+      if (a !== b && rankOf(a) !== rankOf(b)) pairs.push([a, b]);
+    }
+  }
+  return pairs;
+})();
+
+const manoeuvreUniverse = () => [
+  ...MANOEUVRE_SCENARIOS.flatMap(s => [
+    { stateId: s.id, aspect: 'plain', questionType: 'manoeuvre-role' },
+    { stateId: s.id, aspect: 'plain', questionType: 'manoeuvre-obligation' }
+  ]),
+  ...HIERARCHY_PAIRS.map(([a, b]) => ({
+    stateId: `${a}-v-${b}`, aspect: 'plain', questionType: 'manoeuvre-hierarchy'
+  })),
+  ...MANOEUVRE_SCENARIOS
+    .filter(s => solve(s).role === 'stand-on')
+    .flatMap(s => STAND_ON_STAGES.map(stage => ({
+      stateId: s.id, aspect: stage, questionType: 'manoeuvre-standon-stage'
+    })))
+];
+
+function manoeuvreQuestionFor({ stateId, aspect, questionType }) {
+  if (questionType === 'manoeuvre-hierarchy') {
+    const [a, b] = stateId.split('-v-');
+    if (!CATEGORY_NAMES[a] || !CATEGORY_NAMES[b]) return null;
+    const giver = rankOf(a) < rankOf(b) ? a : b;
+    const options = [
+      { id: 'a', text: `The ${CATEGORY_NAMES[a]} keeps out of the way.` },
+      { id: 'b', text: `The ${CATEGORY_NAMES[b]} keeps out of the way.` },
+      { id: 'both', text: 'Both give way; neither stands on.' },
+      { id: 'neither', text: 'Rule 18 does not decide between them.' }
+    ];
+    return {
+      type: 'manoeuvre-hierarchy',
+      scenario: null, showPlan: false,
+      prompt: `A ${CATEGORY_NAMES[a]} and a ${CATEGORY_NAMES[b]} are in sight of one another `
+            + 'and neither is overtaking. Which keeps out of the way?',
+      options: mvShuffle(options),
+      answerId: giver === a ? 'a' : 'b',
+      explain: `Rule 18. A ${CATEGORY_NAMES[giver]} keeps out of the way of a `
+             + `${CATEGORY_NAMES[giver === a ? b : a]}. Rule 18 is a hierarchy between vessels, `
+             + 'not a right belonging to either of them.'
+    };
+  }
+
+  const scenario = MANOEUVRE_SCENARIOS.find(s => s.id === stateId);
+  if (!scenario) return null;
+
+  if (questionType === 'manoeuvre-standon-stage') {
+    const stage = STAND_ON_STAGES.includes(aspect) ? aspect : 'course-and-speed';
+    const cue = {
+      'course-and-speed': 'She is giving way and the range is opening as it should.',
+      'may-act': 'The range is closing and it has become apparent that she is not taking '
+               + 'appropriate action.',
+      'must-act': 'You are now so close that collision cannot be avoided by her action alone.'
+    }[stage];
+    return {
+      type: 'manoeuvre-standon-stage',
+      scenario, stage, showPlan: true,
+      prompt: `You are the stand-on vessel. ${cue} What does Rule 17 require of you now?`,
+      options: mvShuffle([
+        ...STAND_ON_STAGES.map(st => ({ id: st, text: STAGE_TEXT[st] })),
+        { id: 'giveway', text: 'You become the give-way vessel and must keep out of her way.' }
+      ]),
+      answerId: stage,
+      explain: `${STAGE_TEXT[stage]} Rule 17 is three states, and the transition between them `
+             + 'is what the rule is really about. You never become the give-way vessel: the '
+             + 'obligation changes, the roles do not.'
+    };
+  }
+
+  const solved = solve(scenario);
+
+  if (questionType === 'manoeuvre-obligation') {
+    const right = solved.notApplicable
+      ? solved.notApplicable.reason
+      : solved.obligations[0];
+    const others = MANOEUVRE_SCENARIOS
+      .filter(s => s.id !== scenario.id)
+      .map(s => solve(s))
+      .map(o => (o.notApplicable ? o.notApplicable.reason : o.obligations[0]))
+      .filter(t => t && t !== right);
+    return {
+      type: 'manoeuvre-obligation',
+      scenario, showPlan: true,
+      prompt: 'What does this require of you?',
+      options: mvShuffle([right, ...[...new Set(others)].slice(0, 3)].map((t, i) => ({
+        id: i === 0 ? 'right' : `w${i}`, text: t
+      })).map((o, i, all) => all[i])),
+      answerId: 'right',
+      explain: `${solved.rules.join(', ')}. ${scenario.explanation}`
+    };
+  }
+
+  const roleKey = solved.notApplicable ? 'none' : solved.role;
+  return {
+    type: 'manoeuvre-role',
+    scenario, showPlan: true,
+    prompt: 'In sight of one another. What are you here?',
+    options: mvShuffle(['give-way', 'stand-on', 'both-give-way', 'none']
+      .map(k => ({ id: k, text: ROLE_TEXT[k] }))),
+    answerId: roleKey || 'none',
+    explain: `${solved.rules.join(', ')}. ${scenario.explanation}`
+  };
+}
+
+const manoeuvreSpace = () => ({
+  scenarios: MANOEUVRE_SCENARIOS.length,
+  pairs: HIERARCHY_PAIRS.length,
+  cards: manoeuvreUniverse().length
+});
+
+
 /* ===== src/scheduler.js ===== */
 /**
  * Spaced repetition over the drill, scheduled by FSRS.
@@ -6300,6 +7308,10 @@ function reset() {
 
 
 /* ===== app ===== */
+
+
+
+
 
 
 
@@ -6983,12 +7995,78 @@ makeDrill({
 
 drawFlagList();
 
+// --- manoeuvres -------------------------------------------------------------
+
+const MV_UNIVERSE = manoeuvreUniverse();
+$('vTotal').textContent = MV_UNIVERSE.length;
+
+$('mvNote').innerHTML = `
+  <div class="rule">Rule 19 is not modelled here</div>
+  <p>Restricted visibility is a separate problem: it has no stand-on vessel at all, so folding
+  it into this engine would produce something that answers &ldquo;who stands on&rdquo; where
+  nobody does. Not in sight of one another, and none of these rules apply.</p>
+  <p class="mem">No answer here gives you a heading, a number of degrees or a speed. Rule 8
+  sets standards for action, not values.</p>`;
+
+function drawManoeuvreList() {
+  $('mvList').innerHTML = SCENARIO_CATEGORIES.map(cat => `
+    <div class="siggroup">
+      <h3>${cat}</h3>
+      <div class="mvcards">
+        ${MANOEUVRE_SCENARIOS.filter(s => s.category === cat).map(s => {
+          const o = resolveManoeuvre({ own: s.own, target: s.target,
+            targetBearing: s.targetBearing, ownBearingFromTarget: s.ownBearingFromTarget,
+            inSight: s.inSight, standOnStage: s.standOnStage || 'course-and-speed' });
+          const role = o.notApplicable ? 'not applicable' : (o.role || 'none');
+          return `<div class="mvcard">
+            ${renderManoeuvre(s, { width: 150 })}
+            <div class="body2">
+              <h4>${s.title}</h4>
+              <div class="who">you: ${CATEGORY_NAMES[s.own.category]}<br>
+                <span class="her">her: ${CATEGORY_NAMES[s.target.category]}</span></div>
+              <div class="mvrole ${o.role || ""}">${role}${o.doubt ? " · doubt" : ""}</div>
+              <div class="rules">${o.rules.join(" · ")}</div>
+              <ol>${(o.notApplicable ? [o.notApplicable.reason] : o.obligations)
+                .map(x => `<li>${x}</li>`).join("")}</ol>
+              <p class="why">${s.explanation}</p>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+}
+
+makeDrill({
+  universe: MV_UNIVERSE,
+  build: manoeuvreQuestionFor,
+  audible: () => null,                 // a situation is seen, not heard
+  // The plan is the question. Drawn anonymously: the label would otherwise name
+  // both vessels, which for manoeuvre-role is most of the answer.
+  show: q => {
+    $('vShown').innerHTML = q.showPlan && q.scenario
+      ? renderManoeuvre(q.scenario, { width: 230, anonymous: true })
+      : '';
+  },
+  clear: () => { $('vShown').innerHTML = ''; },
+  reveal: q => {
+    if (q.scenario) {
+      $('vShown').innerHTML = renderManoeuvre(q.scenario, { width: 230 });
+    }
+  },
+  prompt: 'vPrompt', verdict: 'vVerdict', next: 'vNext', easy: 'vEasy',
+  strip: 'vShown', opts: 'vOpts', hint: null, play: null, stopBtn: null,
+  seen: 'vSeen', due: 'vDue', streak: 'vStreak'
+});
+
+drawManoeuvreList();
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
 $('tab-sound').addEventListener('click', () => switchTab('sound'));
 $('tab-distress').addEventListener('click', () => switchTab('distress'));
 $('tab-morse').addEventListener('click', () => switchTab('morse'));
 $('tab-flags').addEventListener('click', () => switchTab('flags'));
+$('tab-manoeuvre').addEventListener('click', () => switchTab('manoeuvre'));
 function switchTab(t) {
   stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
@@ -6997,12 +8075,14 @@ function switchTab(t) {
   $('view-distress').classList.toggle('hidden', t !== 'distress');
   $('view-morse').classList.toggle('hidden', t !== 'morse');
   $('view-flags').classList.toggle('hidden', t !== 'flags');
+  $('view-manoeuvre').classList.toggle('hidden', t !== 'manoeuvre');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
   $('tab-sound').setAttribute('aria-selected', t === 'sound');
   $('tab-distress').setAttribute('aria-selected', t === 'distress');
   $('tab-morse').setAttribute('aria-selected', t === 'morse');
   $('tab-flags').setAttribute('aria-selected', t === 'flags');
+  $('tab-manoeuvre').setAttribute('aria-selected', t === 'manoeuvre');
 }
 
 draw(); sync();
