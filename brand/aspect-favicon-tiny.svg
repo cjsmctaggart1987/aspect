@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Aspect">
+  <title>Aspect</title>
+<path d="M 92.50 67.60 A 46 46 0 0 1 7.50 67.60 L 31.52 57.65 A 20 20 0 0 0 68.48 57.65 Z" fill="#FFFFFF" stroke="#0E1F28" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M 50.00 4.00 A 46 46 0 0 1 92.50 67.60 L 68.48 57.65 A 20 20 0 0 0 50.00 30.00 Z" fill="#00A862" stroke="#0E1F28" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M 7.50 67.60 A 46 46 0 0 1 50.00 4.00 L 50.00 30.00 A 20 20 0 0 0 31.52 57.65 Z" fill="#CE2019" stroke="#0E1F28" stroke-width="2.4" stroke-linejoin="round"/>
+</svg>

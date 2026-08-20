@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Aspect, one colour">
+  <title>Aspect, one colour</title>
+<path d="M 50.00 2.00 L 54.64 9.26 L 45.36 9.26 Z" fill="#0E1F28"/>
+  <path d="M 98.00 50.00 L 90.74 54.64 L 90.74 45.36 Z" fill="#0E1F28"/>
+  <path d="M 50.00 98.00 L 45.36 90.74 L 54.64 90.74 Z" fill="#0E1F28"/>
+  <path d="M 2.00 50.00 L 9.26 45.36 L 9.26 54.64 Z" fill="#0E1F28"/>
+  <path d="M 81.82 18.18 L 81.18 23.37 L 76.63 18.82 Z" fill="#0E1F28"/>
+  <path d="M 81.82 81.82 L 76.63 81.18 L 81.18 76.63 Z" fill="#0E1F28"/>
+  <path d="M 18.18 81.82 L 18.82 76.63 L 23.37 81.18 Z" fill="#0E1F28"/>
+  <path d="M 18.18 18.18 L 23.37 18.82 L 18.82 23.37 Z" fill="#0E1F28"/>
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#0E1F28" stroke-width="2"/>
+  <line x1="50.00" y1="10.00" x2="50.00" y2="16.50" stroke="#0E1F28" stroke-width="2.6"/>
+  <line x1="70.00" y1="15.36" x2="68.00" y2="18.82" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="84.64" y1="30.00" x2="81.18" y2="32.00" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="90.00" y1="50.00" x2="83.50" y2="50.00" stroke="#0E1F28" stroke-width="2.6"/>
+  <line x1="84.64" y1="70.00" x2="81.18" y2="68.00" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="70.00" y1="84.64" x2="68.00" y2="81.18" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="50.00" y1="90.00" x2="50.00" y2="83.50" stroke="#0E1F28" stroke-width="2.6"/>
+  <line x1="30.00" y1="84.64" x2="32.00" y2="81.18" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="15.36" y1="70.00" x2="18.82" y2="68.00" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="10.00" y1="50.00" x2="16.50" y2="50.00" stroke="#0E1F28" stroke-width="2.6"/>
+  <line x1="15.36" y1="30.00" x2="18.82" y2="32.00" stroke="#0E1F28" stroke-width="1.7"/>
+  <line x1="30.00" y1="15.36" x2="32.00" y2="18.82" stroke="#0E1F28" stroke-width="1.7"/>
+  <path d="M 80.49 62.63 A 33 33 0 0 1 19.51 62.63 L 30.60 58.04 A 21 21 0 0 0 69.40 58.04 Z" fill="none" stroke="#0E1F28" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M 50.00 17.00 A 33 33 0 0 1 80.49 62.63 L 69.40 58.04 A 21 21 0 0 0 50.00 29.00 Z" fill="#0E1F28" stroke="#0E1F28" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M 19.51 62.63 A 33 33 0 0 1 50.00 17.00 L 50.00 29.00 A 21 21 0 0 0 30.60 58.04 Z" fill="#0E1F28" stroke="#0E1F28" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

@@ -1,3 +1,6 @@
 node_modules/
 .DS_Store
 tools/rule-text-parsed.json
+
+# The original brand delivery. Its contents live in brand/, generated.
+aspect-brand.zip

@@ -1,0 +1,16 @@
+{
+  "name": "Aspect — Rules of the Road",
+  "short_name": "Aspect",
+  "description": "A free drill tool for COLREGs lights, shapes, signals and IALA buoyage. Every diagram is generated from the rules.",
+  "start_url": "../index.html",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0E1F28",
+  "background_color": "#E7EEF0",
+  "icons": [
+    { "src": "aspect-favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "apple-touch-icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "aspect-mark-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
