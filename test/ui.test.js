@@ -132,4 +132,30 @@ export default function run(t) {
     /Reduced motion is set/.test(app));
   t.ok('the lamp itself refuses to draw a still lamp under reduced motion',
     /function showLamp[\s\S]{0,320}stillness\.matches/.test(app));
+  t.section('the hide toggle');
+  t.ok('the Observer panel carries a hide checkbox', page.includes('id="hideDetail"'));
+  t.ok('both panels are addressable',
+    page.includes('id="observerPanel"') && page.includes('id="targetPanel"'));
+  t.ok('both panels wrap their contents in a maskable region',
+    (page.match(/<div class="maskable">/g) || []).length === 2);
+  // If the toggle sat inside the region it hides, ticking it would hide the
+  // control and there would be no way to untick it.
+  const observer = page.slice(page.indexOf('id="observerPanel"'), page.indexOf('id="targetPanel"'));
+  const maskStart = observer.indexOf('<div class="maskable">');
+  const maskEnd = observer.indexOf('</div>', observer.indexOf('bandRead'));
+  const togglePos = observer.indexOf('id="hideDetail"');
+  t.ok('the toggle sits outside the region it hides, so it stays clickable',
+    togglePos > maskEnd && maskStart < maskEnd, 'otherwise it cannot be unticked');
+  t.ok('hiding is visibility, so the layout does not jump',
+    page.includes('.panel.masked .maskable{visibility:hidden}'));
+  t.ok('one listener, toggling a class on each panel, and nothing else',
+    app.split("$('hideDetail').addEventListener").length - 1 === 1 &&
+    app.split("classList.toggle('masked'").length - 1 === 2);
+  // The previous attempt at this drove masking through draw() and the render
+  // path, and took the whole app down. This one must stay well clear of both.
+  const handler = app.slice(app.indexOf("$('hideDetail')"),
+    app.indexOf("$('hideDetail')") + 300);
+  t.ok('masking never touches the render path',
+    !/draw\(\)|renderScene|renderDial|innerHTML/.test(handler),
+    'it toggles two classes and nothing else');
 }
