@@ -120,7 +120,11 @@ export default function run(t) {
   t.section('the offline file is self-contained');
   t.ok('no script or style is loaded from elsewhere',
     !/<script[^>]+src=/.test(html) && !/@import/.test(html));
-  t.ok('the only external reference is the font stylesheet',
-    (html.match(/https?:\/\//g) || []).every(() => true) &&
-    (html.match(/<link[^>]+href="https?:\/\/[^"]+"/g) || []).every(l => /fonts\.g/.test(l)));
+  // The canonical link is the one non-font URL, and it is not a resource: it
+  // tells a crawler which copy is the real one, and the page never fetches it.
+  // Anything else pointing off-machine would break the offline promise.
+  const links = html.match(/<link[^>]+href="https?:\/\/[^"]+"/g) || [];
+  t.ok('nothing is fetched from off-machine except the fonts',
+    links.every(l => /fonts\.g/.test(l) || /rel="canonical"/.test(l)),
+    links.filter(l => !/fonts\.g|canonical/.test(l)).join(' ') || 'fonts, and one canonical');
 }

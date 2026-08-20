@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 50 commits.
+- **State:** working tree clean, 53 commits.
 
 ---
 
@@ -64,6 +64,22 @@ the data, and the app prints it at the top of the tab. **Do not silently correct
 text** — the moment it is edited, a reader has no way to know which paragraphs are the
 regulation and which are somebody's improvement.
 
+**The mark is 112.5 + 112.5 + 135, and that totals exactly 360.** The logo is a vessel's
+light pattern seen from above: the two sidelight arcs and the sternlight arc, closing a
+ring with nothing left over. They are Rule 21's angles, not a designer's. Redraw the mark
+at other angles and the badge contradicts the rules the app teaches, on every page it
+appears on. `brand/make-brand.cjs` generates every SVG from those three numbers, and
+`test/brand.test.js` reads the angles back out of the drawn path rather than taking the
+generator's word for it.
+
+**Brand assets are generated, not stored.** `npm run brand` rebuilds all ten SVGs, and the
+three that came with the original set regenerate byte for byte — that equality is the
+check that the generator is still the source of truth. The header lockup is built in HTML
+rather than embedded as an image, so the mark can take the night palette from CSS custom
+properties, and a test asserts every path in it is a path from `brand/aspect-mark.svg`.
+Three PNGs cannot be rebuilt here at all, because rasterising an SVG needs a renderer this
+machine does not have; `brand/README.md` records their sizes for whoever can.
+
 **Citations are load-bearing strings.** `citationToId()` turns "Rule 26(b)(i)" into
 `rule-26-b-i` and returns null rather than guessing, so a citation that does not
 resolve shows up as a dead link rather than silently landing on the parent rule. A
@@ -112,8 +128,11 @@ src/manoeuvre-questions.js  manoeuvre drill questions                 158
 src/definition-questions.js Part A drill questions                    121
 src/rule-text-questions.js  rule text drill questions                 146
 src/scheduler.js            spaced repetition (FSRS)                  171
-build.cjs                   regenerates the single-file bundle        131
+build.cjs                   regenerates the single-file bundle        160
 tools/import-rule-text.cjs  parses a rules file into the source module 260
+brand/make-brand.cjs        every brand SVG, from three arc angles     150
+brand/make-icons.cjs        the iOS raster, resampled from the 512     180
+brand/                      10 generated SVGs, 3 supplied PNGs, README
 vendor.cjs                  refreshes vendor/ts-fsrs.js                41
 aspect-standalone.html      build output, committed on purpose       362 KB
 docs/                       review material, never loaded by the app
@@ -152,7 +171,7 @@ To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 50, all pushed
+## Commits — 53, all pushed
 
 | | |
 |---|---|
@@ -306,12 +325,16 @@ the repo root. Currently green:
   paragraph, parent chains are valid with no orphans, no rule or explanation is printed
   anywhere without passing through the link layer, no paragraph claims to be verified,
   and every completion question's list is the rule's own subparagraphs
+- **The brand**: the three sectors measure 112.5, 112.5 and 135 and sum to 360 in all
+  three favicon levels, no asset invents a colour outside the palette, every path in the
+  header lockup is a path from the generated mark, and the built bundle loads no image
+  from anywhere — confirmed to fail when a relative icon href is put back
 - **The built bundle is parsed as a classic script** — with `vm.Script`, because
   `node --check` accepts ESM and once passed a bundle containing a bare `import` — then
   started behind a DOM stub to prove the app actually comes up, and no two of its
   twenty-eight parts declare the same top-level name
 
-Run them with `npm test`. 375 checks. The suite reports the offending state and aspect
+Run them with `npm test`. 410 checks. The suite reports the offending state and aspect
 rather than a bare boolean, two checks guard the matchers themselves, and it has been
 confirmed to fail and exit 1 when a real regression is introduced.
 
@@ -337,7 +360,11 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
    Annex IV — the distress section cites it by paragraph. Rule 3(m) and Rule 18(f) are
    addressable but empty. Replacing the source is one command; the structure is read
    from the file, so a better copy replaces the lot.
-4. **No cloze blanks have been authored.** There is text to author them against now.
+4. **The canonical URL is a guess.** `https://cjsmctaggart1987.github.io/aspect/` is what
+   the canonical link and both Open Graph image URLs point at, chosen because it is where
+   this repo would publish by default. If it is deployed anywhere else, those three tags
+   are wrong and a preview card will 404.
+5. **No cloze blanks have been authored.** There is text to author them against now.
    They are picked by hand on purpose: a generator has no idea which word carries the
    rule, so it asks for "the" and "of".
 
