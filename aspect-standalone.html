@@ -200,9 +200,23 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .searchbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
 .searchbar input{font-family:var(--label);font-size:15px;padding:8px 11px;
   border:1px solid var(--ink);background:var(--paper);color:var(--ink);min-width:340px;max-width:100%}
-.rulepart{margin-top:22px}
+.rulepart{margin-top:26px}
 .rulepart > h3{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
-  margin:0 0 4px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+  margin:0 0 2px;padding-bottom:6px;border-bottom:1px solid var(--ink)}
+.rulesec{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px;
+  margin:14px 0 2px}
+.rulegroup{border-bottom:1px solid var(--rule)}
+.rulegroup > summary{list-style:none;cursor:pointer;display:flex;gap:11px;align-items:baseline;
+  padding:9px 4px}
+.rulegroup > summary::-webkit-details-marker{display:none}
+.rulegroup > summary::before{content:'+';font-family:var(--data);font-size:13px;
+  color:var(--magenta);width:10px;flex:none}
+.rulegroup[open] > summary::before{content:'\2212'}
+.rulegroup > summary:hover{background:rgba(195,0,107,.05)}
+.rulegroup .num{font-family:var(--data);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--magenta);min-width:82px;flex:none}
+.rulegroup .name{font-size:14px}
+.rulegroup .paras{padding:0 0 12px 25px}
 .para{padding:7px 0 7px 11px;border-left:2px solid transparent;font-size:13.5px}
 .para:target,.para.hit{border-left-color:var(--magenta);background:rgba(195,0,107,.05)}
 .para .cite{font-family:var(--data);font-size:11px;color:var(--magenta);letter-spacing:.06em}
@@ -562,6 +576,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 
   <div class="searchbar">
     <input type="search" id="textSearch" placeholder="Search the rules, or type a citation such as 13(b)">
+    <button class="btn ghost" id="textExpand">Expand all</button>
     <span class="sighint" id="searchCount"></span>
   </div>
   <div id="textIndex"></div>
@@ -9362,22 +9377,85 @@ function linkCitations(text) {
   return out + text.slice(at);
 }
 
-function drawRuleIndex(hits) {
-  const show = hits ? new Set(hits.map(h => h.id)) : null;
-  $('textIndex').innerHTML = [...RULE_PARTS.map(part => ({ id: part.id, name: part.name })),
-    { id: 'Annex', name: 'Annexes' }].map(part => {
-    const paras = RULE_TEXT.filter(x => x.part === part.id && (!show || show.has(x.id)));
-    if (!paras.length) return "";
-    return `<div class="rulepart"><h3>${part.name}</h3>
-      ${paras.map(x => `<div class="para d${x.path.length} ${show ? "hit" : ""}" id="p-${x.id}">
-        <span class="cite">${x.citation}</span>
-        ${x.heading ? `<span class="head">${x.heading}</span>` : ""}
-        <div class="body3">${x.text
-          ? linkCitations(x.text)
-          : `<span class="pending">Text pending. Supply from 33 CFR Subchapter E.</span>`}</div>
-      </div>`).join("")}</div>`;
-  }).join("");
+/**
+ * The index, drawn as drop-downs: part, then rule, then the text.
+ *
+ * Native <details>, not a class and a click handler. It is keyboard accessible
+ * for nothing, it survives the markup being rebuilt from scratch on every
+ * search, and the browser's own find-in-page can open it.
+ *
+ * A search forces the matching rules open, because a hit hidden behind a closed
+ * disclosure is worse than no hit at all.
+ */
+const PART_LIST = [...RULE_PARTS.map(part => ({ id: part.id, name: part.name })),
+  { id: 'Annex', name: 'Annexes' }];
+
+/** The drop-down a paragraph belongs in: its rule, or its annex. */
+const groupIdFor = para => (para.rule ? `rule-${para.rule}` : para.id.split('-').slice(0, 2).join('-'));
+
+let indexExpanded = false;
+let indexHits = null;
+
+function paraRow(x, hit) {
+  // The summary already carries the rule's own citation, so the row inside it
+  // does not repeat it. Subparagraphs do carry theirs: that is what a reader
+  // needs when a link lands them halfway down a long rule.
+  return `<div class="para d${x.path.length}${hit ? ' hit' : ''}" id="p-${x.id}">
+    ${x.path.length ? `<span class="cite">${x.citation}</span>` : ''}
+    ${x.heading && x.path.length ? `<span class="head">${x.heading}</span>` : ''}
+    <div class="body3">${x.text
+      ? linkCitations(x.text)
+      : `<span class="pending">Text pending. Supply from 33 CFR Subchapter E.</span>`}</div>
+  </div>`;
 }
+
+function drawRuleIndex(hits) {
+  indexHits = hits;
+  const show = hits ? new Set(hits.map(h => h.id)) : null;
+  $('textIndex').innerHTML = PART_LIST.map(part => {
+    const paras = RULE_TEXT.filter(x => x.part === part.id && (!show || show.has(x.id)));
+    if (!paras.length) return '';
+
+    const groups = [];
+    for (const x of paras) {
+      const id = groupIdFor(x);
+      let group = groups.find(g => g.id === id);
+      if (!group) groups.push(group = { id, section: x.section, paras: [] });
+      group.paras.push(x);
+    }
+
+    let section = null;
+    const body = groups.map(group => {
+      const head = paragraphById(group.id);
+      // A rule's own entry is skipped when it is only a container: its citation
+      // and heading are already the summary line, so printing it again inside
+      // says the same thing twice.
+      const rows = group.paras
+        .filter(x => x.path.length > 0 || x.text || group.paras.length === 1)
+        .map(x => paraRow(x, !!show)).join('');
+      let lead = '';
+      if (group.section && group.section !== section) {
+        section = group.section;
+        lead = `<div class="rulesec">${section}</div>`;
+      }
+      return lead + `<details class="rulegroup" id="d-${group.id}"${show || indexExpanded ? ' open' : ''}>
+        <summary>
+          <span class="num">${head ? head.citation : group.id}</span>
+          <span class="name">${(head && head.heading) || ''}</span>
+        </summary>
+        <div class="paras">${rows}</div>
+      </details>`;
+    }).join('');
+
+    return `<div class="rulepart"><h3>${part.name}</h3>${body}</div>`;
+  }).join('');
+}
+
+$('textExpand').addEventListener('click', () => {
+  indexExpanded = !indexExpanded;
+  $('textExpand').textContent = indexExpanded ? 'Collapse all' : 'Expand all';
+  drawRuleIndex(indexHits);
+});
 
 $('textSearch').addEventListener('input', e => {
   const q = e.target.value.trim();
@@ -9400,7 +9478,12 @@ document.addEventListener('click', e => {
   $('textSearch').value = '';
   $('searchCount').textContent = '';
   drawRuleIndex(null);
-  const el = $(`p-${id}`);
+  // Open the drop-down first: scrolling to a paragraph inside a closed one
+  // lands the reader on a collapsed heading with nothing under it.
+  const target = paragraphById(id);
+  const group = target ? $(`d-${groupIdFor(target)}`) : null;
+  if (group) group.open = true;
+  const el = $(`p-${id}`) || group;
   if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
 });
 

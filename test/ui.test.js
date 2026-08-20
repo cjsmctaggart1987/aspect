@@ -153,6 +153,23 @@ export default function run(t) {
     /searchRuleText\(/.test(app));
   t.ok('the index draws once on load, not only after a search',
     /drawRuleIndex\(null\);/.test(app));
+  t.ok('the index is drop-downs: a part, then a rule, then its text',
+    /<details class="rulegroup"/.test(app) && /<summary>/.test(app) &&
+    /class="rulepart"/.test(app));
+  t.ok('a drop-down is native <details>, not a class toggled by hand',
+    !/classList\.toggle\('open'/.test(app),
+    'keyboard accessible, and find-in-page can open it');
+  t.ok('a search forces the matching rules open',
+    /\$\{show \|\| indexExpanded \? ' open' : ''\}/.test(app),
+    'a hit behind a closed drop-down is worse than no hit');
+  t.ok('there is a way to open the lot for reading straight through',
+    page.includes('id="textExpand"') &&
+    /\$\('textExpand'\)\.addEventListener/.test(app));
+  t.ok('following a citation opens the drop-down it lands in',
+    /group\.open = true/.test(app),
+    'otherwise the reader arrives at a collapsed heading');
+  t.ok('Part B keeps its three sections as subheadings',
+    /class="rulesec"/.test(app));
   t.ok('a paragraph with no text says so rather than showing an empty line',
     /Text pending/.test(app));
   t.ok('the missing text is declared on the section itself',
