@@ -95,6 +95,24 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .mark.night p{color:#93A6B1}
 .mark.night .mem{color:#8296A2}
 .mark.night .egnote{color:#7C8F9B}
+.sigkeywrap{margin-bottom:16px;max-width:320px}
+.sigkey{display:block;width:100%;height:auto}
+.sigplay{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.sigplay .btn{margin-top:0}
+.sigplay .btn:disabled{opacity:.4;cursor:default}
+.sighint{font-family:var(--data);font-size:11px;color:var(--ink-soft)}
+.stripwrap{margin:0 0 14px;max-width:420px}
+.sigstrip{display:block;width:100%;height:auto}
+.siggroup{margin-top:26px}
+.siggroup > h3{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+  margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.sigcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.sigcard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px}
+.sigcard .rule{font-family:var(--data);font-size:11px;letter-spacing:.12em;color:var(--magenta);text-transform:uppercase}
+.sigcard h4{margin:3px 0 8px;font-size:16px;font-weight:500}
+.sigcard p{margin:8px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.sigcard .mem{font-family:var(--note);font-style:italic;margin-top:6px;font-size:13.5px;color:var(--ink)}
+.sigcard .kit{font-family:var(--data);font-size:10.5px;color:var(--ink-soft);margin-top:8px;letter-spacing:.08em;text-transform:uppercase}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -115,6 +133,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 <div class="tabs" role="tablist">
   <button role="tab" id="tab-lights" aria-selected="true">Lights and shapes</button>
   <button role="tab" id="tab-buoys" aria-selected="false">Buoyage</button>
+  <button role="tab" id="tab-sound" aria-selected="false">Sound signals</button>
 </div>
 
 <section id="view-lights">
@@ -183,6 +202,40 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <div class="marks" id="marks"></div>
 </section>
 
+<section id="view-sound" class="hidden">
+  <p class="sub" style="max-width:66ch;margin:0 0 14px">
+    Rules 32 to 35, International. Every signal can be read as well as heard:
+    filled is a blast, the space between is silence. Nothing plays until you ask it to.
+  </p>
+  <div id="soundKey" class="sigkeywrap"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="sPrompt">Press start. You will be given a signal to play, and asked about it.</p>
+      <div class="sigplay">
+        <button class="btn ghost" id="sPlay" disabled>Play signal</button>
+        <button class="btn ghost" id="sStop" disabled>Stop</button>
+        <span class="sighint" id="sHint"></span>
+      </div>
+      <div id="sStrip" class="stripwrap"></div>
+      <div class="opts" id="sOpts"></div>
+      <p class="verdict" id="sVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="sNext">Start a drill</button>
+        <button class="btn ghost hidden" id="sEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="sSeen">0</b> of <b id="sTotal">0</b></span>
+        <span>Due today <b id="sDue">0</b></span>
+        <span>Streak <b id="sStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="signalList"></div>
+</section>
+
 <footer>
   Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
   33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
@@ -197,6 +250,10 @@ import { visibleLights, questionSpace, norm, distractors, shuffle } from './src/
 import { renderScene, renderDial, LIGHT_HEX, SHAPE_NAMES } from './src/render-lights.js';
 import { renderBuoy } from './src/render-buoy.js';
 import { cardKey, selectCard, grade, regradeLast, canRegrade, stats, reset, GRADE } from './src/scheduler.js';
+import { SOUND_SIGNALS, SIGNAL_GROUPS } from './data/sound-signals.js';
+import { signalStrip, describe, stripKey } from './src/render-signal.js';
+import { play, stop } from './src/audio.js';
+import { soundUniverse, questionFor as soundQuestionFor } from './src/sound-questions.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -422,13 +479,123 @@ function sync() {
   drawMarks();
 }
 
+// --- sound signals --------------------------------------------------------
+
+const SOUND_UNIVERSE = soundUniverse();
+$('sTotal').textContent = SOUND_UNIVERSE.length;
+$('soundKey').innerHTML = stripKey();
+
+let sound = null;          // the live question, or null once answered
+let soundKey = null;
+
+function drawSignalList() {
+  $('signalList').innerHTML = SIGNAL_GROUPS.map(group => `
+    <div class="siggroup">
+      <h3>${group}</h3>
+      <div class="sigcards">
+        ${SOUND_SIGNALS.filter(s => s.group === group).map(s => `
+          <div class="sigcard">
+            <div class="rule">${s.rule}</div>
+            <h4>${s.name}</h4>
+            ${signalStrip(s)}
+            <div class="sigplay">
+              <button class="btn ghost" data-play="${s.id}">Play</button>
+              <span class="sighint">${describe(s)}</span>
+            </div>
+            <p>${s.meaning}</p>
+            <p class="mem">${s.memory}</p>
+            <div class="kit">${s.equipment.join(' + ')}${s.repeat ? ` · every ${s.repeat}s` : ''}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// Delegated, so the buttons survive a redraw. Audio starts here and nowhere
+// else: the AudioContext is only ever created inside a real click.
+$('signalList').addEventListener('click', e => {
+  const id = e.target.closest('[data-play]')?.dataset.play;
+  if (!id) return;
+  play(SOUND_SIGNALS.find(s => s.id === id));
+});
+
+function showSoundProgress() {
+  const s = stats();
+  $('sSeen').textContent = s.seen;
+  $('sDue').textContent = s.dueToday;
+  $('sStreak').textContent = s.streak;
+}
+
+function nextSoundQuestion() {
+  stop();
+  const card = selectCard(SOUND_UNIVERSE);
+  soundKey = cardKey(card.stateId, card.aspect, card.questionType);
+  sound = soundQuestionFor(card);
+
+  $('sPrompt').textContent = sound.prompt;
+  $('sVerdict').textContent = '';
+  $('sNext').textContent = 'Next';
+  $('sEasy').classList.add('hidden');
+  // The strip is the answer for identify and pitch, so it stays hidden until
+  // the question is answered. For select, the strips are the options.
+  $('sStrip').innerHTML = '';
+  $('sPlay').disabled = false;
+  $('sStop').disabled = false;
+  $('sHint').textContent = sound.type === 'sound-pitch'
+    ? 'A whistle. Judge her length by its pitch.'
+    : 'Play it as many times as you like.';
+
+  $('sOpts').innerHTML = '';
+  sound.options.forEach(o => {
+    const b = document.createElement('button');
+    b.textContent = o.text;
+    b.addEventListener('click', () => {
+      [...$('sOpts').children].forEach(c => { c.disabled = true; });
+      const right = o.id === sound.answerId;
+      b.classList.add(right ? 'right' : 'wrong');
+      if (!right) {
+        [...$('sOpts').children].find(c => c.textContent ===
+          sound.options.find(x => x.id === sound.answerId).text)?.classList.add('right');
+      }
+      grade(soundKey, right ? GRADE.GOOD : GRADE.AGAIN);
+      $('sEasy').classList.toggle('hidden', !right);
+      showSoundProgress();
+      // Always show the pattern once answered, whether or not they heard it.
+      $('sStrip').innerHTML = signalStrip(sound.signal);
+      $('sVerdict').textContent = sound.explain;
+      sound = null;
+    });
+    $('sOpts').appendChild(b);
+  });
+}
+
+$('sPlay').addEventListener('click', () => {
+  const signal = sound ? sound.signal : null;
+  if (!signal) return;
+  play(signal, { lengthBand: sound.band });
+});
+$('sStop').addEventListener('click', stop);
+$('sNext').addEventListener('click', nextSoundQuestion);
+$('sEasy').addEventListener('click', () => {
+  if (!canRegrade()) return;
+  regradeLast(GRADE.EASY);
+  $('sEasy').classList.add('hidden');
+  showSoundProgress();
+});
+
+drawSignalList();
+showSoundProgress();
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
+$('tab-sound').addEventListener('click', () => switchTab('sound'));
 function switchTab(t) {
+  stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
   $('view-buoys').classList.toggle('hidden', t !== 'buoys');
+  $('view-sound').classList.toggle('hidden', t !== 'sound');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
+  $('tab-sound').setAttribute('aria-selected', t === 'sound');
 }
 
 draw(); sync();
