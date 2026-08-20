@@ -62,6 +62,8 @@ data/sound-signals.js   18 sound signals, Rules 32 to 35            305
 data/morse.js           A-Z, 0-9, SOS prosign, timing               112
 data/distress-signals.js 13 distress signals, Annex IV              190
 data/flags.js           40 code flags, ICS                          260
+data/manoeuvre-scenarios.js 22 worked situations                   250
+src/manoeuvre-engine.js Rules 11 to 18 as a decision engine        400
 src/engine.js           arcs, projection, question generation      146
 src/render-lights.js    scene and aspect dial renderers            393
 src/render-buoy.js      buoy renderer                              140
@@ -323,8 +325,9 @@ them as bugs.
 | Distress | 13 Annex IV signals | distress-identify, distress-select |
 | Morse | 37 characters | morse-hear, morse-see |
 | Code flags | 40 flags | flag-identify, flag-select, flag-signal |
+| Manoeuvres | 22 scenarios | manoeuvre-role, -obligation, -hierarchy, -standon-stage |
 
-Fifteen question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
+Nineteen question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
 needed to change.
 
 **The middle slot.** For lights it is the aspect and for buoyage it is the mode,
