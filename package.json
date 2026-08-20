@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "COLREGs lights and shapes, and IALA buoyage, generated from the rule rather than drawn.",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "dev": "serve --listen 5173 .",
-    "build": "node build.js",
-    "vendor": "node vendor.js"
+    "build": "node build.cjs",
+    "vendor": "node vendor.cjs"
   },
   "devDependencies": {
     "serve": "^14.2.6"

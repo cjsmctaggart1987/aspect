@@ -43,7 +43,7 @@ diagrams are generated at runtime; no bitmaps, no traced figures.
 
 ## Layout and dependency order
 
-Nothing may reference anything later in this list. `build.js` concatenates in exactly
+Nothing may reference anything later in this list. `build.cjs` concatenates in exactly
 this order, so a backward import produces a bundle that throws on load even though the
 module build runs fine.
 
@@ -56,15 +56,15 @@ src/engine.js           arcs, projection, question generation   146
 src/render-lights.js    scene and aspect dial renderers         393
 src/render-buoy.js      buoy renderer                           140
 src/scheduler.js        spaced repetition (FSRS)                171
-build.js                regenerates the single-file bundle       85
-vendor.js               refreshes vendor/ts-fsrs.js              41
+build.cjs               regenerates the single-file bundle       85
+vendor.cjs              refreshes vendor/ts-fsrs.js              41
 aspect-standalone.html  build output, committed on purpose
 ```
 
 `aspect-standalone.html` is a build artifact but is committed deliberately: it is the
 form you hand to someone with no network. It works from `file://` — no server needed.
 
-**Build rule:** `build.js` strips `export ` from top-level declarations and **blanks
+**Build rule:** `build.cjs` strips `export ` from top-level declarations and **blanks
 import and `export { ... }` lines rather than deleting them**, so bundle line numbers
 still match source line numbers. The build is reproducible byte for byte.
 `.gitattributes` pins LF because `core.autocrlf` was on globally and a CRLF checkout
