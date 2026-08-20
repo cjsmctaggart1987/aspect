@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, `main` in sync with origin, 13 commits.
+- **State:** working tree clean, `main` in sync with origin, 15 commits.
 
 ---
 
@@ -94,13 +94,14 @@ npm install
 npm run dev      # serve on :5173 — the module version needs HTTP, not file://
 npm run build    # regenerate aspect-standalone.html
 npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
+npm test         # 38 checks against the real modules
 ```
 
 To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 13, all pushed
+## Commits — 15, all pushed
 
 | | |
 |---|---|
@@ -117,6 +118,9 @@ To just look at it: double-click `aspect-standalone.html`.
 | `003388d` | Declare the package as ESM, move Node scripts to .cjs |
 | `3e0dbd8` | Draw a distinct silhouette for each type of vessel |
 | `b604a66` | Show buoyage light rhythms, and add a night view |
+| `3964596` | Refresh the state snapshot |
+| `b6366ab` | Bring the verification suites into the repo |
+| `59a5954` | Honour reduced motion on the vessel lights |
 
 ### Spaced repetition — `src/scheduler.js`
 
@@ -174,9 +178,11 @@ the repo root. Currently green:
 - 16 buoy clip ids unique, none named `bodyClip`
 - Flash counts off rendered SVG: N 6, E 3, S 6+LFl, W 9, isolated 2, preferred 2+1
 - 33 SMIL animations, keyTimes monotonic and normalised 0→1
+- Flashing lights emit no SMIL at all when reduced motion is set, and stay lit
 
-**The test suites are not in the repo.** They live in a scratch directory and will not
-survive the session. See open items.
+Run them with `npm test`. 38 checks. The suite reports the offending state and aspect
+rather than a bare boolean, two checks guard the matchers themselves, and it has been
+confirmed to fail and exit 1 when a real regression is introduced.
 
 **Fixed bug worth remembering:** `render-buoy.js` used a single hardcoded
 `clipPath id="bodyClip"` for every mark. Twelve marks in one document meant every
@@ -186,23 +192,38 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
 
 ---
 
-## Open items
+## Open
 
 1. **Nothing has been reviewed by eye.** The silhouettes and rhythm strips are verified
-   geometrically only. Recognisability and proportion are judgement calls geometry
-   cannot settle. Contact sheets: `docs/silhouettes.html`, `docs/buoyage.html`.
-2. **`SHAPE_D_M = 1.5`** in `render-lights.js` is an assumption, not a rule value.
-   Annex I's minimum is 0.6 m, unreadable at this scale, so the 14px floor dominates on
-   large vessels.
-3. **The `HULLS` proportions are invented** — where a funnel sits, how tall a gantry is.
-   Only the projection behaviour is load-bearing.
-4. **Reduced motion is still unfixed for the vessel lights.** The page's
-   `prefers-reduced-motion` CSS rule only suppresses CSS animation; SMIL ignores it. The
-   buoy lamp threads an explicit `motion` flag and checks `matchMedia`. The vessels'
-   flashing yellow does not, and has been animating for reduced-motion users throughout.
-5. **Commit the test suites** so verification survives and anyone can run it.
-6. `data/buoyage.js` contains "Cayman, the Americas and Japan are Region B" in teaching
-   text. Factual about IALA region membership, but a geographic tell in a public repo.
+   geometrically only. No assertion can settle whether a cargo ship reads as a cargo
+   ship. Contact sheets: `docs/silhouettes.html`, `docs/buoyage.html`.
+
+## Closed — accepted and documented
+
+These are decisions, not outstanding work. They are recorded so nobody rediscovers
+them as bugs.
+
+2. **`SHAPE_D_M = 1.5`** in `render-lights.js` is a chosen value, not a rule value.
+   Annex I's minimum is 0.6 m, which is two or three pixels at this scale, so the 14px
+   floor dominates on large vessels and the metre figure only takes over on small craft
+   drawn large. Accepted: a rule-minimum shape would be invisible, which teaches nothing.
+3. **The `HULLS` proportions are authored** — where a funnel sits, how tall a gantry is.
+   Accepted: only the projection behaviour is load-bearing, and that is tested. The
+   proportions are presentation and can be tuned freely without risking correctness.
+6. **"Cayman, the Americas and Japan are Region B"** in `data/buoyage.js`. Accepted and
+   deliberately left as it is: it is a correct statement of IALA Region B membership and
+   it is useful teaching text. Do not change it.
+
+## Closed — done
+
+4. ~~Reduced motion unfixed for the vessel lights.~~ Fixed in `59a5954`. `renderScene`
+   takes an explicit `motion` flag, `index.html` checks `matchMedia` once and passes it
+   to both views, and the listener redraws both so the setting takes effect without a
+   reload. When motion is reduced the light is drawn lit and steady rather than dropped.
+   Five checks cover it.
+5. ~~Test suites not in the repo.~~ Done in `b6366ab`. `test/` with `npm test`, importing
+   the real modules from the repo root. Confirmed the suite fails and exits 1 when a real
+   regression is introduced.
 
 ## Environment notes
 
