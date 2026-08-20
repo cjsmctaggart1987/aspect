@@ -224,6 +224,8 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .para .body3{margin-top:3px;color:var(--ink-soft)}
 .para.d1{margin-left:16px}.para.d2{margin-left:32px}
 .pending{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
+.caveats{margin:8px 0 10px;padding-left:18px;font-size:13px}
+.caveats li{margin-bottom:5px}
 .rulelink{color:var(--magenta);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .rulelink:hover{background:rgba(195,0,107,.10)}
 .hidden{display:none}
@@ -583,9 +585,11 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 </section>
 
 <footer>
-  Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
-  33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
-  publications. Study aid only. It is not a substitute for the Navigation Rules.
+  Rule text imported from a transcription of the 1972 Collision Regulations, named in the
+  Rule text tab along with what is wrong with it; the rules themselves are reproduced
+  verbatim in US law and are a US Government work. Buoyage described from 33 CFR Part 62.
+  Every diagram is generated here, so nothing is reproduced from IALA or IMO publications.
+  Study aid only. It is not a substitute for the Navigation Rules.
 </footer>
 </div>
 
@@ -5412,50 +5416,370 @@ const definitionsForState = stateId =>
 const definitionById = id => DEFINITIONS.find(d => d.id === id) || null;
 
 
+/* ===== data/rule-text-source.js ===== */
+/**
+ * GENERATED FILE — do not edit by hand.
+ *
+ * Regenerate with:
+ *   node tools/import-rule-text.cjs <file.txt> --write
+ *
+ * The importer reports what it found and what it disagrees with before it
+ * writes. Read that report; it is the only check on the source.
+ */
+
+const RULE_SOURCE_META = {
+  "file": "224721054-COLREGS-the-Rules-of-the-Road.txt",
+  "imported": "2026-08-20",
+  "rules": 38,
+  "paragraphs": 303,
+  "withText": 272
+};
+
+const RULE_SOURCE = [
+  {"id":"rule-1","citation":"Rule 1","heading":"Application"},
+  {"id":"rule-1-a","citation":"Rule 1(a)","text":"These Rules shall apply to all vessels upon the high seas and in all waters connected therewith navigable by seagoing vessels."},
+  {"id":"rule-1-b","citation":"Rule 1(b)","text":"Nothing in these Rules shall interfere in the operation of special rules made by an appropriate authority for roadsteads, harbors, rivers, lakes or inland waterways connected with the high seas and navigable by seagoing vessels. Such special rules shall conform as closely as possible to these Rules."},
+  {"id":"rule-1-c","citation":"Rule 1(c)","text":"Nothing in these Rules shall interfere with the operation of any special rules made by the Government of any State with respect to additional station or signal lights or shapes or whistle signals for ships of war and vessels proceeding under convoy, or with respect to additional station or signal lights for fishing vessels fishing as a fleet. These additional station or signal lights or whistle signals shall, so far as possible, be such that they cannot be mistaken for any light, shape, or signal authorized elsewhere under these Rules."},
+  {"id":"rule-1-d","citation":"Rule 1(d)","text":"Traffic separation schemes may be adopted by the Organization for the purpose of these Rules."},
+  {"id":"rule-1-e","citation":"Rule 1(e)","text":"Whenever the Government concerned shall have determined that a vessel of special construction or purpose cannot comply fully with the provisions of any of these Rules with respect to number, position, range or arc of visibility of lights or shapes, as well as to the disposition and characteristics of sound-signaling appliances, such vessel shall comply with such other provisions in regard to number, position, range or arc of visibility of lights or shapes, as well as to the disposition and characteristics of sound-signaling appliances, as her Government shall have determined to be the closest possible compliance with these Rules in respect to that vessel."},
+  {"id":"rule-2","citation":"Rule 2","heading":"Responsibility"},
+  {"id":"rule-2-a","citation":"Rule 2(a)","text":"Nothing in these Rules shall exonerate any vessel, or the owner, master, or crew thereof, from the consequences of any neglect to comply with these Rules or of the neglect of any precaution which may be required by the ordinary practice of seamen, or by the special circumstances of the case."},
+  {"id":"rule-2-b","citation":"Rule 2(b)","text":"In construing and complying with these Rules due regard shall be had to all dangers of navigation and collision and to any special circumstances, including the limitations of the vessels involved, which may make a departure from these Rules necessary to avoid immediate danger."},
+  {"id":"rule-3","citation":"Rule 3","heading":"General Definitions","text":"For the purpose of these Rules, except where the context otherwise requires:"},
+  {"id":"rule-3-a","citation":"Rule 3(a)","text":"The word \"vessel\" includes every description of watercraft, including non-displacement craft and seaplanes, used or capable of being used as a means of transportation on water."},
+  {"id":"rule-3-b","citation":"Rule 3(b)","text":"The term \"power driven vessel\" means any vessel propelled by machinery."},
+  {"id":"rule-3-c","citation":"Rule 3(c)","text":"The term \"sailing vessel\" means any vessel under sail provided that propelling machinery, if fitted, is not being used."},
+  {"id":"rule-3-d","citation":"Rule 3(d)","text":"The term \"vessel engaged in fishing\" means any vessel fishing with nets, lines, trawls, or other fishing apparatus which restrict maneuverability, but does not include a vessel fishing with trolling lines or other fishing apparatus which do not restrict manageability."},
+  {"id":"rule-3-e","citation":"Rule 3(e)","text":"The term \"seaplane\" includes any aircraft designed to maneuver on the water."},
+  {"id":"rule-3-f","citation":"Rule 3(f)","text":"The term \"vessel not under command\" means a vessel which through some exceptional circumstance is unable to maneuver as required by these Rules and is therefore unable to keep out of the way of another vessel."},
+  {"id":"rule-3-g","citation":"Rule 3(g)","text":"The term \"vessel restricted in her ability to maneuver\" means a vessel which from the nature of her work is restricted in her ability to maneuver as required by these Rules and is therefore unable to keep out of the way of another vessel. The term \"vessel restricted in her ability to maneuver\" shall include but not be limited to:"},
+  {"id":"rule-3-g-i","citation":"Rule 3(g)(i)","text":"A vessel engaged in laying, servicing, or picking up a navigational mark, submarine cable or pipeline;"},
+  {"id":"rule-3-g-ii","citation":"Rule 3(g)(ii)","text":"A vessel engaged in dredging, surveying or underwater operations;"},
+  {"id":"rule-3-g-iii","citation":"Rule 3(g)(iii)","text":"A vessel engaged in replenishment or transferring persons, provisions or cargo while underway;"},
+  {"id":"rule-3-g-iv","citation":"Rule 3(g)(iv)","text":"A vessel engaged in the launching or recovery of aircraft;"},
+  {"id":"rule-3-g-v","citation":"Rule 3(g)(v)","text":"A vessel engaged in mineclearance operations;"},
+  {"id":"rule-3-g-vi","citation":"Rule 3(g)(vi)","text":"A vessel engaged in a towing operation such as severely restricts the towing vessel and her tow in their ability to deviate from their course."},
+  {"id":"rule-3-h","citation":"Rule 3(h)","text":"The term \"vessel constrained by her draft\" means a power driven vessel which because of her draft in relation to the available depth and width of navigable water is severely restricted in her ability to deviate from the course she is following."},
+  {"id":"rule-3-i","citation":"Rule 3(i)","text":"The word \"underway\" means a vessel is not at anchor, or made fast to the shore, or aground."},
+  {"id":"rule-3-j","citation":"Rule 3(j)","text":"The words \"length\" and \"breadth\" of a vessel mean her length overall and greatest breadth."},
+  {"id":"rule-3-k","citation":"Rule 3(k)","text":"Vessels shall be deemed to be in sight of one another only when one can be observed visually from the other."},
+  {"id":"rule-3-l","citation":"Rule 3(l)","text":"The term \"restricted visibility\" means any condition in which visibility is restricted by fog, mist, falling snow, heavy rainstorms, sandstorms and any other similar causes."},
+  {"id":"rule-4","citation":"Rule 4","heading":"Application","text":"Rules in this section apply to any condition of visibility."},
+  {"id":"rule-5","citation":"Rule 5","heading":"Look-out","text":"Every vessel shall at all times maintain a proper look-out by sight as well as by hearing as well as by all available means appropriate in the prevailing circumstances and conditions so as to make a full appraisal of the situation and of the risk of collision."},
+  {"id":"rule-6","citation":"Rule 6","heading":"Safe Speed","text":"Every vessel shall at all times proceed at a safe speed so that she can take proper and effective action to avoid collision and be stopped within a distance appropriate to the prevailing circumstances and conditions. In determining a safe speed the following factors shall be among those taken into account:"},
+  {"id":"rule-6-a","citation":"Rule 6(a)","text":"By all vessels:"},
+  {"id":"rule-6-a-i","citation":"Rule 6(a)(i)","text":"The state of visibility;"},
+  {"id":"rule-6-a-ii","citation":"Rule 6(a)(ii)","text":"The traffic density including concentrations of fishing vessels or any other vessels;"},
+  {"id":"rule-6-a-iii","citation":"Rule 6(a)(iii)","text":"The manageability of the vessel with special reference to stopping distance and turning ability in the prevailing conditions;"},
+  {"id":"rule-6-a-iv","citation":"Rule 6(a)(iv)","text":"At night the presence of background light such as from shore lights or from back scatter from her own lights;"},
+  {"id":"rule-6-a-v","citation":"Rule 6(a)(v)","text":"The state of wind, sea and current, and the proximity of navigational hazards;"},
+  {"id":"rule-6-a-vi","citation":"Rule 6(a)(vi)","text":"The draft in relation to the available depth of water."},
+  {"id":"rule-6-b","citation":"Rule 6(b)","text":"Additionally, by vessels with operational radar:"},
+  {"id":"rule-6-b-i","citation":"Rule 6(b)(i)","text":"The characteristics, efficiency and limitations of the radar equipment;"},
+  {"id":"rule-6-b-ii","citation":"Rule 6(b)(ii)","text":"Any constrains imposed by the radar range scale in use;"},
+  {"id":"rule-6-b-iii","citation":"Rule 6(b)(iii)","text":"The effect on radar detection of the sea state, weather and other sources of interference;"},
+  {"id":"rule-6-b-iv","citation":"Rule 6(b)(iv)","text":"The possibility that small vessels, ice and other floating objects may not be detected by radar at an adequate range;"},
+  {"id":"rule-6-b-v","citation":"Rule 6(b)(v)","text":"The number location and movement of vessels detected by radar;"},
+  {"id":"rule-6-b-vi","citation":"Rule 6(b)(vi)","text":"The more exact assessment of the visibility that may be possible when radar is used to determine the range of vessels or other objects in the vicinity."},
+  {"id":"rule-7","citation":"Rule 7","heading":"Risk of Collision"},
+  {"id":"rule-7-a","citation":"Rule 7(a)","text":"Every vessel shall use all available means appropriate to the prevailing circumstances and conditions to determine if risk of collision exists. If there is any doubt such risk shall be deemed to exist."},
+  {"id":"rule-7-b","citation":"Rule 7(b)","text":"Proper use shall be made of radar equipment if fitted and operational, including long-range scanning to obtain early warning of risk of collision and radar plotting or equivalent systematic observation of detected objects."},
+  {"id":"rule-7-c","citation":"Rule 7(c)","text":"Assumptions shall not be made on the basis of scanty information, especially scanty radar information."},
+  {"id":"rule-7-d","citation":"Rule 7(d)","text":"In determining if risk of collision exists the following considerations shall be among those taken into account:"},
+  {"id":"rule-7-d-i","citation":"Rule 7(d)(i)","text":"Such risk shall be deemed to exist if the compass bearing of an approaching vessel does not appreciably change;"},
+  {"id":"rule-7-d-ii","citation":"Rule 7(d)(ii)","text":"Such risk may sometimes exist even when an appreciable bearing change is evident, particularly when approaching a very large vessel or a tow or when approaching a vessel at close range."},
+  {"id":"rule-8","citation":"Rule 8","heading":"Action to Avoid Collision"},
+  {"id":"rule-8-a","citation":"Rule 8(a)","text":"Any action taken to avoid collision shall, if the circumstances of the case admit, be positive, made in ample time and with due regard to the observance of good seamanship."},
+  {"id":"rule-8-b","citation":"Rule 8(b)","text":"Any alteration of course and/or speed to avoid collision shall, if the circumstances of the case admit be large enough to be readily apparent to another vessel observing visually or by radar; a succession of small alterations of course and/or speed shall be avoided."},
+  {"id":"rule-8-c","citation":"Rule 8(c)","text":"If there is sufficient sea room, alteration of course alone may be the most effective action to avoid a close- quarters situation provided that it is made in good time, is substantial and does not result in another close- quarters situation."},
+  {"id":"rule-8-d","citation":"Rule 8(d)","text":"Action taken to avoid collision with another vessel shall be such as to result in passing at a safe distance. The effectiveness of the action shall be carefully checked until the other vessel is finally past and clear."},
+  {"id":"rule-8-e","citation":"Rule 8(e)","text":"If necessary to avoid collision or allow more time to asses the situation, a vessel may slacken her speed or take all way off by stopping or reversing her means of propulsion."},
+  {"id":"rule-8-f","citation":"Rule 8(f)"},
+  {"id":"rule-8-f-i","citation":"Rule 8(f)(i)","text":"A vessel which, by any of these rules, is required not to impede the passage or safe passage of another vessel shall when required by the circumstances of the case, take early action to allow sufficient sea room for the safe passage of the other vessel."},
+  {"id":"rule-8-f-ii","citation":"Rule 8(f)(ii)","text":"A vessel required not to impede the passage or safe passage of another vessel is not relieved of this obligation if approaching the other vessel so as to involve risk of collision and shall, when taking action, have full regard to the action which may be required by the rules of this part."},
+  {"id":"rule-8-f-iii","citation":"Rule 8(f)(iii)","text":"A vessel the passage of which is not to be impeded remains fully obliged to comply with the rules of this part when the two vessels are approaching one another so as to involve risk of collision."},
+  {"id":"rule-9","citation":"Rule 9","heading":"Narrow Channels"},
+  {"id":"rule-9-a","citation":"Rule 9(a)","text":"A vessel proceeding along the course of a narrow channel or fairway shall keep as near to the outer limit of the channel or fairway which lies on her starboard side as is safe and practicable."},
+  {"id":"rule-9-b","citation":"Rule 9(b)","text":"A vessel of less than 20 meters in length or a sailing vessel shall not impede the passage of a vessel which can safely navigate only within a narrow channel or fairway."},
+  {"id":"rule-9-c","citation":"Rule 9(c)","text":"A vessel engaged in fishing shall not impede the passage of any other vessel navigating within a narrow passage or fairway."},
+  {"id":"rule-9-d","citation":"Rule 9(d)","text":"A vessel shall not cross a narrow passage or fairway if such crossing impedes the passage of a vessel which can safely navigate only within such channel or fairway. The latter vessel may use the sound signal prescribed in Rule 34(d) if in doubt as to the intention of the crossing vessel."},
+  {"id":"rule-9-e","citation":"Rule 9(e)"},
+  {"id":"rule-9-e-i","citation":"Rule 9(e)(i)","text":"In a narrow channel or fairway when overtaking can take place only when the vessel to be overtaken has to take action to permit safe passing, the vessel intending to overtake shall indicate her intention by sounding the appropriate signal prescribed in Rule 34(c)(i). The vessel to be overtaken shall, if in agreement, sound the appropriate signal prescribed in Rule 34(c)(ii) and take steps to permit safe passing. If in doubt she may sound the signals prescribed in Rule 34(d)."},
+  {"id":"rule-9-e-ii","citation":"Rule 9(e)(ii)","text":"This rule does not relieve the overtaking vessel of her obligation under Rule 13."},
+  {"id":"rule-9-f","citation":"Rule 9(f)","text":"A vessel nearing a bend or an area of a narrow channel or fairway where other vessels may be obscured by an intervening obstruction shall navigate with particular alertness and caution and shall sound the appropriate signal prescribed in Rule 34(e)."},
+  {"id":"rule-9-g","citation":"Rule 9(g)","text":"Any vessel shall, if the circumstances of the case admit, avoid anchoring in a narrow channel."},
+  {"id":"rule-10","citation":"Rule 10","heading":"Traffic Separation Schemes"},
+  {"id":"rule-10-a","citation":"Rule 10(a)","text":"This rule applies to traffic separation schemes adopted by the Organization and does not relieve any vessel of her obligation under any other rule."},
+  {"id":"rule-10-b","citation":"Rule 10(b)","text":"A vessel using a traffic separation scheme shall:"},
+  {"id":"rule-10-b-i","citation":"Rule 10(b)(i)","text":"Proceed in the appropriate traffic lane in the general direction of traffic flow for that lane."},
+  {"id":"rule-10-b-ii","citation":"Rule 10(b)(ii)","text":"So far as is practicable keep clear of a traffic separation line or separation zone."},
+  {"id":"rule-10-b-iii","citation":"Rule 10(b)(iii)","text":"Normally join or leave a traffic lane at the termination of the lane, but when joining or leaving from either side shall do so at as small an angle to the general direction of traffic flow as practicable."},
+  {"id":"rule-10-c","citation":"Rule 10(c)","text":"A vessel shall so far as practicable avoid crossing traffic lanes, but if obliged to do so shall cross on a heading as nearly as practicable at right angles to the general direction of traffic flow."},
+  {"id":"rule-10-d","citation":"Rule 10(d)"},
+  {"id":"rule-10-d-i","citation":"Rule 10(d)(i)","text":"A vessel shall not use an inshore traffic zone when she can safely use the appropriate traffic lane within the adjacent traffic separation scheme. However, vessels of less than 20 meters in length, sailing vessels and vessels engaged in fishing may use the inshore traffic zone."},
+  {"id":"rule-10-d-ii","citation":"Rule 10(d)(ii)","text":"Notwithstanding subparagraph (d)(i), a vessel may use an inshore traffic Zone when en route to or from a port, offshore installation or structure, pilot station or any other place situated within the inshore traffic zone, or to avoid immediate danger."},
+  {"id":"rule-10-e","citation":"Rule 10(e)","text":"A vessel, other than a crossing vessel or a vessel joining or leaving a lane shall not normally enter a separation zone or cross a separation line except:"},
+  {"id":"rule-10-e-i","citation":"Rule 10(e)(i)","text":"in cases of emergency to avoid immediate danger;"},
+  {"id":"rule-10-e-ii","citation":"Rule 10(e)(ii)","text":"to engage in fishing within a separation zone."},
+  {"id":"rule-10-f","citation":"Rule 10(f)","text":"A vessel navigating in areas near the terminations of traffic separation schemes shall do so with particular caution."},
+  {"id":"rule-10-g","citation":"Rule 10(g)","text":"A vessel shall so far as practicable avoid anchoring in a traffic separation scheme or in areas near its terminations."},
+  {"id":"rule-10-h","citation":"Rule 10(h)","text":"A vessel not using a traffic separating scheme shall avoid it by as wide a margin as is practicable."},
+  {"id":"rule-10-i","citation":"Rule 10(i)","text":"A vessel engaged in fishing shall not impede the passage of any vessel following a traffic lane."},
+  {"id":"rule-10-j","citation":"Rule 10(j)","text":"A vessel of less than 20 meters in length or a sailing vessel shall not impede the safe passage of a power driven vessel following a traffic lane."},
+  {"id":"rule-10-k","citation":"Rule 10(k)","text":"A vessel restricted in her ability to maneuver when engaged in an operation for the maintenance of safety of navigation in a traffic separating scheme is exempted from complying with this Rule to the extent necessary to carry out the operation."},
+  {"id":"rule-10-l","citation":"Rule 10(l)","text":"A vessel restricted in her ability to maneuver when engaged in an operation for the laying, servicing or picking up a submarine cable, within a traffic separating scheme, is exempted from complying with this Rule to the extent necessary to carry out the operation."},
+  {"id":"rule-11","citation":"Rule 11","heading":"Application","text":"Rules in this section apply to vessels in sight of one another."},
+  {"id":"rule-12","citation":"Rule 12","heading":"Sailing Vessels"},
+  {"id":"rule-12-a","citation":"Rule 12(a)","text":"when two sailing vessels are approaching one another, so as to involve risk of collision, one of them shall keep out of the way of the other as follows:"},
+  {"id":"rule-12-a-i","citation":"Rule 12(a)(i)","text":"when each of them has the wind on a different side, the vessel which has the wind on the port side shall keep out of the way of the other;"},
+  {"id":"rule-12-a-ii","citation":"Rule 12(a)(ii)","text":"When both have the wind on the same side, the vessel which is to windward shall keep out of the way of the vessel which is to leeward;"},
+  {"id":"rule-12-a-iii","citation":"Rule 12(a)(iii)","text":"if the vessel with the wind on the port side sees a vessel to windward and cannot determine with certainty whether the other vessel has the wind on the port or the starboard side, she shall keep out of the way of the other."},
+  {"id":"rule-12-b","citation":"Rule 12(b)","text":"For the purposes of this Rule the windward side shall be deemed to be the side opposite that on which the mainsail is carried or, in the case of a square rigged vessel, the side opposite to that on which the largest fore- and-aft sail is carried."},
+  {"id":"rule-13","citation":"Rule 13","heading":"Overtaking"},
+  {"id":"rule-13-a","citation":"Rule 13(a)","text":"Notwithstanding anything contained in the Rules of Part B, Sections I and II, any vessel overtaking any other shall keep out of the way of the vessel being overtaken."},
+  {"id":"rule-13-b","citation":"Rule 13(b)","text":"A vessel shall be deemed to be overtaking when coming up with a another vessel from a direction more than 22.5 degrees abaft her beam, that is, in such a position with reference to the vessel she is overtaking, that at night she would be able to see only the sternlight of that vessel but neither of her sidelights."},
+  {"id":"rule-13-c","citation":"Rule 13(c)","text":"When a vessel is in any doubt as to whether she is overtaking another, she shall assume that this is the case and act accordingly."},
+  {"id":"rule-13-d","citation":"Rule 13(d)","text":"Any subsequent alteration of the bearing between the two vessels shall not make the overtaking vessel a crossing vessel within the meaning of these Rules or relieve her of the duty of keeping clear of the overtaken vessel until she is finally past and clear."},
+  {"id":"rule-14","citation":"Rule 14","heading":"Head-on Situation"},
+  {"id":"rule-14-a","citation":"Rule 14(a)","text":"When two power driven vessels are meeting on reciprocal or nearly reciprocal courses so as to involve risk of collision each shall alter her course to starboard so that each shall pass on the port side of the other."},
+  {"id":"rule-14-b","citation":"Rule 14(b)","text":"Such a situation shall be deemed to exist when a vessel sees the other ahead or nearly ahead and by night she could see the masthead lights in line or nearly in line and/or both sidelights and by day she observes the corresponding aspect of the other vessel."},
+  {"id":"rule-14-c","citation":"Rule 14(c)","text":"When a vessel is in any doubt as to whether such a situation exists she shall assume that it does exist and act accordingly."},
+  {"id":"rule-15","citation":"Rule 15","heading":"Crossing Situation","text":"When two power driven vessels are crossing so as to involve risk of collision, the vessel which has the other on her own starboard side shall keep out of the way and shall, if the circumstances of the case admit, avoid crossing ahead of the other vessel."},
+  {"id":"rule-16","citation":"Rule 16","heading":"Action by Give-way Vessel","text":"Every vessel which is directed to keep out of the way of another vessel shall, so far as possible, take early and substantial action to keep well clear."},
+  {"id":"rule-17","citation":"Rule 17","heading":"Action by Stand-on Vessel"},
+  {"id":"rule-17-a","citation":"Rule 17(a)"},
+  {"id":"rule-17-a-i","citation":"Rule 17(a)(i)","text":"Where one of two vessels is to keep out of the way of the other shall keep her course and speed."},
+  {"id":"rule-17-a-ii","citation":"Rule 17(a)(ii)","text":"The latter vessel may however take action to avoid collision by her maneuver alone, as soon as it becomes apparent to her that the vessel required to keep out of the way is not taking appropriate action in accordance with these Rules."},
+  {"id":"rule-17-b","citation":"Rule 17(b)","text":"When, from any cause, the vessel required to keep her course and speed finds herself so close that collision cannot be avoided by the action of the give-way vessel alone, she shall take such action as will best aid to avoid collision."},
+  {"id":"rule-17-c","citation":"Rule 17(c)","text":"A power driven vessel which takes action in a crossing situation in accordance with subparagraph (a)(ii) of this Rule to avoid collision with another power driven vessel shall, if the circumstances of the case admit, not alter course to port for a vessel on her own port side."},
+  {"id":"rule-17-d","citation":"Rule 17(d)","text":"This Rule does not relieve the give-way vessel of her obligation to keep out of the way."},
+  {"id":"rule-18","citation":"Rule 18","heading":"Responsibilities Between Vessels","text":"Except where rule 9, 10, and 13 otherwise require:"},
+  {"id":"rule-18-a","citation":"Rule 18(a)","text":"A power driven vessel underway shall keep out of the way of:"},
+  {"id":"rule-18-a-i","citation":"Rule 18(a)(i)","text":"a vessel not under command;"},
+  {"id":"rule-18-a-ii","citation":"Rule 18(a)(ii)","text":"a vessel restricted in her ability to maneuver;"},
+  {"id":"rule-18-a-iii","citation":"Rule 18(a)(iii)","text":"a vessel engaged in fishing;"},
+  {"id":"rule-18-a-iv","citation":"Rule 18(a)(iv)","text":"a sailing vessel;"},
+  {"id":"rule-18-b","citation":"Rule 18(b)","text":"A sailing vessel under way shall keep out of the way of:"},
+  {"id":"rule-18-b-i","citation":"Rule 18(b)(i)","text":"a vessel not under command;"},
+  {"id":"rule-18-b-ii","citation":"Rule 18(b)(ii)","text":"a vessel restricted in her ability to maneuver;"},
+  {"id":"rule-18-b-iii","citation":"Rule 18(b)(iii)","text":"a vessel engaged in fishing;"},
+  {"id":"rule-18-c","citation":"Rule 18(c)","text":"A vessel engaged in fishing when underway shall, so far as possible, keep out of the way of:"},
+  {"id":"rule-18-c-i","citation":"Rule 18(c)(i)","text":"a vessel not under command;"},
+  {"id":"rule-18-c-ii","citation":"Rule 18(c)(ii)","text":"a vessel restricted in her ability to maneuver."},
+  {"id":"rule-18-d","citation":"Rule 18(d)"},
+  {"id":"rule-18-d-i","citation":"Rule 18(d)(i)","text":"Any vessel other than a vessel not under command or a vessel restricted in her ability to maneuver shall, if the circumstances of the case admit, avoid impeding the safe passage of a vessel constrained by her draft, exhibiting the signals in Rule 28."},
+  {"id":"rule-18-d-ii","citation":"Rule 18(d)(ii)","text":"A vessel constrained by her draft shall navigate with particular caution having full regard to her special condition."},
+  {"id":"rule-18-e","citation":"Rule 18(e)","text":"A seaplane on the water shall, in general, keep well clear of all vessels and avoid impeding their navigation. In circumstances, however, where risk of collision exists, she shall comply with the Rules of this Part."},
+  {"id":"rule-19","citation":"Rule 19","heading":"Conduct of Vessels in Restricted Visibility"},
+  {"id":"rule-19-a","citation":"Rule 19(a)","text":"This rule applies to vessels not in sight of one another when navigating in or near an area of restricted visibility."},
+  {"id":"rule-19-b","citation":"Rule 19(b)","text":"Every vessel shall proceed at a safe speed adapted to the prevailing circumstances and condition of restricted visibility. A power driven vessel shall have her engines ready for immediate maneuver."},
+  {"id":"rule-19-c","citation":"Rule 19(c)","text":"Every vessel shall have due regard to the prevailing circumstances and conditions of restricted visibility when complying with the Rules of Section I of this Part."},
+  {"id":"rule-19-d","citation":"Rule 19(d)","text":"A vessel which detects by radar alone the presence of another vessel shall determine if a close-quarters situation is developing and/or risk of collision exists. If so, she shall take avoiding action in ample time, provided that when such action consists of an alteration in course, so far as possible the following shall be avoided:"},
+  {"id":"rule-19-d-i","citation":"Rule 19(d)(i)","text":"An alteration of course to port for a vessel forward of the beam, other than for a vessel being overtaken;"},
+  {"id":"rule-19-d-ii","citation":"Rule 19(d)(ii)","text":"An alteration of course toward a vessel abeam or abaft the beam."},
+  {"id":"rule-19-e","citation":"Rule 19(e)","text":"Except where it has been determined that a risk of collision does not exist, every vessel which hears apparently forward of her beam the fog signal of another vessel, or which cannot avoid a close-quarters situation with another vessel forward of her beam, shall reduce her speed to be the minimum at which she can be kept on her course. She shall if necessary take all her way off and in any event navigate with extreme caution until danger of collision is over."},
+  {"id":"rule-20","citation":"Rule 20","heading":"Application"},
+  {"id":"rule-20-a","citation":"Rule 20(a)","text":"Rules in this part shall be complied with in all weathers."},
+  {"id":"rule-20-b","citation":"Rule 20(b)","text":"The Rules concerning lights shall be complied with from sunset to sunrise, and during such times no other lights shall be exhibited, except such lights which cannot be mistaken for the lights specified in these Rules or do not impair their visibility or distinctive character, or interfere with the keeping of a proper look-out."},
+  {"id":"rule-20-c","citation":"Rule 20(c)","text":"The lights prescribed by these rules shall, if carried, also be exhibited from sunrise to sunset in restricted visibility and may be exhibited in all other circumstances when it is deemed necessary."},
+  {"id":"rule-20-d","citation":"Rule 20(d)","text":"The Rules concerning shapes shall be complied with by day."},
+  {"id":"rule-20-e","citation":"Rule 20(e)","text":"The lights and shapes specified in these Rules shall comply with the provisions of Annex I to these Regulations."},
+  {"id":"rule-21","citation":"Rule 21","heading":"Definitions"},
+  {"id":"rule-21-a","citation":"Rule 21(a)","text":"\"Masthead light\" means a white light placed over the fore and aft centerline of the vessel showing an unbroken light over an arc of horizon of 225 degrees and so fixed as to show the light from right ahead to 22.5 degrees abaft the beam on either side of the vessel."},
+  {"id":"rule-21-b","citation":"Rule 21(b)","text":"\"Sidelights\" means a green light on the starboard side and a red light on the port side each showing an unbroken light over an arc of horizon of 112.5 degrees and so fixed as to show the light from right ahead to 22.5 degrees abaft the beam on the respective side. In a vessel of less than 20 meters in length the sidelights may be combined in one lantern carried on the fore and aft centerline of the vessel."},
+  {"id":"rule-21-c","citation":"Rule 21(c)","text":"\"Sternlight\", means a white light placed as nearly as practicable at the stern showing an unbroken light over an arc of horizon of 135 degrees and so fixed as to show the light 67.5 degrees from right aft on each side of the vessel."},
+  {"id":"rule-21-d","citation":"Rule 21(d)","text":"\"Towing light\" means a yellow light having the same characteristics as the \"sternlight\" defined in paragraph (c) of this Rule."},
+  {"id":"rule-21-e","citation":"Rule 21(e)","text":"\"All round light\" means a light showing an unbroken light over an arc of horizon of 360 degrees."},
+  {"id":"rule-21-f","citation":"Rule 21(f)","text":"\"Flashing light\" means a light flashing at regular intervals at a frequency of 120 flashes or more per minute."},
+  {"id":"rule-22","citation":"Rule 22","heading":"Visibility of Lights","text":"The lights prescribed in these Rules shall have an intensity as specified in Section 8 of Annex I to these Regulations so as to be visible at the following minimum ranges:"},
+  {"id":"rule-22-a","citation":"Rule 22(a)","text":"In vessels of 50 meters or more in length: a masthead light, 6 miles; a sidelight, 3 miles; a towing light, 3 miles; a white red, green or yellow all-around light, 3 miles."},
+  {"id":"rule-22-b","citation":"Rule 22(b)","text":"In vessels of 12 meters or more in length but less than 50 meters in length; a masthead light, 5 miles; except that where the length of the vessel is less than 20 meters, 3 miles; a sidelight, 2 miles; a sternlight, 2 miles, A towing light, 2 miles; a white, red, green or yellow all-round light, 2 miles."},
+  {"id":"rule-22-c","citation":"Rule 22(c)","text":"In vessels of less than 12 meters in length: a masthead light, 2 miles; a sidelight, 1 miles; a towing light, 2 miles; a white red, green or yellow all-around light, 2 miles."},
+  {"id":"rule-22-d","citation":"Rule 22(d)","text":"In inconspicuous, partly submerged vessels or objects being towed; a white all-round light; 3 miles."},
+  {"id":"rule-23","citation":"Rule 23","heading":"power driven Vessels Underway"},
+  {"id":"rule-23-a","citation":"Rule 23(a)","text":"A power driven vessel underway shall exhibit:"},
+  {"id":"rule-23-a-i","citation":"Rule 23(a)(i)","text":"a masthead light forward;"},
+  {"id":"rule-23-a-ii","citation":"Rule 23(a)(ii)","text":"a second masthead light abaft of and higher than the forward one; except that a vessel of less than 50 meters in length shall not be obliged to exhibit such a light but may do so;"},
+  {"id":"rule-23-a-iii","citation":"Rule 23(a)(iii)","text":"sidelights: and"},
+  {"id":"rule-23-a-iv","citation":"Rule 23(a)(iv)","text":"a sternlight."},
+  {"id":"rule-23-b","citation":"Rule 23(b)","text":"An air-cushion vessel when operating in non-displacement mode shall, in addition to the lights prescribed in paragraph (a) of this Rule, exhibit an all-round flashing yellow light."},
+  {"id":"rule-23-c","citation":"Rule 23(c)"},
+  {"id":"rule-23-c-i","citation":"Rule 23(c)(i)","text":"A power driven vessel of less than 12 meters in length may in lieu of the lights prescribed in paragraph (a) of this Rule exhibit an all-round white light and sidelights."},
+  {"id":"rule-23-c-ii","citation":"Rule 23(c)(ii)","text":"a power driven vessel of less than 7 meters in length whose maximum speed does not exceed 7 knots may in lieu of the lights prescribed in paragraph (a) of this Rule exhibit an all-round white light and shall, if practicable, also exhibit sidelights."},
+  {"id":"rule-23-c-iii","citation":"Rule 23(c)(iii)","text":"the masthead light or all-round white light on a power driven vessel of less than 12 meters in length may be displaced from the fore and aft centerline of the vessel if centerline fitting is not practicable, provided the sidelights are combined in one lantern which shall be carried on the fore and aft centerline of the vessel or located as nearly as practicable in the same fore and aft line as the masthead light or all-round white light."},
+  {"id":"rule-24","citation":"Rule 24","heading":"Towing and Pushing"},
+  {"id":"rule-24-a","citation":"Rule 24(a)","text":"A power driven vessel when towing shall exhibit:"},
+  {"id":"rule-24-a-i","citation":"Rule 24(a)(i)","text":"instead of the light prescribed in Rule 23(a)(i) or (a)(ii), two masthead lights in a vertical line. When the length of the tow measuring from the stern of the towing vessel to the after end of the tow exceeds 200 meters, three such lights in a vertical line;"},
+  {"id":"rule-24-a-ii","citation":"Rule 24(a)(ii)","text":"sidelights;"},
+  {"id":"rule-24-a-iii","citation":"Rule 24(a)(iii)","text":"a sternlight;"},
+  {"id":"rule-24-a-iv","citation":"Rule 24(a)(iv)","text":"a towing light in a vertical line above the sternlight; and"},
+  {"id":"rule-24-a-v","citation":"Rule 24(a)(v)","text":"when the length of the tow exceeds 200 meters, a diamond shape where it can best be seen."},
+  {"id":"rule-24-b","citation":"Rule 24(b)","text":"When a pushing vessel and a vessel being pushed ahead are rigidly connected in a composite unit they shall be regarded as a power driven vessel and exhibit the lights prescribed in Rule 23."},
+  {"id":"rule-24-c","citation":"Rule 24(c)","text":"A power driven vessel when pushing ahead or towing alongside, except in the case of a composite unit, shall exhibit:"},
+  {"id":"rule-24-c-i","citation":"Rule 24(c)(i)","text":"instead of the light prescribed in Rule 23(a)(i) or (a)(ii), two masthead lights in a vertical line. When the length of the tow measuring from the stern of the towing vessel to the after end of the tow exceeds 200 meters, three such lights in a vertical line;"},
+  {"id":"rule-24-c-ii","citation":"Rule 24(c)(ii)","text":"sidelights;"},
+  {"id":"rule-24-c-iii","citation":"Rule 24(c)(iii)","text":"a sternlight."},
+  {"id":"rule-24-d","citation":"Rule 24(d)","text":"A power driven vessel to which paragraph (a) or (c) of this Rule apply shall also comply with rule 23(a)(ii)."},
+  {"id":"rule-24-e","citation":"Rule 24(e)","text":"A vessel or object being towed, other than those mentioned in paragraph (g) of this Rule, shall exhibit:"},
+  {"id":"rule-24-e-i","citation":"Rule 24(e)(i)","text":"sidelights;"},
+  {"id":"rule-24-e-ii","citation":"Rule 24(e)(ii)","text":"a sternlight;"},
+  {"id":"rule-24-e-iii","citation":"Rule 24(e)(iii)","text":"when the length of the tow exceeds 200 meters, a diamond shape where it can best be seen."},
+  {"id":"rule-24-f","citation":"Rule 24(f)","text":"Provided that any number of vessels being towed alongside or pushed in a group shall be lighted as one vessel,"},
+  {"id":"rule-24-f-i","citation":"Rule 24(f)(i)","text":"a vessel being pushed ahead, not being part of a composite unit, shall exhibit at the forward end, sidelights;"},
+  {"id":"rule-24-f-ii","citation":"Rule 24(f)(ii)","text":"a vessel being towed alongside shall exhibit a sternlight and at the forward end, sidelights."},
+  {"id":"rule-24-g","citation":"Rule 24(g)","text":"An inconspicuous, partly submerged vessel or object, or combination of such vessels or objects being towed, shall exhibit:"},
+  {"id":"rule-24-g-i","citation":"Rule 24(g)(i)","text":"if it is less than 25 meters in breadth, one all-round white light at or near the front end and one at or near the after end except that dracones need not exhibit a light at or near the forward end;"},
+  {"id":"rule-24-g-ii","citation":"Rule 24(g)(ii)","text":"if it is 25 meters or more in breadth, two or more additional all-round white lights at or near the extremities of its breadth;"},
+  {"id":"rule-24-g-iii","citation":"Rule 24(g)(iii)","text":"if it exceeds 100 meters in length, additional all-round white lights between the lights prescribed in subparagraphs (i) and (ii) so that the distance between the lights shall not exceed 100 meters.;"},
+  {"id":"rule-24-g-iv","citation":"Rule 24(g)(iv)","text":"a diamond shape at or near the aftermost extremity of the last vessel or object being towed and if the length of the tow exceeds 200 meters an additional diamond shape where it can best be seen and located as far forward as is practicable."},
+  {"id":"rule-24-h","citation":"Rule 24(h)","text":"When from any sufficient cause it is impracticable for a vessel or object being towed to exhibit the lights or shapes prescribed in paragraph (e) or (g) of this Rule, all possible measures shall be taken to light the vessel or object being towed or at least indicate the presence of such vessel or object."},
+  {"id":"rule-24-i","citation":"Rule 24(i)","text":"Where from any sufficient cause it is impracticable for a vessel not normally engaged in towing operations to display the lights prescribed in paragraph (a) or (c) of this Rule, such vessel shall not be required to exhibit those lights when engaged in towing another vessel in distress or otherwise in need of assistance. All possible measures shall be taken to indicate the nature of the relationship between the towing vessel and the vessel being towed as authorized by Rule 36, in particular by illuminating the towline."},
+  {"id":"rule-25","citation":"Rule 25","heading":"Sailing Vessels Underway and Vessels Under Oars"},
+  {"id":"rule-25-a","citation":"Rule 25(a)","text":"a sailing vessel underway shall exhibit:"},
+  {"id":"rule-25-a-i","citation":"Rule 25(a)(i)","text":"sidelights;"},
+  {"id":"rule-25-a-ii","citation":"Rule 25(a)(ii)","text":"a sternlight."},
+  {"id":"rule-25-b","citation":"Rule 25(b)","text":"In a sailing vessel of less than 20 meters in length the lights prescribed in paragraph (a) of this Rule may be combined in one lantern carried at or near the top of the mast where it can best be seen."},
+  {"id":"rule-25-c","citation":"Rule 25(c)","text":"A sailing vessel underway may, in addition to the lights prescribed in paragraph (a) of this Rule, exhibit at or near the top of the mast, where they can best be seen, two all-round lights in a vertical line, the upper being red and the lower Green, but these lights shall not be exhibited in conjunction with the combined lantern permitted by paragraph (b) of this Rule."},
+  {"id":"rule-25-d","citation":"Rule 25(d)"},
+  {"id":"rule-25-d-i","citation":"Rule 25(d)(i)","text":"A sailing vessel of less than 7 meters in length shall, if practicable, exhibit the lights prescribed in paragraph (a) or (b) of this Rule, but if she does not, she shall have ready at hand an electric torch or lighted lantern showing a white light which shall be exhibited in sufficient time to prevent collision."},
+  {"id":"rule-25-d-ii","citation":"Rule 25(d)(ii)","text":"A vessel under oars may exhibit the lights prescribed in this rule for sailing vessels, but if she does not, she shall have ready at hand an electric torch or lighted lantern showing a white light which shall be exhibited in sufficient time to prevent collision."},
+  {"id":"rule-25-e","citation":"Rule 25(e)","text":"A vessel proceeding under sail when also being propelled by machinery shall exhibit forward where it can best be seen a conical shape, apex downwards."},
+  {"id":"rule-26","citation":"Rule 26","heading":"Fishing Vessels"},
+  {"id":"rule-26-a","citation":"Rule 26(a)","text":"A vessel engaged in fishing, whether underway or at anchor, shall exhibit only the lights and shapes prescribed by this rule."},
+  {"id":"rule-26-b","citation":"Rule 26(b)","text":"A vessel when engaged in trawling, by which is meant the dragging through the water of a dredge net or other apparatus used as a fishing appliance, shall exhibit;"},
+  {"id":"rule-26-b-i","citation":"Rule 26(b)(i)","text":"two all-round lights in a vertical line, the upper being green and the lower white, or a shape consisting of two cones with their apexes together in a vertical line one above the other; a vessel of less than 20 meters in length may instead of this shape exhibit a basket;"},
+  {"id":"rule-26-b-ii","citation":"Rule 26(b)(ii)","text":"a masthead light abaft of and higher than the all-round green light; a vessel of less than 50 meters in length shall not be obliged to exhibit such a light but may do so;"},
+  {"id":"rule-26-b-iii","citation":"Rule 26(b)(iii)","text":"when making way through the water, in addition to the lights prescribed in this paragraph, sidelights and a sternlight."},
+  {"id":"rule-26-c","citation":"Rule 26(c)","text":"A vessel engaged in fishing, other than trawling, shall exhibit:"},
+  {"id":"rule-26-c-i","citation":"Rule 26(c)(i)","text":"two all-round lights in a vertical line, the upper being red and the lower white, or a shape consisting of two cones with their apexes together in a vertical line one above the other; a vessel of less than 20 meters in length may instead of this shape exhibit a basket;"},
+  {"id":"rule-26-c-ii","citation":"Rule 26(c)(ii)","text":"when there is outlying gear extending more than 150 meters horizontally from the vessel, an all-round white light or a cone apex upwards in the direction of the gear."},
+  {"id":"rule-26-c-iii","citation":"Rule 26(c)(iii)","text":"when making way through the water, in addition to the lights prescribed in this paragraph, sidelights and a sternlight."},
+  {"id":"rule-26-d","citation":"Rule 26(d)","text":"A vessel engaged in fishing in close proximity to other vessels engaged in fishing may exhibit the additional signals described in Annex II to these Regulations."},
+  {"id":"rule-26-e","citation":"Rule 26(e)","text":"A vessel when not engaged in fishing shall not exhibit the lights or shapes prescribed in this Rule, but only those prescribed for a vessel of her length."},
+  {"id":"rule-27","citation":"Rule 27","heading":"Vessels Not Under Command or Restricted in Their Ability to Maneuver"},
+  {"id":"rule-27-a","citation":"Rule 27(a)","text":"A vessel not under command shall exhibit:"},
+  {"id":"rule-27-a-i","citation":"Rule 27(a)(i)","text":"two all-round red lights in a vertical line where they can best be seen;"},
+  {"id":"rule-27-a-ii","citation":"Rule 27(a)(ii)","text":"two balls or similar shapes in a vertical line where they can best be seen;"},
+  {"id":"rule-27-a-iii","citation":"Rule 27(a)(iii)","text":"when making way through the water, in addition to the lights prescribed in this paragraph, sidelights and a sternlight."},
+  {"id":"rule-27-b","citation":"Rule 27(b)","text":"A vessel restricted in her ability to maneuver, except a vessel engaged in mineclearance operations, shall exhibit:"},
+  {"id":"rule-27-b-i","citation":"Rule 27(b)(i)","text":"three all-round lights in a vertical line where they can best be seen. The highest and lowest of these lights shall be red and the middle light shall be white;"},
+  {"id":"rule-27-b-ii","citation":"Rule 27(b)(ii)","text":"three shapes in a vertical line where they can best be seen. The highest and lowest of these shapes shall be balls and the middle one a diamond."},
+  {"id":"rule-27-b-iii","citation":"Rule 27(b)(iii)","text":"when making way through the water, a masthead light, sidelights and a sternlight in addition to the lights prescribed in subparagraph (i);"},
+  {"id":"rule-27-b-iv","citation":"Rule 27(b)(iv)","text":"when at anchor, in addition to the lights or shapes prescribed in subparagraphs(i) and (ii), the light, lights, or shape prescribed in Rule 30."},
+  {"id":"rule-27-c","citation":"Rule 27(c)","text":"A power driven vessel engaged in a towing operation such as severely restricts the towing vessel and her tow in their ability to deviate from their course shall, in addition to the lights or shapes prescribed in Rule 24(a), exhibit the lights or shapes prescribed in subparagraph (b)(i) and (ii) of this Rule."},
+  {"id":"rule-27-d","citation":"Rule 27(d)","text":"A vessel engaged in dredging or underwater operations, when restricted in her ability to maneuver, shall exhibit the lights and shapes prescribed in subparagraphs (b)(i),(ii) and (iii) of this Rule and shall in addition when an obstruction exists, exhibit:"},
+  {"id":"rule-27-d-i","citation":"Rule 27(d)(i)","text":"two all-round red lights or two balls in a vertical line to indicate the side on which the obstruction exists;"},
+  {"id":"rule-27-d-ii","citation":"Rule 27(d)(ii)","text":"two all-round green lights or two diamonds in a vertical line to indicate the side on which another vessel may pass;"},
+  {"id":"rule-27-d-iii","citation":"Rule 27(d)(iii)","text":"when at anchor, the lights or shapes prescribed in this paragraph instead of the lights or shapes prescribed in Rule 30."},
+  {"id":"rule-27-e","citation":"Rule 27(e)","text":"Whenever the size of a vessel engaged in diving operations makes it impracticable to exhibit all lights and shapes prescribed in paragraph (d) of this Rule, the following shall be exhibited:"},
+  {"id":"rule-27-e-i","citation":"Rule 27(e)(i)","text":"Three all-round lights in a vertical line where they can best be seen. The highest and lowest of these lights shall be red and the middle light shall be white;"},
+  {"id":"rule-27-e-ii","citation":"Rule 27(e)(ii)","text":"a rigid replica of the code flag \"A\" not less than 1 meter in height. Measures shall be taken to ensure its all- round visibility."},
+  {"id":"rule-27-f","citation":"Rule 27(f)","text":"A vessel engaged in mineclearance operations shall in addition to the lights prescribed for a power driven vessel in Rule 23 or to the light or shape prescribed for a vessel at anchor in Rule 30 as appropriate, exhibit three all-round green lights or three balls. One of these lights or shapes shall be exhibited near the foremast head and one at each end of the fore yard. These lights or shapes indicate that it is dangerous for another vessel to approach within 1000 meters of the mineclearance vessel."},
+  {"id":"rule-27-g","citation":"Rule 27(g)","text":"Vessels of less than 12 meters in length, except those engaged in diving operations, shall not be required to exhibit the lights prescribed in this Rule."},
+  {"id":"rule-27-h","citation":"Rule 27(h)","text":"The signals prescribed in this Rule are not signals of vessels in distress and requiring assistance. Such signals are contained in Annex IV to these Regulations."},
+  {"id":"rule-28","citation":"Rule 28","heading":"Vessels Constrained by their Draft","text":"A vessel constrained by her draft may, in addition to the lights prescribed for power driven vessels in Rule 23, exhibit where they can best be seen three all-round red lights in a vertical line, or a cylinder."},
+  {"id":"rule-29","citation":"Rule 29","heading":"Pilot Vessels"},
+  {"id":"rule-29-a","citation":"Rule 29(a)","text":"A vessel engaged on pilotage duty shall exhibit:"},
+  {"id":"rule-29-a-i","citation":"Rule 29(a)(i)","text":"at or near the masthead, two all-round lights in a vertical line, the upper being white and the lower red;"},
+  {"id":"rule-29-a-ii","citation":"Rule 29(a)(ii)","text":"when underway, in addition, sidelights and a sternlight;"},
+  {"id":"rule-29-a-iii","citation":"Rule 29(a)(iii)","text":"when at anchor, in addition to the lights prescribed in subparagraph (i), the light, lights, or shape prescribed in Rule 30 for vessels at anchor."},
+  {"id":"rule-29-b","citation":"Rule 29(b)","text":"A pilot vessel when not engaged on pilotage duty shall exhibit the lights or shapes prescribed for a similar vessel of her length."},
+  {"id":"rule-30","citation":"Rule 30","heading":"Anchored Vessels and Vessels Aground"},
+  {"id":"rule-30-a","citation":"Rule 30(a)","text":"A vessel at anchor shall exhibit where it can best be seen:"},
+  {"id":"rule-30-a-i","citation":"Rule 30(a)(i)","text":"in the fore part, an all-round white light or one ball;"},
+  {"id":"rule-30-a-ii","citation":"Rule 30(a)(ii)","text":"at or near the stern and at a lower level than the light prescribed in subparagraph (i), an all-round white light."},
+  {"id":"rule-30-b","citation":"Rule 30(b)","text":"A vessel of less than 50 meters in length may exhibit an all-round white light where it can best be seen instead of the lights prescribed in paragraph (a) of this Rule."},
+  {"id":"rule-30-c","citation":"Rule 30(c)","text":"A vessel at anchor may, and a vessel of 100 meters and more in length shall, also use the available working or equivalent lights to illuminate her decks."},
+  {"id":"rule-30-d","citation":"Rule 30(d)","text":"A vessel aground shall exhibit the lights prescribed in paragraph (a) or (b) of this Rule and in addition, where they can best be seen;"},
+  {"id":"rule-30-d-i","citation":"Rule 30(d)(i)","text":"two all-round red lights in a vertical line;"},
+  {"id":"rule-30-d-ii","citation":"Rule 30(d)(ii)","text":"three balls in a vertical line."},
+  {"id":"rule-30-e","citation":"Rule 30(e)","text":"A vessel of less than 7 meters in length, when at anchor not in or near a narrow channel, fairway or where other vessels normally navigate, shall not be required to exhibit the shape prescribed in paragraphs (a) and (b) of this Rule."},
+  {"id":"rule-30-f","citation":"Rule 30(f)","text":"A vessel of less than 12 meters in length, when aground, shall not be required to exhibit the lights or shapes prescribed in subparagraphs (d)(i) and (ii) of this Rule."},
+  {"id":"rule-31","citation":"Rule 31","heading":"Seaplanes","text":"Where it is impracticable for a seaplane to exhibit lights or shapes of the characteristics or in the positions prescribed in the Rules of this Part she shall exhibit lights and shapes as closely similar in characteristics and position as is possible."},
+  {"id":"rule-32","citation":"Rule 32","heading":"Definitions"},
+  {"id":"rule-32-a","citation":"Rule 32(a)","text":"The word \"whistle\" means any sound signaling appliance capable of producing the prescribed blasts and which complies with the specifications in Annex III to these Regulations."},
+  {"id":"rule-32-b","citation":"Rule 32(b)","text":"The term \"short blast\" means a blast of about one second's duration."},
+  {"id":"rule-32-c","citation":"Rule 32(c)","text":"The term \"prolonged blast\" means a blast from four to six seconds' duration."},
+  {"id":"rule-33","citation":"Rule 33","heading":"Equipment for Sound Signals"},
+  {"id":"rule-33-a","citation":"Rule 33(a)","text":"A vessel of 12 meters or more in length shall be provided with a whistle and a bell and a vessel of 100 meters or more in length shall, in addition be provided with a gong, the tone and sound of which cannot be confused with that of the bell. The whistle, bell and gong shall comply with the specifications in Annex III to these Regulations. The bell or gong or both may be replaced by other equipment having the same respective sound characteristics, provided that manual sounding of the prescribed signals shall always be possible."},
+  {"id":"rule-33-b","citation":"Rule 33(b)","text":"A vessel of less than 12 meters in length shall not be obliged to carry the sound signaling appliances prescribed in paragraph (a) of this Rule but if she does not, she shall be provided with some other means of making an efficient signal."},
+  {"id":"rule-34","citation":"Rule 34","heading":"Maneuvering and Warning Signals"},
+  {"id":"rule-34-a","citation":"Rule 34(a)","text":"When vessels are in sight of one another, a power driven vessel under way, when maneuvering as authorized or required by these Rules, shall indicate that maneuver by the following signals on her whistle: one short blast to mean \"I am altering my course to starboard\"; two short blasts to mean \"I am altering my course to port\"; three short blasts to mean \"I am operating astern propulsion\"."},
+  {"id":"rule-34-b","citation":"Rule 34(b)","text":"Any vessel may supplement the whistle signals prescribed in paragraph (a) of this Rule by light signals, repeated as appropriate, whilst the maneuver is being carried out:"},
+  {"id":"rule-34-b-i","citation":"Rule 34(b)(i)","text":"these signals shall have the following significance: one flash to mean \"I am altering my course to starboard\"; two flashes to mean \"I am altering my course to port\"; three flashes to mean \"I am operating astern propulsion\"."},
+  {"id":"rule-34-b-ii","citation":"Rule 34(b)(ii)","text":"the duration of each flash shall be about one second, the interval between flashes shall be about one second, and the interval between successive signals shall not be less than ten seconds."},
+  {"id":"rule-34-b-iii","citation":"Rule 34(b)(iii)","text":"the light used for this signal shall, if fitted, be an all-round white light, visible at a minimum range of 5 miles, and shall comply with the provisions of Annex I to these Regulations."},
+  {"id":"rule-34-c","citation":"Rule 34(c)","text":"When in sight of one another in a narrow channel or fairway:"},
+  {"id":"rule-34-c-i","citation":"Rule 34(c)(i)","text":"a vessel intending to overtake another shall in compliance with Rule 9 (e)(i) indicate her intention by the following signals on her whistle. two prolonged blasts followed by one short blast to mean \"I intend to overtake you on your starboard side\"; two prolonged blasts followed by two short blasts to mean \"I intend to overtake you on your port side\"."},
+  {"id":"rule-34-c-ii","citation":"Rule 34(c)(ii)","text":"the vessel about to be overtaken when acting in accordance with 9(e)(i) shall indicate her agreement by the following signal on her whistle: one prolonged, one short, one prolonged and one short blast, in that order."},
+  {"id":"rule-34-d","citation":"Rule 34(d)","text":"When vessels in sight of one another are approaching each other and from any cause either vessel fails to understand the intentions or actions of the other, or is in doubt whether sufficient action is being taken by the other to avoid collision, the vessel in doubt shall immediately indicate such doubt by giving at least five short and rapid blasts on the whistle. Such signal may be supplemented by at least five short and rapid flashes."},
+  {"id":"rule-34-e","citation":"Rule 34(e)","text":"A vessel nearing a bend or an area of a channel or fairway where other vessels may be obscured by an intervening obstruction shall sound one prolonged blast. Such signal shall be answered with a prolonged blast by any approaching vessel that may be within hearing around the bend or behind the intervening obstruction."},
+  {"id":"rule-34-f","citation":"Rule 34(f)","text":"If whistles are fitted on a vessel at a distance apart of more than 100 meters, one whistle only shall be used for giving maneuvering and warning signals."},
+  {"id":"rule-35","citation":"Rule 35","heading":"Sound Signals in Restricted Visibility","text":"In or near an area of restricted visibility, whether by day or night the signals prescribed in this Rule shall be used as follows:"},
+  {"id":"rule-35-a","citation":"Rule 35(a)","text":"A power driven vessel making way through the water shall sound at intervals of not more than 2 minutes one prolonged blast."},
+  {"id":"rule-35-b","citation":"Rule 35(b)","text":"A power driven vessel underway but stopped and making no way through the water shall sound at intervals of no more than 2 minutes two prolonged blasts in succession with an interval of about 2 seconds between them."},
+  {"id":"rule-35-c","citation":"Rule 35(c)","text":"A vessel not under command, a vessel restricted in her ability to maneuver, a vessel constrained by her draft, a sailing vessel, a vessel engaged in fishing and a vessel engaged in towing or pushing another vessel shall, instead of the signals prescribed in paragraph (a) or (b) of this Rule, sound at intervals of not more than 2 minutes three blasts in succession, namely one prolonged followed by two short blasts."},
+  {"id":"rule-35-d","citation":"Rule 35(d)","text":"A vessel engaged in fishing, when at anchor, and a vessel restricted in her ability to maneuver when carrying out her work at anchor, shall instead of the signals prescribed in paragraph (g) of this Rule sound the signal prescribed in paragraph (c) of this Rule."},
+  {"id":"rule-35-e","citation":"Rule 35(e)","text":"A vessel towed or if more than one vessel is being towed the last vessel of the tow, if manned, shall at intervals of not more than 2 minutes sound four blasts in succession, namely one prolonged followed by three short blasts. When practicable, this signal shall be made immediately after the signal made by the towing vessel."},
+  {"id":"rule-35-f","citation":"Rule 35(f)","text":"When a pushing vessel and a vessel being pushed ahead are rigidly connected in a composite unit they shall be regarded as a power driven vessel and shall give the signals prescribed in paragraphs (a) or (b) of this Rule."},
+  {"id":"rule-35-g","citation":"Rule 35(g)","text":"A vessel at anchor shall at intervals of not more than 1 minute ring the bell rapidly for five seconds. In a vessel 100 meters or more in length the bell shall be sounded in the forepart of the vessel and immediately after the ringing of the bell the gong shall be sounded rapidly for about 5 seconds in the after part of the vessel. A vessel at anchor may in addition sound three blasts in succession, namely one short, one long and one short blast, to give warning of her position and of the possibility of collision to an approaching vessel."},
+  {"id":"rule-35-h","citation":"Rule 35(h)","text":"A vessel aground shall give the bell signal and if required the gong signal prescribed in paragraph (g) of this Rule and shall, in addition, give three separate and distinct strokes on the bell immediately before and after the rapid ringing of the bell. A vessel aground may in addition sound an appropriate whistle signal."},
+  {"id":"rule-35-i","citation":"Rule 35(i)","text":"A vessel of less than 12 meters in length shall not be obliged to give the above mentioned signals but, if she does not, shall make some other efficient sound signal at intervals of not more than 2 minutes."},
+  {"id":"rule-35-j","citation":"Rule 35(j)","text":"A pilotage vessel when engaged on pilotage duty may in addition to the signals prescribed in paragraph (a), (b) or (g) of this Rule sound an identity signal consisting of four short blasts."},
+  {"id":"rule-36","citation":"Rule 36","heading":"Signals to Attract Attention","text":"If necessary to attract the attention of another vessel, any vessel may make light or sound signals that cannot be mistaken for any signal authorized elsewhere in these Rules, or may direct the beam of her searchlight in the direction of the danger, in such a way as not to embarrass any vessel Any light to attract the attention of another vessel shall be such that it cannot be mistaken for any aid to navigation. For the purpose of this Rule the use of high intensity intermittent or revolving lights, such as strobe lights, shall be avoided."},
+  {"id":"rule-37","citation":"Rule 37","heading":"Distress Signals","text":"When a vessel is in distress and requires assistance she shall use or exhibit the signals described in Annex IV to these Regulations."},
+  {"id":"rule-38","citation":"Rule 38","heading":"Exemptions","text":"Any vessel (or class of vessel) provided that she complies with the requirements of the International Regulations for the Preventing of Collisions at Sea, 1960, the keel of which is laid or is at a corresponding stage of construction before the entry into force of these Regulations may be exempted from compliance therewith as follows:"},
+  {"id":"rule-38-a","citation":"Rule 38(a)","text":"The installation of lights with ranges prescribed in Rule 22, until 4 years after the date of entry into force of these regulations."},
+  {"id":"rule-38-b","citation":"Rule 38(b)","text":"The installation of lights with color specifications as prescribed in Section 7 of Annex I to these Regulations, until 4 years after the entry into force of these Regulations."},
+  {"id":"rule-38-c","citation":"Rule 38(c)","text":"The repositioning of lights as a result of conversion from Imperial to metric units and rounding off measurement figures, permanent exemption."},
+  {"id":"rule-38-d","citation":"Rule 38(d)"},
+  {"id":"rule-38-d-i","citation":"Rule 38(d)(i)","text":"The repositioning of masthead lights on vessels of less than 150 meters in length, resulting from the prescriptions of Section 3 (a) of Annex I to these regulations, permanent exemption."},
+  {"id":"rule-38-d-ii","citation":"Rule 38(d)(ii)","text":"The repositioning of masthead lights on vessels of 150 meters or more in length, resulting from the prescriptions of Section 3 (a) of Annex I to these regulations, until 9 years after the date of entry into force of these Regulations."},
+  {"id":"rule-38-e","citation":"Rule 38(e)","text":"The repositioning of masthead lights resulting from the prescriptions of Section 2(b) of Annex I to these Regulations, until 9 years after the date of entry into force of these Regulations."},
+  {"id":"rule-38-f","citation":"Rule 38(f)","text":"The repositioning of sidelights resulting from the prescriptions of Section 2(g) and 3(b) of Annex I to these Regulations, until 9 years after the date of entry into force of these Regulations."},
+  {"id":"rule-38-g","citation":"Rule 38(g)","text":"The requirements for sound signal appliances prescribed in Annex II to these Regulations, until 9 years after the date of entry into force of these Regulations."},
+  {"id":"rule-38-h","citation":"Rule 38(h)","text":"The repositioning of all-round lights resulting from the prescription of Section 9(b) of Annex I to these Regulations, permanent exemption."}
+];
+
+
 /* ===== data/rule-text.js ===== */
 /**
  * The rule text, as addressable paragraphs.
  *
- * THE TEXT IS NOT SUPPLIED. READ THIS BEFORE ADDING ANY.
+ * WHERE THE TEXT COMES FROM
  *
- * Every entry below carries `text: null` and `status: 'pending-source'`. That is
- * deliberate and it is not an oversight.
+ * `data/rule-text-source.js`, which is generated — never hand-edited — by
+ * `node tools/import-rule-text.cjs <file.txt> --write`. The structure comes
+ * from the source too: the parser reads the markers and builds the paragraph
+ * list, rather than fitting the source into a shape somebody remembered. That
+ * matters, because the shape somebody remembered was wrong in two places, and
+ * the import is what found them.
  *
- * This is the one section of the app that quotes rather than paraphrases, which
- * is exactly why it cannot be written from memory. Everywhere else an
- * approximation is a paraphrase and is honest about being one; here an
- * approximation is a misquotation of a regulation, presented as the regulation.
- * A reader would have no way to tell which paragraphs were right. So the
- * structure is built and the text is left for someone with 33 CFR Subchapter E
- * in front of them.
+ * This is the only section of the app that quotes rather than paraphrases.
+ * Everywhere else an approximation is a paraphrase and says so; here it would
+ * be a misquoted regulation presented as the regulation. So nothing in this
+ * file is written from memory, and `status` records exactly how good the text
+ * is rather than implying it is authoritative.
  *
- * TO SUPPLY IT
+ * STATUS VALUES
  *
- * Fill `text` and set `status: 'verified'` on each entry, from 33 CFR
- * Subchapter E (a US Government work, not subject to copyright). Do not
- * paraphrase into this field — every other file in the project is the place for
- * that. Do not bulk-fill from memory or from a model: fill from the source,
- * paragraph by paragraph, or leave it pending.
+ *   imported          text came from the source file, unedited, uncollated
+ *   pending-source    no text: the source did not cover it
+ *   pending-amendment no text: the source predates the amendment that added it
  *
- * WHAT IS BUILT
- *
- * The structure: ids, parts, paths, parent chains and headings. That is what
- * citations resolve against, so the link layer works today — tapping "Rule
- * 26(b)" in a lights answer opens the right paragraph, and shows that its text
- * is pending rather than showing something invented.
+ * There is no `verified` status in use. Nothing here has been read against an
+ * official copy line by line, and pretending otherwise is the failure this
+ * file exists to avoid. Read SOURCE_CAVEATS before trusting a paragraph.
  *
  * ID SCHEME
  *
- * `rule-26-b-i` for Rule 26(b)(i); `annex-3-1` for Annex III paragraph 1. It
- * matches the granularity of the citations already used across the app, which
- * is the point: store coarser than the citations and every link lands in the
- * wrong place.
- *
- * BLANKS
- *
- * `blanks` is empty on every entry and stays that way until a human authors
- * them. See the note on CLOZE_POLICY below.
+ * `rule-26-b-i` for Rule 26(b)(i); `annex-4-2` for Annex IV paragraph 2. It
+ * matches the granularity of the citations used across the app, which is the
+ * point: store coarser than the citations and every link lands in the wrong
+ * place.
  */
+
+
 
 const RULE_PARTS = [
   { id: 'A', name: 'Part A — General', rules: [1, 2, 3] },
@@ -5472,9 +5796,55 @@ const RULE_SECTIONS = [
 ];
 
 /**
- * Rule headings. Structure and headings are recalled far more reliably than
- * wording, and they are what the index and the search need to be usable before
- * any text exists. They are still marked unverified.
+ * What is wrong with the text that is in here.
+ *
+ * Recorded in the data rather than in a commit message, because the app shows
+ * it to the reader. A study aid that quietly serves a superseded regulation is
+ * worse than one that admits it is quoting an old copy.
+ */
+const SOURCE_CAVEATS = [
+  {
+    id: 'pre-2001',
+    summary: 'The transcription predates the 2001 amendments',
+    detail: 'It carries no wing-in-ground craft provisions. Rule 3(m) and Rule 18(f) are '
+      + 'therefore absent, and both are cited elsewhere in the app. They are kept as '
+      + 'addressable paragraphs with no text, so their links still work.'
+  },
+  {
+    id: 'us-rendering',
+    summary: 'It is a US rendering, not the IMO wording',
+    detail: 'It reads "maneuver", "meters" and "draft" where the IMO text reads '
+      + '"manoeuvre", "metres" and "draught". The wording is not otherwise known to '
+      + 'differ, but it has not been collated against an official copy.'
+  },
+  {
+    id: 'rule-38-g',
+    summary: 'Rule 38(g) cites Annex II where it should cite Annex III',
+    detail: 'Annex III is the one about sound signal appliances. This is an error in the '
+      + 'transcription, left as it stands rather than silently corrected: editing a text '
+      + 'that is presented as quoted is how a study aid stops being trustworthy.'
+  },
+  {
+    id: 'typos',
+    summary: 'It carries the odd transcription slip',
+    detail: 'Rule 6(b)(ii) reads "constrains" where it should read "constraints". A scan '
+      + 'for the usual scanning damage found nothing else, which is not the same as there '
+      + 'being nothing else. Slips are left as they stand, for the reason above.'
+  },
+  {
+    id: 'annexes',
+    summary: 'The annexes are not in the source at all',
+    detail: 'Annexes I to IV are addressable but have no text. Annex IV matters most, '
+      + 'because the distress section cites it by paragraph.'
+  }
+];
+
+/**
+ * Rule headings, in the app's own spelling.
+ *
+ * A heading is a title, not regulatory text, so it follows the rest of the app
+ * rather than the source's Americanised capitals. The importer reports any
+ * heading that differs from the source by more than spelling.
  */
 const RULE_HEADINGS = {
   1: 'Application', 2: 'Responsibility', 3: 'General definitions',
@@ -5502,45 +5872,29 @@ const ANNEXES = [
 ];
 
 /**
- * Subparagraph structure, declared only where the app cites it or where the
- * shape is needed to hold a citation's parent chain.
+ * Paragraphs the app cites that the source does not contain.
  *
- * Deliberately not invented wholesale. A subparagraph declared here that does
- * not exist in the regulation would be a fabricated citation target, which is
- * the same class of error as fabricated text.
+ * Both were added by the 2001 amendments. They are declared so their citations
+ * still resolve — a link that goes nowhere is worse than a paragraph that
+ * admits it has no text.
+ *
+ * Rule 23(d) and Rule 35(k) used to be declared here too, and have been
+ * dropped. Nothing cited them; they were guesses at a structure that the
+ * source settles.
  */
-const SUBPARAGRAPHS = {
-  2: ['a', 'b'],
-  3: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'],
-  12: ['a', 'b'],
-  13: ['a', 'b', 'c', 'd'],
-  14: ['a', 'b', 'c'],
-  17: ['a', 'b', 'c', 'd'],
-  18: ['a', 'b', 'c', 'd', 'e', 'f'],
-  23: ['a', 'b', 'c', 'd'],
-  24: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'],
-  25: ['a', 'b', 'c', 'd', 'e'],
-  26: ['a', 'b', 'c', 'd', 'e'],
-  27: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
-  29: ['a', 'b'],
-  30: ['a', 'b', 'c', 'd', 'e'],
-  34: ['a', 'b', 'c', 'd', 'e', 'f'],
-  35: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
-};
+const AMENDMENT_GAPS = [
+  { id: 'rule-3-m', citation: 'Rule 3(m)', rule: 3, path: ['m'], parentId: 'rule-3' },
+  { id: 'rule-18-f', citation: 'Rule 18(f)', rule: 18, path: ['f'], parentId: 'rule-18' }
+];
 
-/** Third-level structure, again only where cited. */
-const SUBSUB = {
-  '3-g': ['i', 'ii', 'iii', 'iv', 'v', 'vi'],
-  '12-a': ['i', 'ii', 'iii'],
-  '17-a': ['i', 'ii'],
-  '23-c': ['i', 'ii'],
-  '24-a': ['i', 'ii', 'iii'],
-  '26-b': ['i', 'ii', 'iii'],
-  '26-c': ['i', 'ii'],
-  '27-b': ['i', 'ii', 'iii', 'iv'],
-  '29-a': ['i', 'ii'],
-  '34-c': ['i', 'ii']
-};
+const partFor = n => (RULE_PARTS.find(p => p.rules.includes(n)) || {}).id || null;
+const sectionFor = n => (RULE_SECTIONS.find(s => s.rules.includes(n)) || {}).name || null;
+
+/** `rule-26-b-i` -> { rule: 26, path: ['b', 'i'] } */
+function readId(id) {
+  const bits = id.split('-');
+  return { rule: Number(bits[1]), path: bits.slice(2) };
+}
 
 const paragraph = e => ({
   text: null,
@@ -5553,42 +5907,39 @@ const paragraph = e => ({
 
 function build() {
   const out = [];
-  for (const part of RULE_PARTS) {
-    for (const n of part.rules) {
-      const section = RULE_SECTIONS.find(s => s.part === part.id && s.rules.includes(n));
-      out.push(paragraph({
-        id: `rule-${n}`,
-        rule: n,
-        part: part.id,
-        section: section ? section.name : null,
-        path: [],
-        citation: `Rule ${n}`,
-        heading: RULE_HEADINGS[n] || null
-      }));
-      for (const a of SUBPARAGRAPHS[n] || []) {
-        out.push(paragraph({
-          id: `rule-${n}-${a}`,
-          rule: n,
-          part: part.id,
-          section: section ? section.name : null,
-          path: [a],
-          citation: `Rule ${n}(${a})`,
-          parentId: `rule-${n}`
-        }));
-        for (const r of SUBSUB[`${n}-${a}`] || []) {
-          out.push(paragraph({
-            id: `rule-${n}-${a}-${r}`,
-            rule: n,
-            part: part.id,
-            section: section ? section.name : null,
-            path: [a, r],
-            citation: `Rule ${n}(${a})(${r})`,
-            parentId: `rule-${n}-${a}`
-          }));
-        }
-      }
-    }
+
+  for (const src of RULE_SOURCE) {
+    const { rule, path } = readId(src.id);
+    out.push(paragraph({
+      id: src.id,
+      rule,
+      part: partFor(rule),
+      section: sectionFor(rule),
+      path,
+      citation: src.citation,
+      parentId: path.length ? ['rule', rule, ...path.slice(0, -1)].join('-') : null,
+      heading: path.length ? null : (RULE_HEADINGS[rule] || null),
+      text: src.text || null,
+      status: src.text ? 'imported' : 'pending-source'
+    }));
   }
+
+  // Spliced in after the last subparagraph of their rule rather than appended,
+  // so Rule 3(m) reads after Rule 3(l) instead of turning up at the end.
+  for (const gap of AMENDMENT_GAPS) {
+    const entry = paragraph({
+      ...gap,
+      part: partFor(gap.rule),
+      section: sectionFor(gap.rule),
+      status: 'pending-amendment'
+    });
+    let at = out.length;
+    for (let i = 0; i < out.length; i++) {
+      if (out[i].rule === gap.rule) at = i + 1;
+    }
+    out.splice(at, 0, entry);
+  }
+
   for (const ax of ANNEXES) {
     out.push(paragraph({
       id: `annex-${ax.number}`,
@@ -5601,19 +5952,20 @@ function build() {
     }));
     // Annex IV is cited by paragraph in the distress section.
     if (ax.number === 4) {
-      for (const p of [1, 2, 3]) {
+      for (const n of [1, 2, 3]) {
         out.push(paragraph({
-          id: `annex-4-${p}`,
+          id: `annex-4-${n}`,
           rule: null,
           part: 'Annex',
           section: null,
-          path: [String(p)],
-          citation: `Annex IV(${p})`,
+          path: [String(n)],
+          citation: `Annex IV(${n})`,
           parentId: 'annex-4'
         }));
       }
     }
   }
+
   return out;
 }
 
@@ -5621,6 +5973,33 @@ const RULE_TEXT = build();
 
 const BY_ID = new Map(RULE_TEXT.map(p => [p.id, p]));
 const paragraphById = id => BY_ID.get(id) || null;
+
+/** The paragraphs directly beneath one, in order. */
+const childrenOf = id => RULE_TEXT.filter(p => p.parentId === id);
+
+/**
+ * Whether a paragraph introduces an enumerated list, and what is in it.
+ *
+ * Derived from the structure rather than stored: a paragraph whose own text
+ * ends in a colon or semicolon and which has three or more subparagraphs is
+ * introducing a list, and those subparagraphs are its items. Rule 27(a) — "A
+ * vessel not under command shall exhibit:" — is one. Rule 8(f), which has no
+ * text of its own and simply runs (f)(i), (f)(ii), is not.
+ *
+ * The colon test is what keeps the completion drill honest. Without it the
+ * drill would ask what completes lists that were never lists.
+ */
+const LIST_ITEM_LIMIT = 300;
+
+function listUnder(id) {
+  const parent = paragraphById(id);
+  if (!parent || !parent.text || !/[:;]\s*$/.test(parent.text)) return null;
+  const items = childrenOf(id);
+  if (items.length < 3 || !items.every(i => i.text && i.text.length <= LIST_ITEM_LIMIT)) return null;
+  return items.map(i => i.text);
+}
+
+const listParagraphs = () => RULE_TEXT.filter(p => listUnder(p.id));
 
 /**
  * Turn a citation as written anywhere in the app into a paragraph id.
@@ -5678,8 +6057,9 @@ function searchRuleText(query) {
   return direct ? [direct, ...hits.filter(p => p.id !== direct.id)] : hits;
 }
 
-const paragraphsPending = () => RULE_TEXT.filter(p => p.status === 'pending-source');
+const paragraphsPending = () => RULE_TEXT.filter(p => !p.text);
 const paragraphsWithText = () => RULE_TEXT.filter(p => p.text);
+const SOURCE_META = RULE_SOURCE_META;
 
 /**
  * Cloze policy, recorded here so it is not quietly reversed later.
@@ -5690,8 +6070,8 @@ const paragraphsWithText = () => RULE_TEXT.filter(p => p.text);
  * word the paragraph turns on: "more than 22.5 degrees abaft her beam", "shall",
  * "may", "not under command".
  *
- * There are no blanks yet, and there should be none until the text is in and
- * somebody has read it.
+ * There are still no blanks. Now that there is text to author them against,
+ * that is a job for somebody who has read it, not for a generator.
  */
 const CLOZE_POLICY = {
   authored: true,
@@ -8218,6 +8598,7 @@ const definitionSpace = () => ({
 
 
 
+
 const RULE_TEXT_QUESTION_TYPES = ['text-which-rule', 'text-complete-list', 'text-cloze'];
 
 const rtShuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
@@ -8243,10 +8624,15 @@ function whichRuleSources() {
 
 const SOURCES = whichRuleSources();
 
-/** Paragraphs that could carry a completion question once text exists. */
-const completableParagraphs = () =>
-  RULE_TEXT.filter(p => p.text && Array.isArray(p.listItems) && p.listItems.length >= 3
-    && p.listClosed === true);
+/**
+ * Paragraphs that carry a completion question.
+ *
+ * A paragraph qualifies when it introduces an enumerated list and has three or
+ * more subparagraphs under it — "A vessel not under command shall exhibit:"
+ * followed by (i), (ii), (iii). The list is the rule's own, so nothing has to
+ * be transcribed twice and the question can never disagree with the text.
+ */
+const completableParagraphs = () => listParagraphs();
 
 /** Paragraphs with authored blanks. Empty until a human writes some. */
 const clozeParagraphs = () => RULE_TEXT.filter(p => (p.blanks || []).length > 0);
@@ -8286,18 +8672,27 @@ function ruleTextQuestionFor({ stateId, aspect, questionType }) {
 
   if (questionType === 'text-complete-list') {
     const p = paragraphById(stateId);
-    if (!p || !p.text || !Array.isArray(p.listItems)) return null;
-    const missing = p.listItems[p.listItems.length - 1];
-    const shown = p.listItems.slice(0, -1);
-    const wrong = rtShuffle(RULE_TEXT.filter(q => Array.isArray(q.listItems) && q.id !== p.id)
-      .flatMap(q => q.listItems)).slice(0, 3);
+    const items = listUnder(stateId);
+    if (!p || !items) return null;
+    const missing = items[items.length - 1];
+    const shown = items.slice(0, -1);
+    // Distractors are items from other lists, so every option is a real
+    // requirement from somewhere in the rules. An invented one would be
+    // eliminable on style alone.
+    const pool = [...new Set(listParagraphs()
+      .filter(q => q.id !== p.id)
+      .flatMap(q => listUnder(q.id))
+      .filter(t => !items.includes(t)))];
+    const wrong = rtShuffle(pool).slice(0, 3);
+    if (wrong.length < 3) return null;
     return {
       type: 'text-complete-list',
-      paragraph: p,
-      prompt: `${p.citation} lists: ${shown.join('; ')}. What completes the list?`,
+      paragraph: p, items,
+      prompt: `${p.text} ${shown.map((t, i) => `(${['i', 'ii', 'iii', 'iv', 'v', 'vi'][i]}) ${t}`).join(' ')}`
+        + ' What completes the list?',
       options: rtShuffle([missing, ...wrong]).map((t, i) => ({ id: `o${i}`, text: t })),
       answerId: null,   // set below, once shuffled ids are known
-      explain: `${p.citation}. ${p.text}`,
+      explain: `${p.citation}. ${p.text} ${items.join(' ')}`,
       _answerText: missing
     };
   }
@@ -8338,6 +8733,7 @@ function resolveAnswerId(question) {
 
 const ruleTextSpace = () => ({
   paragraphs: RULE_TEXT.length,
+  withText: RULE_TEXT.filter(p => p.text).length,
   whichRule: SOURCES.length,
   completable: completableParagraphs().length,
   cloze: clozeParagraphs().length,
@@ -9347,15 +9743,18 @@ drawDefinitionList();
 const TEXT_UNIVERSE = ruleTextUniverse();
 $('xTotal').textContent = TEXT_UNIVERSE.length;
 
-const PENDING = RULE_TEXT.filter(x => x.status !== "verified").length;
+// The text is quoted, so what it is quoted from is part of the section.
+const TEXT_IN = RULE_TEXT.filter(x => x.text).length;
+const TEXT_OUT = RULE_TEXT.length - TEXT_IN;
 $('textNote').innerHTML = `
-  <div class="rule">The text has not been supplied</div>
-  <p>All ${PENDING} paragraphs are addressable and every citation in the app links to the right
-  one, but the wording itself is not here. This is the only section that quotes rather than
-  paraphrases, which is exactly why it was not written from memory: a misquoted regulation
-  presented as the regulation is worse than an obvious gap.</p>
-  <p class="mem">Fill <code>text</code> in data/rule-text.js from 33 CFR Subchapter E,
-  paragraph by paragraph.</p>`;
+  <div class="rule">Read this before you trust a paragraph</div>
+  <p>${TEXT_IN} of ${RULE_TEXT.length} paragraphs carry text, taken unedited from
+  <em>${SOURCE_META.file}</em>. It has not been collated against an official copy, so no
+  paragraph here is marked verified, and the known faults are these:</p>
+  <ul class="caveats">${SOURCE_CAVEATS.map(c =>
+    `<li><b>${c.summary}.</b> ${linkCitations(c.detail)}</li>`).join('')}</ul>
+  <p class="mem">${TEXT_OUT} paragraphs still have no text. Replace the source and re-run
+  <code>node tools/import-rule-text.cjs &lt;file&gt; --write</code> to fix the lot at once.</p>`;
 
 /**
  * Turns every citation in a piece of text into a link into the rule index.
@@ -9405,7 +9804,9 @@ function paraRow(x, hit) {
     ${x.heading && x.path.length ? `<span class="head">${x.heading}</span>` : ''}
     <div class="body3">${x.text
       ? linkCitations(x.text)
-      : `<span class="pending">Text pending. Supply from 33 CFR Subchapter E.</span>`}</div>
+      : `<span class="pending">${x.status === 'pending-amendment'
+          ? 'Added by a later amendment than the source. No text.'
+          : 'Not in the source. No text.'}</span>`}</div>
   </div>`;
 }
 

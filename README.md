@@ -132,9 +132,18 @@ There is no account, no backend and no cookie, nothing is sent anywhere, and
 
 ## Sources
 
-Rule text is worked from **33 CFR Subchapter E** and buoyage from **33 CFR
-Part 62**. Both are works of the United States Government and are not subject
-to copyright.
+Buoyage is described from **33 CFR Part 62**, a work of the United States
+Government and not subject to copyright.
+
+The rule text is quoted rather than paraphrased — it is the one part of the app
+that is. The Collision Regulations are reproduced verbatim in US law as the
+Navigation Rules, likewise a US Government work. The copy in this repo, though,
+is an **uncollated transcription**: it predates the 2001 amendments, uses US
+spelling, and carries at least one wrong cross-reference and one typo. The app
+names the file it came from and lists every known fault on the Rule text tab,
+and no paragraph is marked verified. Swap in a better source with
+`node tools/import-rule-text.cjs <file.txt> --write` — the structure is read
+from the source, so a better file simply replaces the lot.
 
 **No text or diagram from any IALA or IMO publication is reproduced here, and
 none should ever be added.** IALA is a non-governmental association and its

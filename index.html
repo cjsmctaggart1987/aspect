@@ -224,6 +224,8 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .para .body3{margin-top:3px;color:var(--ink-soft)}
 .para.d1{margin-left:16px}.para.d2{margin-left:32px}
 .pending{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
+.caveats{margin:8px 0 10px;padding-left:18px;font-size:13px}
+.caveats li{margin-bottom:5px}
 .rulelink{color:var(--magenta);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .rulelink:hover{background:rgba(195,0,107,.10)}
 .hidden{display:none}
@@ -583,9 +585,11 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 </section>
 
 <footer>
-  Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
-  33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
-  publications. Study aid only. It is not a substitute for the Navigation Rules.
+  Rule text imported from a transcription of the 1972 Collision Regulations, named in the
+  Rule text tab along with what is wrong with it; the rules themselves are reproduced
+  verbatim in US law and are a US Government work. Buoyage described from 33 CFR Part 62.
+  Every diagram is generated here, so nothing is reproduced from IALA or IMO publications.
+  Study aid only. It is not a substitute for the Navigation Rules.
 </footer>
 </div>
 
@@ -616,8 +620,8 @@ import { manoeuvreUniverse, manoeuvreQuestionFor } from './src/manoeuvre-questio
 import { DEFINITIONS, DEFINITION_RULES, DEFINITION_BOUNDARIES, definitionsForState }
   from './data/definitions.js';
 import { definitionUniverse, definitionQuestionFor } from './src/definition-questions.js';
-import { RULE_TEXT, RULE_PARTS, paragraphById, citationToId, findCitations, searchRuleText }
-  from './data/rule-text.js';
+import { RULE_TEXT, RULE_PARTS, paragraphById, citationToId, findCitations, searchRuleText,
+  SOURCE_CAVEATS, SOURCE_META } from './data/rule-text.js';
 import { ruleTextUniverse, ruleTextQuestionFor, resolveAnswerId }
   from './src/rule-text-questions.js';
 
@@ -1416,15 +1420,18 @@ drawDefinitionList();
 const TEXT_UNIVERSE = ruleTextUniverse();
 $('xTotal').textContent = TEXT_UNIVERSE.length;
 
-const PENDING = RULE_TEXT.filter(x => x.status !== "verified").length;
+// The text is quoted, so what it is quoted from is part of the section.
+const TEXT_IN = RULE_TEXT.filter(x => x.text).length;
+const TEXT_OUT = RULE_TEXT.length - TEXT_IN;
 $('textNote').innerHTML = `
-  <div class="rule">The text has not been supplied</div>
-  <p>All ${PENDING} paragraphs are addressable and every citation in the app links to the right
-  one, but the wording itself is not here. This is the only section that quotes rather than
-  paraphrases, which is exactly why it was not written from memory: a misquoted regulation
-  presented as the regulation is worse than an obvious gap.</p>
-  <p class="mem">Fill <code>text</code> in data/rule-text.js from 33 CFR Subchapter E,
-  paragraph by paragraph.</p>`;
+  <div class="rule">Read this before you trust a paragraph</div>
+  <p>${TEXT_IN} of ${RULE_TEXT.length} paragraphs carry text, taken unedited from
+  <em>${SOURCE_META.file}</em>. It has not been collated against an official copy, so no
+  paragraph here is marked verified, and the known faults are these:</p>
+  <ul class="caveats">${SOURCE_CAVEATS.map(c =>
+    `<li><b>${c.summary}.</b> ${linkCitations(c.detail)}</li>`).join('')}</ul>
+  <p class="mem">${TEXT_OUT} paragraphs still have no text. Replace the source and re-run
+  <code>node tools/import-rule-text.cjs &lt;file&gt; --write</code> to fix the lot at once.</p>`;
 
 /**
  * Turns every citation in a piece of text into a link into the rule index.
@@ -1474,7 +1481,9 @@ function paraRow(x, hit) {
     ${x.heading && x.path.length ? `<span class="head">${x.heading}</span>` : ''}
     <div class="body3">${x.text
       ? linkCitations(x.text)
-      : `<span class="pending">Text pending. Supply from 33 CFR Subchapter E.</span>`}</div>
+      : `<span class="pending">${x.status === 'pending-amendment'
+          ? 'Added by a later amendment than the source. No text.'
+          : 'Not in the source. No text.'}</span>`}</div>
   </div>`;
 }
 

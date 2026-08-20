@@ -11,7 +11,9 @@
  * checking it without anyone remembering to update a fixture.
  */
 import { RULE_TEXT, RULE_PARTS, RULE_SECTIONS, ANNEXES, paragraphById, citationToId,
-  findCitations, searchRuleText, paragraphsPending, CLOZE_POLICY } from '../data/rule-text.js';
+  findCitations, searchRuleText, paragraphsPending, paragraphsWithText, childrenOf,
+  listUnder, listParagraphs, SOURCE_CAVEATS, SOURCE_META, CLOZE_POLICY }
+  from '../data/rule-text.js';
 import { ruleTextUniverse, ruleTextQuestionFor, resolveAnswerId, whichRuleSources,
   completableParagraphs, clozeParagraphs, RULE_TEXT_QUESTION_TYPES, ruleTextSpace }
   from '../src/rule-text-questions.js';
@@ -43,6 +45,9 @@ export default function run(t) {
   t.ok('ids are unique', new Set(RULE_TEXT.map(p => p.id)).size === RULE_TEXT.length,
     `${RULE_TEXT.length} paragraphs`);
   t.ok('citations are unique', new Set(RULE_TEXT.map(p => p.citation)).size === RULE_TEXT.length);
+  t.ok('the structure came from the source, not from a guess',
+    RULE_TEXT.filter(p => p.rule && p.path.length > 0).length > 200,
+    `${RULE_TEXT.filter(p => p.rule && p.path.length > 0).length} subparagraphs read from the text`);
   t.ok('Parts A to E and all four annexes are present',
     RULE_PARTS.length === 5 && ANNEXES.length === 4 &&
     RULE_PARTS.every(part => RULE_TEXT.some(p => p.part === part.id)) &&
@@ -127,16 +132,31 @@ export default function run(t) {
     searchRuleText('').length === 0 && searchRuleText('   ').length === 0);
   t.ok('a query that matches nothing returns nothing', searchRuleText('zzzzq').length === 0);
 
-  t.section('the text is pending, and says so');
-  // Not a placeholder for later: it is the check that stops anyone bulk-filling
-  // these fields from memory, which is the failure this section was built to
-  // avoid.
-  t.ok('every paragraph without text is marked pending-source, not left blank',
-    RULE_TEXT.filter(p => !p.text).every(p => p.status === 'pending-source'),
-    `${paragraphsPending().length} of ${RULE_TEXT.length} pending`);
-  t.ok('any paragraph that does carry text is marked verified',
-    RULE_TEXT.filter(p => p.text).every(p => p.status === 'verified'),
-    `${RULE_TEXT.filter(p => p.text).length} with text`);
+  t.section('the text says how good it is');
+  // These checks stop anyone bulk-filling the text from memory, or quietly
+  // promoting an imported transcription to something it has not earned.
+  t.ok('every paragraph with text is marked imported, never verified',
+    RULE_TEXT.filter(p => p.text).every(p => p.status === 'imported'),
+    `${paragraphsWithText().length} imported`);
+  t.ok('nothing claims to be verified, because nothing has been collated',
+    RULE_TEXT.every(p => p.status !== 'verified'));
+  t.ok('every paragraph without text says why it has none',
+    RULE_TEXT.filter(p => !p.text)
+      .every(p => p.status === 'pending-source' || p.status === 'pending-amendment'),
+    `${paragraphsPending().length} of ${RULE_TEXT.length} still empty`);
+  t.ok('the two paragraphs the source predates are named as such',
+    ['rule-3-m', 'rule-18-f'].every(id =>
+      paragraphById(id) && paragraphById(id).status === 'pending-amendment'),
+    'Rule 3(m) and Rule 18(f), added by the 2001 amendments');
+  t.ok('the annexes are still empty and the caveats say so',
+    RULE_TEXT.filter(p => p.part === 'Annex').every(p => !p.text) &&
+    SOURCE_CAVEATS.some(c => c.id === 'annexes'));
+  t.ok('what is wrong with the source is recorded in the data, not just in a commit',
+    SOURCE_CAVEATS.length >= 4 && SOURCE_CAVEATS.every(c => c.id && c.summary && c.detail),
+    SOURCE_CAVEATS.map(c => c.id).join(', '));
+  t.ok('the source file it came from is named',
+    !!(SOURCE_META && SOURCE_META.file && SOURCE_META.imported),
+    SOURCE_META ? `${SOURCE_META.file}, ${SOURCE_META.imported}` : '');
   t.ok('blanks are authored, never computed',
     CLOZE_POLICY.authored === true && CLOZE_POLICY.computed === false);
   t.ok('no blank exists on a paragraph with no text',
@@ -151,10 +171,27 @@ export default function run(t) {
     `${universe.length} cards`);
   t.ok('every card names a declared question type',
     universe.every(c => RULE_TEXT_QUESTION_TYPES.includes(c.questionType)));
-  t.ok('the text-dependent types produce no cards while the text is pending',
-    completableParagraphs().length === 0 && clozeParagraphs().length === 0 &&
-    universe.every(c => c.questionType === 'text-which-rule'),
-    'text-complete-list and text-cloze wait for a source');
+  t.ok('completion questions now deal, because there is text for them to use',
+    completableParagraphs().length > 0 &&
+    universe.some(c => c.questionType === 'text-complete-list'),
+    `${completableParagraphs().length} enumerated lists`);
+  t.ok('cloze still deals nothing, because no blank has been authored',
+    clozeParagraphs().length === 0 && !universe.some(c => c.questionType === 'text-cloze'),
+    'a generated blank asks for "the" and "of"');
+
+  t.section('what counts as a list');
+  // The colon test is the whole guard. Without it the drill asks what completes
+  // lists that were never lists.
+  t.ok('a list is a paragraph that introduces one and has three or more items',
+    listParagraphs().every(p => /[:;]\s*$/.test(p.text) && listUnder(p.id).length >= 3),
+    listParagraphs().slice(0, 4).map(p => p.citation).join(', '));
+  t.ok('Rule 27(a) is a list and Rule 8(f) is not',
+    !!listUnder('rule-27-a') && !listUnder('rule-8-f'),
+    'Rule 8(f) has no text of its own, it just runs (f)(i), (f)(ii)');
+  t.ok('a list matches the stored text of its own subparagraphs exactly',
+    listParagraphs().every(p =>
+      listUnder(p.id).every((item, i) => item === childrenOf(p.id)[i].text)),
+    'the list is the rule, not a second copy of it');
 
   t.section('which-rule questions');
   const sources = whichRuleSources();

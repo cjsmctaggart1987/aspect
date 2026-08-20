@@ -46,7 +46,7 @@ const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags', 'manoeuv
  * here rather than dropping them from the count keeps the gap visible: if
  * somebody fills the text, these start dealing and the exception should go.
  */
-const PENDING_TYPES = ['text-complete-list', 'text-cloze'];
+const PENDING_TYPES = ['text-cloze'];
 
 export default function run(t) {
   const page = html();
@@ -105,7 +105,7 @@ export default function run(t) {
   // quietly started dealing cards is no longer pending and should be counted.
   t.ok('the pending types really are dealing nothing',
     PENDING_TYPES.every(type => !reachable.has(type)),
-    PENDING_TYPES.join(', ') + ' — both need the rule text');
+    PENDING_TYPES.join(', ') + ' — waiting on blanks authored against the text');
 
   const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE', 'FLAG_UNIVERSE', 'MV_UNIVERSE', 'DEF_UNIVERSE',
     'TEXT_UNIVERSE'];
@@ -170,10 +170,12 @@ export default function run(t) {
     'otherwise the reader arrives at a collapsed heading');
   t.ok('Part B keeps its three sections as subheadings',
     /class="rulesec"/.test(app));
-  t.ok('a paragraph with no text says so rather than showing an empty line',
-    /Text pending/.test(app));
-  t.ok('the missing text is declared on the section itself',
-    app.includes("$('textNote').innerHTML") && /33 CFR/.test(app));
+  t.ok('a paragraph with no text says so, and says which kind of gap it is',
+    /No text./.test(app) && /pending-amendment/.test(app));
+  t.ok('the section names its source and lists what is wrong with it',
+    app.includes("$('textNote').innerHTML") && /SOURCE_CAVEATS/.test(app) &&
+    /SOURCE_META.file/.test(app) && /not been collated/.test(app),
+    'a study aid that hides a bad source is worse than one with no source');
 
   t.section('no built content is left unreachable');
   // Anything exported as a renderer should be called somewhere in the app.
