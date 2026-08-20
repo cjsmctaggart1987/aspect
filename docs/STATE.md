@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 29 commits.
+- **State:** working tree clean, 32 commits.
 
 ---
 
@@ -67,6 +67,7 @@ src/render-buoy.js      buoy renderer                              140
 src/render-signal.js    blast timelines                            135
 src/audio.js            synthesised whistle, bell and gong         200
 src/render-distress.js  code flags, square and ball, arm signal     150
+src/buoyage-questions.js buoyage drill questions                   120
 src/sound-questions.js  sound drill questions                      146
 src/distress-questions.js distress and Morse questions             130
 src/scheduler.js        spaced repetition (FSRS)                   171
@@ -102,14 +103,14 @@ npm install
 npm run dev      # serve on :5173 — the module version needs HTTP, not file://
 npm run build    # regenerate aspect-standalone.html
 npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
-npm test         # 147 checks against the real modules
+npm test         # 159 checks against the real modules
 ```
 
 To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 29, all pushed
+## Commits — 32, all pushed
 
 | | |
 |---|---|
@@ -143,6 +144,9 @@ To just look at it: double-click `aspect-standalone.html`.
 | `cd5fc31` | Distress and Morse drill questions |
 | `8d5e283` | Bundle the distress and Morse modules, and test them |
 | `8c7c5cd` | Surface the distress and Morse sections, and test reachability |
+| `17a0709` | State snapshot for the two new tabs |
+| `31c9354` | Rebuild the gun signal as a report rather than a gong |
+| `8f93e16` | Make buoyage drillable |
 
 ### Spaced repetition — `src/scheduler.js`
 
@@ -312,13 +316,18 @@ them as bugs.
 | Tab | Data | Drill types |
 |---|---|---|
 | Lights and shapes | 30 vessel states | identify, aspect |
-| Buoyage | 16 marks | — (explore only) |
+| Buoyage | 16 marks | buoy-identify, buoy-action, buoy-region |
 | Sound signals | 18 signals | sound-identify, sound-select, sound-pitch |
 | Distress | 13 Annex IV signals | distress-identify, distress-select |
 | Morse | 37 characters | morse-hear, morse-see |
 
-Nine question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
-needed to change. Buoyage is deliberately explore-only; it has no drill and no cards.
+Twelve question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
+needed to change.
+
+**The middle slot.** For lights it is the aspect and for buoyage it is the mode,
+`day` or `night` — both carry meaning. For sound, distress and Morse it is the
+placeholder `na`, because those signals have no second dimension. Do not read
+`signalId:na:sound-identify` as a broken key.
 
 **Reduced motion.** `prefers-reduced-motion` in CSS suppresses CSS animation only —
 SMIL ignores it entirely — so every animated thing here threads an explicit `motion`
@@ -326,6 +335,12 @@ flag instead. For `morse-see` that is not enough: a lamp that never flashes is n
 blank, it is a steady light, which is a different signal. `deliveryFor()` substitutes
 sound and returns the reason, and the UI prints it. Do not "simplify" that to just
 hiding the lamp.
+
+**Audio voices.** The gun was originally built from the gong voice and sounded like
+one, because a gong is inharmonic partials ringing and a report has no pitch at all.
+It is now a noise crack through a falling lowpass, a sine body dropping 110 to 30 Hz,
+and a tail — with a `distance` parameter, at 0.35. Nothing in the audio engine should
+ring unless it is a bell or a gong.
 
 ## Environment notes
 
