@@ -139,6 +139,9 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .lampwrap svg,.chardetail .lightsig{display:block;width:100%;height:auto}
 .substituted{font-family:var(--note);font-style:italic;color:var(--magenta);
   font-size:14px;margin:0 0 10px;max-width:70ch}
+.buoyshown{max-width:210px;margin:0 0 14px;padding:10px;border:1px solid var(--rule);background:rgba(255,255,255,.55)}
+.buoyshown.night{background:#070C13;border-color:#22323C}
+.buoyshown svg{display:block;width:100%;height:200px}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -227,6 +230,25 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
       <button id="buoyNight" aria-pressed="false">By night</button>
     </div>
   </div>
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="bPrompt">Press start. You will be shown a mark with no label.</p>
+      <div id="bShown" class="buoyshown"></div>
+      <div class="opts" id="bOpts"></div>
+      <p class="verdict" id="bVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="bNext">Start a drill</button>
+        <button class="btn ghost hidden" id="bEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="bSeen">0</b> of <b id="bTotal">0</b></span>
+        <span>Due today <b id="bDue">0</b></span>
+        <span>Streak <b id="bStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
   <div class="marks" id="marks"></div>
 </section>
 
@@ -2815,6 +2837,11 @@ const ASPECT_BANDS = [
  * its copyright. The US description at 33 CFR Part 62 is a US Government work
  * and is safe to draw from.
  *
+ * `action` is what you actually do about the mark, which is the thing a drill
+ * should ask. `meaning` explains the mark; `action` is the decision it forces,
+ * and the two are separated because a candidate can recite one without being
+ * able to act on the other.
+ *
  * bands: painted top to bottom.
  * topmark: null, or { form, color, count }.
  */
@@ -2859,6 +2886,7 @@ const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to port.",
     memory: 'Red can, port hand, going upstream in Region A.'
   },
   {
@@ -2873,6 +2901,7 @@ const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to starboard.",
     memory: 'Green cone, starboard hand.'
   },
   {
@@ -2887,6 +2916,7 @@ const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to port.",
     memory: 'Region B inverts the lateral colours. Red right returning.'
   },
   {
@@ -2901,6 +2931,7 @@ const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to starboard.",
     memory: 'Red right returning. Cayman, the Americas and Japan are Region B.'
   },
   {
@@ -2915,6 +2946,7 @@ const MARKS = [
     rhythm: 'Fl (2+1) R',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A port hand mark with a green band. The main channel lies to starboard of the mark.',
+    action: "The main channel lies to starboard, so leave it to port.",
     memory: 'The body colour tells you which lateral mark it primarily is. The band tells you the secondary channel.'
   },
   {
@@ -2929,6 +2961,7 @@ const MARKS = [
     rhythm: 'Fl (2+1) G',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A starboard hand mark with a red band. The main channel lies to port of the mark.',
+    action: "The main channel lies to port, so leave it to starboard.",
     memory: 'Composite group flashing (2+1) always means a channel divides here.'
   },
   {
@@ -2943,6 +2976,7 @@ const MARKS = [
     rhythm: 'Fl (2+1) G',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A port hand mark with a red band. The main channel lies to starboard of the mark.',
+    action: "The main channel lies to starboard, so leave it to port.",
     memory: 'Same logic as Region A with the lateral colours swapped.'
   },
   {
@@ -2957,6 +2991,7 @@ const MARKS = [
     rhythm: 'Fl (2+1) R',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A starboard hand mark with a green band. The main channel lies to port of the mark.',
+    action: "The main channel lies to port, so leave it to starboard.",
     memory: 'Body colour first, band second.'
   },
   {
@@ -2971,6 +3006,7 @@ const MARKS = [
     rhythm: 'VQ or Q, continuous',
     pattern: flashes(3, group(6)),
     meaning: 'Safe water lies to the north of the mark.',
+    action: "Pass to the north of it.",
     memory: 'Both cones point up, and the black band is up. Continuous quick flashing, like twelve o clock.'
   },
   {
@@ -2985,6 +3021,7 @@ const MARKS = [
     rhythm: 'VQ (3) 5s or Q (3) 10s',
     pattern: flashes(5, group(3)),
     meaning: 'Safe water lies to the east of the mark.',
+    action: "Pass to the east of it.",
     memory: 'Topmark is egg shaped. Three flashes, like three o clock.'
   },
   {
@@ -2999,6 +3036,7 @@ const MARKS = [
     rhythm: 'VQ (6) + LFl 10s or Q (6) + LFl 15s',
     pattern: flashes(10, [...group(6), [3.4, 3.4 + LONG]]),
     meaning: 'Safe water lies to the south of the mark.',
+    action: "Pass to the south of it.",
     memory: 'Both cones point down, black band down. Six flashes, like six o clock, and the long flash confirms you counted six not nine.'
   },
   {
@@ -3013,6 +3051,7 @@ const MARKS = [
     rhythm: 'VQ (9) 10s or Q (9) 15s',
     pattern: flashes(10, group(9)),
     meaning: 'Safe water lies to the west of the mark.',
+    action: "Pass to the west of it.",
     memory: 'Topmark is wine glass shaped. West is a wine glass. Nine flashes, like nine o clock.'
   },
   {
@@ -3027,6 +3066,7 @@ const MARKS = [
     rhythm: 'Fl (2)',
     pattern: flashes(5, [[0, 0.5], [1.2, 1.7]]),
     meaning: 'Stationed on or moored above an isolated danger with navigable water all round it.',
+    action: "Do not pass close. There is navigable water all round, but the danger is beneath it.",
     memory: 'Two black balls, two white flashes.'
   },
   {
@@ -3041,6 +3081,7 @@ const MARKS = [
     rhythm: 'Iso, Occ, LFl 10s or Mo (A)',
     pattern: flashes(4, [[0, 2]]),
     meaning: 'Navigable water all round the mark. Often a landfall or mid-channel mark.',
+    action: "Pass either side. There is navigable water all round.",
     memory: 'Red and white vertical stripes. The only mark with a single red sphere topmark.'
   },
   {
@@ -3055,6 +3096,7 @@ const MARKS = [
     rhythm: 'Any rhythm not used for white lights',
     pattern: flashes(4, [[0, 0.5]], { example: true }),
     meaning: 'Indicates a special area or feature. Not primarily a navigational mark.',
+    action: "Not a navigational mark. Consult the chart for what it marks.",
     memory: 'All yellow, yellow X, yellow light. Spoil grounds, cables, recreation zones.'
   },
   {
@@ -3069,6 +3111,7 @@ const MARKS = [
     rhythm: 'Al Oc Bu Y 3s',
     pattern: flashes(3, [[0, 1.4, 'blue'], [1.5, 2.9, 'yellow']]),
     meaning: 'Marks a new danger, normally a wreck, until the danger is charted and permanently marked.',
+    action: "A new and uncharted danger. Give it a wide berth on either side.",
     memory: 'Blue and yellow vertical stripes, alternating blue and yellow light. Nothing else looks like it.'
   }
 ];
@@ -5049,6 +5092,136 @@ function stop() {
 const isPlaying = () => !!(ctx && playing && ctx.currentTime < playing.endsAt);
 
 
+/* ===== src/buoyage-questions.js ===== */
+/**
+ * Drill questions about buoyage.
+ *
+ * The card key uses its middle slot for something real here, unlike the sound
+ * and distress sections where it is a placeholder: `markId:day:buoy-identify`
+ * and `markId:night:buoy-identify` are genuinely different questions. By day
+ * you have the shape and the paint; by night you have a coloured light and a
+ * rhythm and nothing else, and a candidate who can only do the first has not
+ * learned buoyage.
+ *
+ * Distractors work the way the light-signature ones in engine.js do: pick the
+ * marks that are actually confusable. Same category first, then the same body,
+ * topmark or light colour. A cardinal offered against a cardinal teaches the
+ * flash count; a cardinal offered against a special mark teaches nothing.
+ */
+
+
+
+const BUOY_QUESTION_TYPES = ['buoy-identify', 'buoy-action', 'buoy-region'];
+const BUOY_MODES = ['day', 'night'];
+
+const someOf = arr => arr[Math.floor(Math.random() * arr.length)];
+const jumbled = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+
+/** Marks whose colours depend on which region you are in. */
+const isRegional = mark => mark.region === 'A' || mark.region === 'B';
+
+/** How confusable two marks are. Higher is more confusable. */
+function buoySimilarity(a, b) {
+  let score = 0;
+  if (a.type === b.type) score += 3;
+  if (a.body === b.body) score += 1.5;
+  if (a.topmark && b.topmark && a.topmark.form === b.topmark.form) score += 1.5;
+  if (a.lightColor === b.lightColor) score += 1;
+  // Marks painted the same way are the ones you actually mistake at a distance.
+  if (a.bands.join() === b.bands.join()) score += 2;
+  return score;
+}
+
+function buoyDistractors(mark, n = 3, pool = MARKS) {
+  return pool
+    .filter(m => m.id !== mark.id)
+    .map(m => ({ m, score: buoySimilarity(mark, m) + Math.random() * 0.8 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map(x => x.m);
+}
+
+/**
+ * The card space.
+ *
+ * buoy-region only exists for the marks whose colours actually change between
+ * Region A and Region B. Asking which region a cardinal belongs to would be a
+ * trick question: the answer is both, and the point of cardinals is that they
+ * are the same everywhere.
+ */
+const buoyUniverse = () => MARKS.flatMap(mark =>
+  BUOY_MODES.flatMap(mode => BUOY_QUESTION_TYPES
+    .filter(type => type !== 'buoy-region' || isRegional(mark))
+    .map(type => ({ stateId: mark.id, aspect: mode, questionType: type }))));
+
+function buoyageQuestionFor({ stateId, aspect: mode, questionType }, pool = MARKS) {
+  const mark = pool.find(m => m.id === stateId);
+  if (!mark) return null;
+
+  const night = mode === 'night';
+  const seen = night
+    ? 'You see this light at night.'
+    : 'You see this mark by day.';
+
+  if (questionType === 'buoy-action') {
+    // Several marks share an action — both port hand marks are "leave it to
+    // port" — so distractors have to be distinct by action text, not by mark.
+    // Filtering only against the answer leaves two identical wrong options,
+    // which makes the question unanswerable rather than merely easy.
+    const used = new Set([mark.action]);
+    const wrong = [];
+    for (const candidate of buoyDistractors(mark, pool.length, pool)) {
+      if (used.has(candidate.action)) continue;
+      used.add(candidate.action);
+      wrong.push(candidate);
+      if (wrong.length === 3) break;
+    }
+    return {
+      type: 'buoy-action',
+      mark, mode, night,
+      prompt: `${seen} Proceeding in the conventional direction of buoyage, what do you do?`,
+      options: jumbled([mark, ...wrong]).map(m => ({ id: m.id, text: m.action })),
+      answerId: mark.id,
+      explain: `${mark.name}. ${mark.meaning} ${mark.memory}`
+    };
+  }
+
+  if (questionType === 'buoy-region') {
+    const other = mark.region === 'A' ? 'B' : 'A';
+    const options = [
+      { id: 'A', text: 'Region A' },
+      { id: 'B', text: 'Region B' },
+      { id: 'both', text: 'Either — this mark is the same in both regions' },
+      { id: 'neither', text: 'Neither — it is not a lateral or preferred channel mark' }
+    ];
+    return {
+      type: 'buoy-region',
+      mark, mode, night,
+      prompt: `${seen} Which buoyage region are you in?`,
+      options: jumbled(options),
+      answerId: mark.region,
+      explain: `${mark.name}. ${mark.memory} In Region ${other} the lateral colours are the other way round.`
+    };
+  }
+
+  const wrong = buoyDistractors(mark, 3, pool);
+  return {
+    type: 'buoy-identify',
+    mark, mode, night,
+    prompt: `${seen} What is it?`,
+    options: jumbled([mark, ...wrong]).map(m => ({ id: m.id, text: m.name })),
+    answerId: mark.id,
+    explain: `${mark.rhythm ? `${mark.lightColor} · ${mark.rhythm}. ` : ''}${mark.meaning} ${mark.memory}`
+  };
+}
+
+const buoySpace = () => ({
+  marks: MARKS.length,
+  modes: BUOY_MODES.length,
+  cards: buoyUniverse().length
+});
+
+
 /* ===== src/sound-questions.js ===== */
 /**
  * Drill questions about sound signals.
@@ -5560,6 +5733,7 @@ function reset() {
 
 
 
+
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
 
@@ -6034,6 +6208,7 @@ function makeDrill(cfg) {
     $(cfg.easy).classList.add('hidden');
     $(cfg.strip).innerHTML = '';
     if (cfg.lamp) $(cfg.lamp).innerHTML = '';
+    if (cfg.clear) cfg.clear();
     if (cfg.subNote) {
       $(cfg.subNote).textContent = delivery.note;
       $(cfg.subNote).classList.toggle('hidden', !delivery.substituted);
@@ -6041,15 +6216,22 @@ function makeDrill(cfg) {
 
     const audible = cfg.audible(live, wpm);
     const canSend = !!audible || delivery.mode === 'light';
-    $(cfg.play).classList.toggle('hidden', !canSend);
-    $(cfg.play).disabled = !canSend;
+    // A drill with nothing to play has no play button at all, rather than a
+    // disabled one implying a sound it will never make.
+    if (cfg.play) {
+      $(cfg.play).classList.toggle('hidden', !canSend);
+      $(cfg.play).disabled = !canSend;
+    }
     if (cfg.stopBtn) {
       $(cfg.stopBtn).classList.toggle('hidden', !canSend);
       $(cfg.stopBtn).disabled = !canSend;
     }
-    $(cfg.hint).textContent = canSend
-      ? (delivery.mode === 'light' ? 'Shown as a flashing lamp.' : 'Send it as often as you like.')
-      : 'This signal makes no sound. Read it instead.';
+    if (cfg.hint) {
+      $(cfg.hint).textContent = canSend
+        ? (delivery.mode === 'light' ? 'Shown as a flashing lamp.' : 'Send it as often as you like.')
+        : 'This signal makes no sound. Read it instead.';
+    }
+    if (cfg.show) cfg.show(live);
 
     $(cfg.opts).innerHTML = '';
     live.options.forEach(o => {
@@ -6077,7 +6259,7 @@ function makeDrill(cfg) {
     progress();
   }
 
-  $(cfg.play).addEventListener('click', () => {
+  if (cfg.play) $(cfg.play).addEventListener('click', () => {
     if (!live) return;
     const delivery = deliveryFor(live, { motion: !stillness.matches });
     if (delivery.mode === 'light' && cfg.lamp) {
@@ -6122,6 +6304,27 @@ $('wpmRead').textContent = wpm;
 $('ditRead').textContent = ditMs();
 drawDistressList();
 drawCharGrid();
+
+// --- buoyage drill ----------------------------------------------------------
+
+const BUOY_UNIVERSE = buoyUniverse();
+$('bTotal').textContent = BUOY_UNIVERSE.length;
+
+makeDrill({
+  universe: BUOY_UNIVERSE,
+  build: buoyageQuestionFor,
+  audible: () => null,                 // buoys are seen, never heard
+  // The mark itself is the question, so it is shown at once rather than
+  // revealed. At night that is the light and its rhythm; by day, the paint.
+  show: q => {
+    $('bShown').classList.toggle('night', q.night);
+    $('bShown').innerHTML = renderBuoy(q.mark, q.night ? 'night' : 'day', !stillness.matches);
+  },
+  clear: () => { $('bShown').innerHTML = ''; },
+  prompt: 'bPrompt', verdict: 'bVerdict', next: 'bNext', easy: 'bEasy',
+  strip: 'bShown', opts: 'bOpts', hint: null, play: null, stopBtn: null,
+  seen: 'bSeen', due: 'bDue', streak: 'bStreak'
+});
 
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));

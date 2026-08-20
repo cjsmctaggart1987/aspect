@@ -9,6 +9,11 @@
  * its copyright. The US description at 33 CFR Part 62 is a US Government work
  * and is safe to draw from.
  *
+ * `action` is what you actually do about the mark, which is the thing a drill
+ * should ask. `meaning` explains the mark; `action` is the decision it forces,
+ * and the two are separated because a candidate can recite one without being
+ * able to act on the other.
+ *
  * bands: painted top to bottom.
  * topmark: null, or { form, color, count }.
  */
@@ -53,6 +58,7 @@ export const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to port.",
     memory: 'Red can, port hand, going upstream in Region A.'
   },
   {
@@ -67,6 +73,7 @@ export const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to starboard.",
     memory: 'Green cone, starboard hand.'
   },
   {
@@ -81,6 +88,7 @@ export const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to port.",
     memory: 'Region B inverts the lateral colours. Red right returning.'
   },
   {
@@ -95,6 +103,7 @@ export const MARKS = [
     rhythm: 'Any, other than the composite group flashing (2+1)',
     pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
+    action: "Leave it to starboard.",
     memory: 'Red right returning. Cayman, the Americas and Japan are Region B.'
   },
   {
@@ -109,6 +118,7 @@ export const MARKS = [
     rhythm: 'Fl (2+1) R',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A port hand mark with a green band. The main channel lies to starboard of the mark.',
+    action: "The main channel lies to starboard, so leave it to port.",
     memory: 'The body colour tells you which lateral mark it primarily is. The band tells you the secondary channel.'
   },
   {
@@ -123,6 +133,7 @@ export const MARKS = [
     rhythm: 'Fl (2+1) G',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A starboard hand mark with a red band. The main channel lies to port of the mark.',
+    action: "The main channel lies to port, so leave it to starboard.",
     memory: 'Composite group flashing (2+1) always means a channel divides here.'
   },
   {
@@ -137,6 +148,7 @@ export const MARKS = [
     rhythm: 'Fl (2+1) G',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A port hand mark with a red band. The main channel lies to starboard of the mark.',
+    action: "The main channel lies to starboard, so leave it to port.",
     memory: 'Same logic as Region A with the lateral colours swapped.'
   },
   {
@@ -151,6 +163,7 @@ export const MARKS = [
     rhythm: 'Fl (2+1) R',
     pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A starboard hand mark with a green band. The main channel lies to port of the mark.',
+    action: "The main channel lies to port, so leave it to starboard.",
     memory: 'Body colour first, band second.'
   },
   {
@@ -165,6 +178,7 @@ export const MARKS = [
     rhythm: 'VQ or Q, continuous',
     pattern: flashes(3, group(6)),
     meaning: 'Safe water lies to the north of the mark.',
+    action: "Pass to the north of it.",
     memory: 'Both cones point up, and the black band is up. Continuous quick flashing, like twelve o clock.'
   },
   {
@@ -179,6 +193,7 @@ export const MARKS = [
     rhythm: 'VQ (3) 5s or Q (3) 10s',
     pattern: flashes(5, group(3)),
     meaning: 'Safe water lies to the east of the mark.',
+    action: "Pass to the east of it.",
     memory: 'Topmark is egg shaped. Three flashes, like three o clock.'
   },
   {
@@ -193,6 +208,7 @@ export const MARKS = [
     rhythm: 'VQ (6) + LFl 10s or Q (6) + LFl 15s',
     pattern: flashes(10, [...group(6), [3.4, 3.4 + LONG]]),
     meaning: 'Safe water lies to the south of the mark.',
+    action: "Pass to the south of it.",
     memory: 'Both cones point down, black band down. Six flashes, like six o clock, and the long flash confirms you counted six not nine.'
   },
   {
@@ -207,6 +223,7 @@ export const MARKS = [
     rhythm: 'VQ (9) 10s or Q (9) 15s',
     pattern: flashes(10, group(9)),
     meaning: 'Safe water lies to the west of the mark.',
+    action: "Pass to the west of it.",
     memory: 'Topmark is wine glass shaped. West is a wine glass. Nine flashes, like nine o clock.'
   },
   {
@@ -221,6 +238,7 @@ export const MARKS = [
     rhythm: 'Fl (2)',
     pattern: flashes(5, [[0, 0.5], [1.2, 1.7]]),
     meaning: 'Stationed on or moored above an isolated danger with navigable water all round it.',
+    action: "Do not pass close. There is navigable water all round, but the danger is beneath it.",
     memory: 'Two black balls, two white flashes.'
   },
   {
@@ -235,6 +253,7 @@ export const MARKS = [
     rhythm: 'Iso, Occ, LFl 10s or Mo (A)',
     pattern: flashes(4, [[0, 2]]),
     meaning: 'Navigable water all round the mark. Often a landfall or mid-channel mark.',
+    action: "Pass either side. There is navigable water all round.",
     memory: 'Red and white vertical stripes. The only mark with a single red sphere topmark.'
   },
   {
@@ -249,6 +268,7 @@ export const MARKS = [
     rhythm: 'Any rhythm not used for white lights',
     pattern: flashes(4, [[0, 0.5]], { example: true }),
     meaning: 'Indicates a special area or feature. Not primarily a navigational mark.',
+    action: "Not a navigational mark. Consult the chart for what it marks.",
     memory: 'All yellow, yellow X, yellow light. Spoil grounds, cables, recreation zones.'
   },
   {
@@ -263,6 +283,7 @@ export const MARKS = [
     rhythm: 'Al Oc Bu Y 3s',
     pattern: flashes(3, [[0, 1.4, 'blue'], [1.5, 2.9, 'yellow']]),
     meaning: 'Marks a new danger, normally a wreck, until the danger is charted and permanently marked.',
+    action: "A new and uncharted danger. Give it a wide berth on either side.",
     memory: 'Blue and yellow vertical stripes, alternating blue and yellow light. Nothing else looks like it.'
   }
 ];

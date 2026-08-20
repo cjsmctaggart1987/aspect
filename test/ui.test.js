@@ -13,6 +13,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { QUESTION_TYPES as SOUND_TYPES, soundUniverse } from '../src/sound-questions.js';
+import { BUOY_QUESTION_TYPES, buoyUniverse } from '../src/buoyage-questions.js';
 import { DISTRESS_QUESTION_TYPES, MORSE_QUESTION_TYPES, distressUniverse, deliveryFor,
   distressQuestionFor } from '../src/distress-questions.js';
 import { SOUND_SIGNALS } from '../data/sound-signals.js';
@@ -61,20 +62,22 @@ export default function run(t) {
   // Light types are declared in the app itself; the rest come from the modules.
   const lightTypes = (app.match(/const LIGHT_QUESTION_TYPES = \[([^\]]+)\]/) || [, ''])[1]
     .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
-  const declared = [...lightTypes, ...SOUND_TYPES, ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES];
-  t.ok('nine question types declared across the app', declared.length === 9, declared.join(', '));
+  const declared = [...lightTypes, ...BUOY_QUESTION_TYPES, ...SOUND_TYPES,
+    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES];
+  t.ok('twelve question types declared across the app', declared.length === 12, declared.join(', '));
 
   // Reachable means: some universe the app builds contains the type, and that
   // universe is handed to selectCard.
   const reachable = new Set([
     ...lightTypes,
+    ...buoyUniverse().map(c => c.questionType),
     ...soundUniverse().map(c => c.questionType),
     ...distressUniverse().map(c => c.questionType)
   ]);
   const unreachable = declared.filter(type => !reachable.has(type));
   t.ok('every declared type appears in a universe', unreachable.length === 0, unreachable.join(', '));
 
-  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE'];
+  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE'];
   t.ok('every universe the app builds reaches the scheduler',
     universeNames.every(n => app.includes(`selectCard(${n}`) ||
       new RegExp(`universe: ${n}`).test(app)),
@@ -84,8 +87,8 @@ export default function run(t) {
   // the wrong assertion — count the drills.
   const ownDrills = (app.match(/selectCard\((UNIVERSE|SOUND_UNIVERSE)\)/g) || []).length;
   const sharedDrills = (app.match(/^makeDrill\(\{/gm) || []).length;
-  t.ok('four drills, two with their own loop and two sharing one',
-    ownDrills === 2 && sharedDrills === 2,
+  t.ok('five drills, two with their own loop and three sharing one',
+    ownDrills === 2 && sharedDrills === 3,
     `${ownDrills} own + ${sharedDrills} shared`);
   t.ok('every drill grades through the scheduler',
     (app.match(/grade\([^)]*right \? GRADE\.GOOD : GRADE\.AGAIN\)/g) || []).length === ownDrills + 1,

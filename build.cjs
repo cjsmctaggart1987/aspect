@@ -36,6 +36,7 @@ const MODULES = [
   'src/render-signal.js',      // draws sound, Morse and audible distress patterns
   'src/render-distress.js',
   'src/audio.js',              // reads the Annex III bands from data/sound-signals.js
+  'src/buoyage-questions.js',  // needs data/buoyage.js only
   'src/sound-questions.js',    // needs the data, and describe() from render-signal.js
   'src/distress-questions.js', // needs data/distress-signals.js and data/morse.js
   'src/scheduler.js'

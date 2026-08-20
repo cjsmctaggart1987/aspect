@@ -139,6 +139,9 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .lampwrap svg,.chardetail .lightsig{display:block;width:100%;height:auto}
 .substituted{font-family:var(--note);font-style:italic;color:var(--magenta);
   font-size:14px;margin:0 0 10px;max-width:70ch}
+.buoyshown{max-width:210px;margin:0 0 14px;padding:10px;border:1px solid var(--rule);background:rgba(255,255,255,.55)}
+.buoyshown.night{background:#070C13;border-color:#22323C}
+.buoyshown svg{display:block;width:100%;height:200px}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -227,6 +230,25 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
       <button id="buoyNight" aria-pressed="false">By night</button>
     </div>
   </div>
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="bPrompt">Press start. You will be shown a mark with no label.</p>
+      <div id="bShown" class="buoyshown"></div>
+      <div class="opts" id="bOpts"></div>
+      <p class="verdict" id="bVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="bNext">Start a drill</button>
+        <button class="btn ghost hidden" id="bEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="bSeen">0</b> of <b id="bTotal">0</b></span>
+        <span>Due today <b id="bDue">0</b></span>
+        <span>Streak <b id="bStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
   <div class="marks" id="marks"></div>
 </section>
 
@@ -367,6 +389,7 @@ import { MORSE_CHARACTERS, morseSignal, ditSeconds, DEFAULT_WPM, MORSE_IN_USE } 
 import { renderDistress } from './src/render-distress.js';
 import { lightSignal } from './src/render-signal.js';
 import { distressUniverse, distressQuestionFor, audibleFor, deliveryFor } from './src/distress-questions.js';
+import { buoyUniverse, buoyageQuestionFor } from './src/buoyage-questions.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -842,6 +865,7 @@ function makeDrill(cfg) {
     $(cfg.easy).classList.add('hidden');
     $(cfg.strip).innerHTML = '';
     if (cfg.lamp) $(cfg.lamp).innerHTML = '';
+    if (cfg.clear) cfg.clear();
     if (cfg.subNote) {
       $(cfg.subNote).textContent = delivery.note;
       $(cfg.subNote).classList.toggle('hidden', !delivery.substituted);
@@ -849,15 +873,22 @@ function makeDrill(cfg) {
 
     const audible = cfg.audible(live, wpm);
     const canSend = !!audible || delivery.mode === 'light';
-    $(cfg.play).classList.toggle('hidden', !canSend);
-    $(cfg.play).disabled = !canSend;
+    // A drill with nothing to play has no play button at all, rather than a
+    // disabled one implying a sound it will never make.
+    if (cfg.play) {
+      $(cfg.play).classList.toggle('hidden', !canSend);
+      $(cfg.play).disabled = !canSend;
+    }
     if (cfg.stopBtn) {
       $(cfg.stopBtn).classList.toggle('hidden', !canSend);
       $(cfg.stopBtn).disabled = !canSend;
     }
-    $(cfg.hint).textContent = canSend
-      ? (delivery.mode === 'light' ? 'Shown as a flashing lamp.' : 'Send it as often as you like.')
-      : 'This signal makes no sound. Read it instead.';
+    if (cfg.hint) {
+      $(cfg.hint).textContent = canSend
+        ? (delivery.mode === 'light' ? 'Shown as a flashing lamp.' : 'Send it as often as you like.')
+        : 'This signal makes no sound. Read it instead.';
+    }
+    if (cfg.show) cfg.show(live);
 
     $(cfg.opts).innerHTML = '';
     live.options.forEach(o => {
@@ -885,7 +916,7 @@ function makeDrill(cfg) {
     progress();
   }
 
-  $(cfg.play).addEventListener('click', () => {
+  if (cfg.play) $(cfg.play).addEventListener('click', () => {
     if (!live) return;
     const delivery = deliveryFor(live, { motion: !stillness.matches });
     if (delivery.mode === 'light' && cfg.lamp) {
@@ -930,6 +961,27 @@ $('wpmRead').textContent = wpm;
 $('ditRead').textContent = ditMs();
 drawDistressList();
 drawCharGrid();
+
+// --- buoyage drill ----------------------------------------------------------
+
+const BUOY_UNIVERSE = buoyUniverse();
+$('bTotal').textContent = BUOY_UNIVERSE.length;
+
+makeDrill({
+  universe: BUOY_UNIVERSE,
+  build: buoyageQuestionFor,
+  audible: () => null,                 // buoys are seen, never heard
+  // The mark itself is the question, so it is shown at once rather than
+  // revealed. At night that is the light and its rhythm; by day, the paint.
+  show: q => {
+    $('bShown').classList.toggle('night', q.night);
+    $('bShown').innerHTML = renderBuoy(q.mark, q.night ? 'night' : 'day', !stillness.matches);
+  },
+  clear: () => { $('bShown').innerHTML = ''; },
+  prompt: 'bPrompt', verdict: 'bVerdict', next: 'bNext', easy: 'bEasy',
+  strip: 'bShown', opts: 'bOpts', hint: null, play: null, stopBtn: null,
+  seen: 'bSeen', due: 'bDue', streak: 'bStreak'
+});
 
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));

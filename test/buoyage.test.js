@@ -8,6 +8,8 @@
  */
 import { MARKS } from '../data/buoyage.js';
 import { renderBuoy } from '../src/render-buoy.js';
+import { buoyUniverse, buoyageQuestionFor, buoyDistractors, buoySimilarity, isRegional,
+  BUOY_QUESTION_TYPES, BUOY_MODES } from '../src/buoyage-questions.js';
 
 // Lit spans are the only strip rects whose fill wraps onto its own line, which
 // distinguishes them from the strip's background and its outline.
@@ -69,4 +71,49 @@ export default function run(t) {
     }
   }
   t.ok('keyTimes monotonic and normalised 0 to 1', valid && seen >= 16, `${seen} animations`);
+  t.section('the drill');
+  t.ok('every mark says what to do about it, not only what it is',
+    MARKS.every(m => m.action && m.action !== m.meaning));
+  const universe = buoyUniverse();
+  const keys = universe.map(c => `${c.stateId}:${c.aspect}:${c.questionType}`);
+  t.ok('all card keys unique', new Set(keys).size === keys.length, `${keys.length} cards`);
+  t.ok('keys keep the three-part shape', keys.every(k => k.split(':').length === 3));
+  // Unlike the sound and distress sections, the middle slot carries meaning
+  // here: by day you have the paint, by night only a light and a rhythm.
+  t.ok('the middle slot is a real mode, not a placeholder',
+    universe.every(c => BUOY_MODES.includes(c.aspect)) &&
+    new Set(universe.map(c => c.aspect)).size === 2);
+  t.ok('every mark is drilled in both day and night',
+    MARKS.every(m => BUOY_MODES.every(mode =>
+      universe.some(c => c.stateId === m.id && c.aspect === mode))));
+  t.ok('region questions exist only for marks whose colours change by region',
+    universe.filter(c => c.questionType === 'buoy-region')
+      .every(c => isRegional(MARKS.find(m => m.id === c.stateId))),
+    `${new Set(universe.filter(c => c.questionType === 'buoy-region').map(c => c.stateId)).size} marks`);
+  t.ok('cardinals are never asked which region they belong to',
+    !universe.some(c => c.questionType === 'buoy-region' && c.stateId.startsWith('card-')));
+
+  t.section('questions are answerable');
+  let malformed = 0, duplicated = 0;
+  // Repeated because distractors are randomised: a duplicate option that
+  // appears one draw in twenty is still a broken question.
+  for (let pass = 0; pass < 40; pass++) {
+    for (const card of universe) {
+      const q = buoyageQuestionFor(card);
+      if (!q || q.options.length !== 4 || !q.options.some(o => o.id === q.answerId)) malformed++;
+      else if (new Set(q.options.map(o => o.text)).size !== 4) duplicated++;
+    }
+  }
+  t.ok('no malformed questions across 40 passes', malformed === 0, `${universe.length * 40} drawn`);
+  t.ok('no two options ever read the same', duplicated === 0,
+    'several marks share an action, so distractors dedupe by text not by mark');
+
+  t.section('distractors are confusable');
+  t.ok('a cardinal draws other cardinals',
+    buoyDistractors(MARKS.find(m => m.id === 'card-n'), 3).every(m => m.type === 'Cardinal'),
+    buoyDistractors(MARKS.find(m => m.id === 'card-n'), 3).map(m => m.id).join(', '));
+  t.ok('a mark is more like itself than like anything else',
+    MARKS.every(m => MARKS.filter(o => o.id !== m.id)
+      .every(o => buoySimilarity(m, o) <= buoySimilarity(m, m))));
+  t.ok('three question types declared', BUOY_QUESTION_TYPES.length === 3);
 }
