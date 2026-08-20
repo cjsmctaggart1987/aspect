@@ -197,6 +197,21 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .edgecard .no{background:var(--magenta)}
 .edgecard p{margin:0 0 6px;font-size:13px}
 .edgecard .why2{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
+.searchbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
+.searchbar input{font-family:var(--label);font-size:15px;padding:8px 11px;
+  border:1px solid var(--ink);background:var(--paper);color:var(--ink);min-width:340px;max-width:100%}
+.rulepart{margin-top:22px}
+.rulepart > h3{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+  margin:0 0 4px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.para{padding:7px 0 7px 11px;border-left:2px solid transparent;font-size:13.5px}
+.para:target,.para.hit{border-left-color:var(--magenta);background:rgba(195,0,107,.05)}
+.para .cite{font-family:var(--data);font-size:11px;color:var(--magenta);letter-spacing:.06em}
+.para .head{font-weight:500;margin-left:7px}
+.para .body3{margin-top:3px;color:var(--ink-soft)}
+.para.d1{margin-left:16px}.para.d2{margin-left:32px}
+.pending{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
+.rulelink{color:var(--magenta);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.rulelink:hover{background:rgba(195,0,107,.10)}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -223,6 +238,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <button role="tab" id="tab-flags" aria-selected="false">Code flags</button>
   <button role="tab" id="tab-manoeuvre" aria-selected="false">Manoeuvres</button>
   <button role="tab" id="tab-defs" aria-selected="false">Definitions</button>
+  <button role="tab" id="tab-text" aria-selected="false">Rule text</button>
 </div>
 
 <section id="view-lights">
@@ -516,6 +532,39 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   </div>
 
   <div id="defList"></div>
+</section>
+
+<section id="view-text" class="hidden">
+  <p class="sub" style="max-width:74ch;margin:0 0 8px">
+    The rules themselves, addressable paragraph by paragraph. Every citation elsewhere in the
+    app links here. This is a layer under the other sections as much as a section of its own.
+  </p>
+  <div class="standing" id="textNote"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="xPrompt">Press start.</p>
+      <div class="opts" id="xOpts"></div>
+      <div id="xStrip" class="stripwrap"></div>
+      <p class="verdict" id="xVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="xNext">Start a drill</button>
+        <button class="btn ghost hidden" id="xEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="xSeen">0</b> of <b id="xTotal">0</b></span>
+        <span>Due today <b id="xDue">0</b></span>
+        <span>Streak <b id="xStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="searchbar">
+    <input type="search" id="textSearch" placeholder="Search the rules, or type a citation such as 13(b)">
+    <span class="sighint" id="searchCount"></span>
+  </div>
+  <div id="textIndex"></div>
 </section>
 
 <footer>
@@ -5348,6 +5397,294 @@ const definitionsForState = stateId =>
 const definitionById = id => DEFINITIONS.find(d => d.id === id) || null;
 
 
+/* ===== data/rule-text.js ===== */
+/**
+ * The rule text, as addressable paragraphs.
+ *
+ * THE TEXT IS NOT SUPPLIED. READ THIS BEFORE ADDING ANY.
+ *
+ * Every entry below carries `text: null` and `status: 'pending-source'`. That is
+ * deliberate and it is not an oversight.
+ *
+ * This is the one section of the app that quotes rather than paraphrases, which
+ * is exactly why it cannot be written from memory. Everywhere else an
+ * approximation is a paraphrase and is honest about being one; here an
+ * approximation is a misquotation of a regulation, presented as the regulation.
+ * A reader would have no way to tell which paragraphs were right. So the
+ * structure is built and the text is left for someone with 33 CFR Subchapter E
+ * in front of them.
+ *
+ * TO SUPPLY IT
+ *
+ * Fill `text` and set `status: 'verified'` on each entry, from 33 CFR
+ * Subchapter E (a US Government work, not subject to copyright). Do not
+ * paraphrase into this field — every other file in the project is the place for
+ * that. Do not bulk-fill from memory or from a model: fill from the source,
+ * paragraph by paragraph, or leave it pending.
+ *
+ * WHAT IS BUILT
+ *
+ * The structure: ids, parts, paths, parent chains and headings. That is what
+ * citations resolve against, so the link layer works today — tapping "Rule
+ * 26(b)" in a lights answer opens the right paragraph, and shows that its text
+ * is pending rather than showing something invented.
+ *
+ * ID SCHEME
+ *
+ * `rule-26-b-i` for Rule 26(b)(i); `annex-3-1` for Annex III paragraph 1. It
+ * matches the granularity of the citations already used across the app, which
+ * is the point: store coarser than the citations and every link lands in the
+ * wrong place.
+ *
+ * BLANKS
+ *
+ * `blanks` is empty on every entry and stays that way until a human authors
+ * them. See the note on CLOZE_POLICY below.
+ */
+
+const RULE_PARTS = [
+  { id: 'A', name: 'Part A — General', rules: [1, 2, 3] },
+  { id: 'B', name: 'Part B — Steering and sailing rules', rules: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] },
+  { id: 'C', name: 'Part C — Lights and shapes', rules: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31] },
+  { id: 'D', name: 'Part D — Sound and light signals', rules: [32, 33, 34, 35, 36, 37] },
+  { id: 'E', name: 'Part E — Exemptions', rules: [38] }
+];
+
+const RULE_SECTIONS = [
+  { part: 'B', name: 'Section I — Conduct of vessels in any condition of visibility', rules: [4, 5, 6, 7, 8, 9, 10] },
+  { part: 'B', name: 'Section II — Conduct of vessels in sight of one another', rules: [11, 12, 13, 14, 15, 16, 17, 18] },
+  { part: 'B', name: 'Section III — Conduct of vessels in restricted visibility', rules: [19] }
+];
+
+/**
+ * Rule headings. Structure and headings are recalled far more reliably than
+ * wording, and they are what the index and the search need to be usable before
+ * any text exists. They are still marked unverified.
+ */
+const RULE_HEADINGS = {
+  1: 'Application', 2: 'Responsibility', 3: 'General definitions',
+  4: 'Application', 5: 'Look-out', 6: 'Safe speed', 7: 'Risk of collision',
+  8: 'Action to avoid collision', 9: 'Narrow channels', 10: 'Traffic separation schemes',
+  11: 'Application', 12: 'Sailing vessels', 13: 'Overtaking', 14: 'Head-on situation',
+  15: 'Crossing situation', 16: 'Action by give-way vessel', 17: 'Action by stand-on vessel',
+  18: 'Responsibilities between vessels', 19: 'Conduct of vessels in restricted visibility',
+  20: 'Application', 21: 'Definitions', 22: 'Visibility of lights',
+  23: 'Power-driven vessels underway', 24: 'Towing and pushing', 25: 'Sailing vessels underway and vessels under oars',
+  26: 'Fishing vessels', 27: 'Vessels not under command or restricted in their ability to manoeuvre',
+  28: 'Vessels constrained by their draught', 29: 'Pilot vessels',
+  30: 'Anchored vessels and vessels aground', 31: 'Seaplanes',
+  32: 'Definitions', 33: 'Equipment for sound signals',
+  34: 'Manoeuvring and warning signals', 35: 'Sound signals in restricted visibility',
+  36: 'Signals to attract attention', 37: 'Distress signals',
+  38: 'Exemptions'
+};
+
+const ANNEXES = [
+  { id: 'I', number: 1, name: 'Annex I — Positioning and technical details of lights and shapes' },
+  { id: 'II', number: 2, name: 'Annex II — Additional signals for fishing vessels in close proximity' },
+  { id: 'III', number: 3, name: 'Annex III — Technical details of sound signal appliances' },
+  { id: 'IV', number: 4, name: 'Annex IV — Distress signals' }
+];
+
+/**
+ * Subparagraph structure, declared only where the app cites it or where the
+ * shape is needed to hold a citation's parent chain.
+ *
+ * Deliberately not invented wholesale. A subparagraph declared here that does
+ * not exist in the regulation would be a fabricated citation target, which is
+ * the same class of error as fabricated text.
+ */
+const SUBPARAGRAPHS = {
+  2: ['a', 'b'],
+  3: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'],
+  12: ['a', 'b'],
+  13: ['a', 'b', 'c', 'd'],
+  14: ['a', 'b', 'c'],
+  17: ['a', 'b', 'c', 'd'],
+  18: ['a', 'b', 'c', 'd', 'e', 'f'],
+  23: ['a', 'b', 'c', 'd'],
+  24: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'],
+  25: ['a', 'b', 'c', 'd', 'e'],
+  26: ['a', 'b', 'c', 'd', 'e'],
+  27: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+  29: ['a', 'b'],
+  30: ['a', 'b', 'c', 'd', 'e'],
+  34: ['a', 'b', 'c', 'd', 'e', 'f'],
+  35: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
+};
+
+/** Third-level structure, again only where cited. */
+const SUBSUB = {
+  '3-g': ['i', 'ii', 'iii', 'iv', 'v', 'vi'],
+  '12-a': ['i', 'ii', 'iii'],
+  '17-a': ['i', 'ii'],
+  '23-c': ['i', 'ii'],
+  '24-a': ['i', 'ii', 'iii'],
+  '26-b': ['i', 'ii', 'iii'],
+  '26-c': ['i', 'ii'],
+  '27-b': ['i', 'ii', 'iii', 'iv'],
+  '29-a': ['i', 'ii'],
+  '34-c': ['i', 'ii']
+};
+
+const paragraph = e => ({
+  text: null,
+  status: 'pending-source',
+  blanks: [],
+  heading: null,
+  parentId: null,
+  ...e
+});
+
+function build() {
+  const out = [];
+  for (const part of RULE_PARTS) {
+    for (const n of part.rules) {
+      const section = RULE_SECTIONS.find(s => s.part === part.id && s.rules.includes(n));
+      out.push(paragraph({
+        id: `rule-${n}`,
+        rule: n,
+        part: part.id,
+        section: section ? section.name : null,
+        path: [],
+        citation: `Rule ${n}`,
+        heading: RULE_HEADINGS[n] || null
+      }));
+      for (const a of SUBPARAGRAPHS[n] || []) {
+        out.push(paragraph({
+          id: `rule-${n}-${a}`,
+          rule: n,
+          part: part.id,
+          section: section ? section.name : null,
+          path: [a],
+          citation: `Rule ${n}(${a})`,
+          parentId: `rule-${n}`
+        }));
+        for (const r of SUBSUB[`${n}-${a}`] || []) {
+          out.push(paragraph({
+            id: `rule-${n}-${a}-${r}`,
+            rule: n,
+            part: part.id,
+            section: section ? section.name : null,
+            path: [a, r],
+            citation: `Rule ${n}(${a})(${r})`,
+            parentId: `rule-${n}-${a}`
+          }));
+        }
+      }
+    }
+  }
+  for (const ax of ANNEXES) {
+    out.push(paragraph({
+      id: `annex-${ax.number}`,
+      rule: null,
+      part: 'Annex',
+      section: null,
+      path: [],
+      citation: `Annex ${ax.id}`,
+      heading: ax.name
+    }));
+    // Annex IV is cited by paragraph in the distress section.
+    if (ax.number === 4) {
+      for (const p of [1, 2, 3]) {
+        out.push(paragraph({
+          id: `annex-4-${p}`,
+          rule: null,
+          part: 'Annex',
+          section: null,
+          path: [String(p)],
+          citation: `Annex IV(${p})`,
+          parentId: 'annex-4'
+        }));
+      }
+    }
+  }
+  return out;
+}
+
+const RULE_TEXT = build();
+
+const BY_ID = new Map(RULE_TEXT.map(p => [p.id, p]));
+const paragraphById = id => BY_ID.get(id) || null;
+
+/**
+ * Turn a citation as written anywhere in the app into a paragraph id.
+ *
+ * "Rule 26(b)(i)" -> rule-26-b-i. "Annex IV(2)" -> annex-4-2. Returns null
+ * rather than guessing, so a citation that does not resolve is visible as a
+ * broken link instead of silently landing on the parent rule.
+ */
+function citationToId(citation) {
+  if (!citation) return null;
+  const rule = String(citation).match(/^Rule\s+(\d+)((?:\([a-z0-9]+\))*)\s*$/i);
+  if (rule) {
+    const parts = (rule[2] || '').match(/\(([a-z0-9]+)\)/gi) || [];
+    const chain = parts.map(p => p.replace(/[()]/g, '').toLowerCase());
+    return ['rule', rule[1], ...chain].join('-');
+  }
+  const annex = String(citation).match(/^Annex\s+(I{1,3}V?|IV)\s*(?:\(?\s*(\d+)\s*\)?)?\s*$/i);
+  if (annex) {
+    const n = { i: 1, ii: 2, iii: 3, iv: 4 }[annex[1].toLowerCase()];
+    if (!n) return null;
+    return annex[2] ? `annex-${n}-${annex[2]}` : `annex-${n}`;
+  }
+  return null;
+}
+
+/** Every citation string that appears in a piece of text, in order. */
+function findCitations(text) {
+  if (!text) return [];
+  const out = [];
+  const re = /\bRule\s+\d+(?:\([a-z0-9]+\))*|\bAnnex\s+(?:I{1,3}V?|IV)(?:\s*\(\s*\d+\s*\))?/gi;
+  for (const m of String(text).matchAll(re)) {
+    const citation = m[0].replace(/\s+/g, ' ').trim();
+    out.push({ citation, id: citationToId(citation), index: m.index });
+  }
+  return out;
+}
+
+/**
+ * Plain substring and rule-number search.
+ *
+ * No index, no fuzzy matching, no library. There are a few hundred paragraphs
+ * and a linear scan over them is imperceptible; anything cleverer would be
+ * machinery in search of a problem.
+ */
+function searchRuleText(query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return [];
+  // A bare number or a citation jumps straight to the paragraph.
+  const asCitation = citationToId(/^\d/.test(q) ? `Rule ${q}` : q);
+  const direct = asCitation ? paragraphById(asCitation) : null;
+  const hits = RULE_TEXT.filter(p =>
+    (p.text && p.text.toLowerCase().includes(q)) ||
+    (p.heading && p.heading.toLowerCase().includes(q)) ||
+    p.citation.toLowerCase().includes(q));
+  return direct ? [direct, ...hits.filter(p => p.id !== direct.id)] : hits;
+}
+
+const paragraphsPending = () => RULE_TEXT.filter(p => p.status === 'pending-source');
+const paragraphsWithText = () => RULE_TEXT.filter(p => p.text);
+
+/**
+ * Cloze policy, recorded here so it is not quietly reversed later.
+ *
+ * Blanks are authored by hand, never computed. An algorithm choosing which
+ * words to remove has no idea which words carry the rule, so it produces cards
+ * asking for "the" and "of" — busywork that feels like study. A human picks the
+ * word the paragraph turns on: "more than 22.5 degrees abaft her beam", "shall",
+ * "may", "not under command".
+ *
+ * There are no blanks yet, and there should be none until the text is in and
+ * somebody has read it.
+ */
+const CLOZE_POLICY = {
+  authored: true,
+  computed: false,
+  note: 'Blanks are authored by hand against the real text. Do not generate them.'
+};
+
+
 /* ===== src/engine.js ===== */
 /**
  * Engine: arc visibility, aspect projection, question generation.
@@ -7845,6 +8182,155 @@ const definitionSpace = () => ({
 });
 
 
+/* ===== src/rule-text-questions.js ===== */
+/**
+ * Questions on the rule text.
+ *
+ * TWO OF THE THREE TYPES SHIP EMPTY, ON PURPOSE
+ *
+ * text-which-rule works today, because it asks which rule an obligation comes
+ * from and the obligations are the app's own paraphrases — nothing here needs
+ * the verbatim text.
+ *
+ * text-complete-list and text-cloze both need the actual wording, and the text
+ * is pending. They are built and wired and produce no cards until paragraphs
+ * carry text. That is better than approximating: a completion question whose
+ * list is half-remembered teaches a half-remembered list.
+ */
+
+
+
+
+
+
+const RULE_TEXT_QUESTION_TYPES = ['text-which-rule', 'text-complete-list', 'text-cloze'];
+
+const rtShuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+
+/**
+ * Obligations paired with the rule they come from, harvested from the app's own
+ * paraphrases. Nothing is invented for this and nothing is quoted.
+ */
+function whichRuleSources() {
+  const out = [];
+  const add = (id, statement, citation) => {
+    const target = citationToId(citation);
+    if (!statement || !target || !paragraphById(target)) return;
+    out.push({ id, statement, citation, paragraphId: target });
+  };
+  for (const d of DEFINITIONS) add(`def-${d.id}`, d.definition, d.rule.split(',')[0].trim());
+  for (const s of SOUND_SIGNALS) add(`snd-${s.id}`, s.meaning, s.rule);
+  for (const s of DISTRESS_SIGNALS) add(`dis-${s.id}`, s.description, s.rule.split(',')[0].trim());
+  // One statement per citation, so a question cannot have two right answers.
+  const seen = new Set();
+  return out.filter(o => (seen.has(o.citation) ? false : seen.add(o.citation)));
+}
+
+const SOURCES = whichRuleSources();
+
+/** Paragraphs that could carry a completion question once text exists. */
+const completableParagraphs = () =>
+  RULE_TEXT.filter(p => p.text && Array.isArray(p.listItems) && p.listItems.length >= 3
+    && p.listClosed === true);
+
+/** Paragraphs with authored blanks. Empty until a human writes some. */
+const clozeParagraphs = () => RULE_TEXT.filter(p => (p.blanks || []).length > 0);
+
+const ruleTextUniverse = () => [
+  ...SOURCES.map(s => ({ stateId: s.id, aspect: 'plain', questionType: 'text-which-rule' })),
+  ...completableParagraphs().map(p => ({
+    stateId: p.id, aspect: 'plain', questionType: 'text-complete-list'
+  })),
+  ...clozeParagraphs().flatMap(p => p.blanks.map((_, i) => ({
+    stateId: p.id, aspect: `blank-${i}`, questionType: 'text-cloze'
+  })))
+];
+
+function ruleTextQuestionFor({ stateId, aspect, questionType }) {
+  if (questionType === 'text-which-rule') {
+    const src = SOURCES.find(s => s.id === stateId);
+    if (!src) return null;
+    const right = paragraphById(src.paragraphId);
+    // Distractors from the same part where possible: confusing Rule 26 with
+    // Rule 27 is a real mistake; confusing it with Annex II is not.
+    const pool = RULE_TEXT.filter(p => p.id !== right.id && p.citation !== right.citation);
+    const near = pool.filter(p => p.part === right.part && p.path.length === right.path.length);
+    const wrong = rtShuffle(near.length >= 3 ? near : pool).slice(0, 3);
+    return {
+      type: 'text-which-rule',
+      paragraph: right, source: src,
+      prompt: `${src.statement} Which rule is that?`,
+      options: rtShuffle([right, ...wrong]).map(p => ({
+        id: p.id, text: p.heading ? `${p.citation} — ${p.heading}` : p.citation
+      })),
+      answerId: right.id,
+      explain: `${right.citation}${right.heading ? ` — ${right.heading}` : ''}.`
+             + (right.text ? ` ${right.text}` : ' The text of this paragraph has not been supplied yet.')
+    };
+  }
+
+  if (questionType === 'text-complete-list') {
+    const p = paragraphById(stateId);
+    if (!p || !p.text || !Array.isArray(p.listItems)) return null;
+    const missing = p.listItems[p.listItems.length - 1];
+    const shown = p.listItems.slice(0, -1);
+    const wrong = rtShuffle(RULE_TEXT.filter(q => Array.isArray(q.listItems) && q.id !== p.id)
+      .flatMap(q => q.listItems)).slice(0, 3);
+    return {
+      type: 'text-complete-list',
+      paragraph: p,
+      prompt: `${p.citation} lists: ${shown.join('; ')}. What completes the list?`,
+      options: rtShuffle([missing, ...wrong]).map((t, i) => ({ id: `o${i}`, text: t })),
+      answerId: null,   // set below, once shuffled ids are known
+      explain: `${p.citation}. ${p.text}`,
+      _answerText: missing
+    };
+  }
+
+  if (questionType === 'text-cloze') {
+    const p = paragraphById(stateId);
+    const i = Number(String(aspect).replace('blank-', ''));
+    const blank = p && (p.blanks || [])[i];
+    if (!blank || !p.text) return null;
+    const before = p.text.slice(0, blank.start);
+    const after = p.text.slice(blank.end);
+    const wrong = rtShuffle(RULE_TEXT.flatMap(q => (q.blanks || []).map(b => b.answer))
+      .filter(a => a !== blank.answer)).slice(0, 3);
+    return {
+      type: 'text-cloze',
+      paragraph: p, blank,
+      prompt: `${before}______${after}`,
+      options: rtShuffle([blank.answer, ...wrong]).map((t, n) => ({ id: `c${n}`, text: t })),
+      answerId: null,
+      explain: `${p.citation}. ${blank.note || ''}`.trim(),
+      _answerText: blank.answer
+    };
+  }
+
+  return null;
+}
+
+/**
+ * The two text-dependent types return options keyed by position, so the answer
+ * id has to be resolved after shuffling. Done here rather than in the drill, so
+ * every consumer gets it right.
+ */
+function resolveAnswerId(question) {
+  if (!question || question.answerId !== null || !question._answerText) return question;
+  const match = question.options.find(o => o.text === question._answerText);
+  return { ...question, answerId: match ? match.id : question.options[0].id };
+}
+
+const ruleTextSpace = () => ({
+  paragraphs: RULE_TEXT.length,
+  whichRule: SOURCES.length,
+  completable: completableParagraphs().length,
+  cloze: clozeParagraphs().length,
+  cards: ruleTextUniverse().length,
+  clozePolicy: CLOZE_POLICY
+});
+
+
 /* ===== src/scheduler.js ===== */
 /**
  * Spaced repetition over the drill, scheduled by FSRS.
@@ -8047,6 +8533,10 @@ function reset() {
 
 
 
+
+
+
+
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
 
@@ -8096,7 +8586,7 @@ function draw() {
   $('legend').innerHTML = legend;
 
   if (!drill) {
-    $('mRule').textContent = current.rule;
+    $('mRule').innerHTML = linkCitations(current.rule);
     $('mName').textContent = current.name;
     $('mSummary').textContent = current.summary;
     $('mHint').textContent = current.dutyHint;
@@ -8105,7 +8595,7 @@ function draw() {
     // topics rather than one connected thing.
     const govern = definitionsForState(current.id);
     $('mGovern').innerHTML = govern.length
-      ? `<b>Defined as:</b> ${govern.map(d => `${d.term} (${d.rule})`).join(' · ')}`
+      ? `<b>Defined as:</b> ${govern.map(d => `${d.term} (${linkCitations(d.rule)})`).join(' · ')}`
       : '';
   }
 }
@@ -8218,9 +8708,9 @@ function nextQuestion() {
       grade(key, right ? GRADE.GOOD : GRADE.AGAIN);
       $('qEasy').classList.toggle('hidden', !right);
       showProgress();
-      $('qVerdict').textContent = drill.explain;
+      $('qVerdict').innerHTML = linkCitations(drill.explain);
       $('mName').textContent = drill.state.name;
-      $('mRule').textContent = drill.state.rule;
+      $('mRule').innerHTML = linkCitations(drill.state.rule);
       drill = null;
     });
     $('qOpts').appendChild(b);
@@ -8295,7 +8785,7 @@ function drawSignalList() {
       <div class="sigcards">
         ${SOUND_SIGNALS.filter(s => s.group === group).map(s => `
           <div class="sigcard">
-            <div class="rule">${s.rule}</div>
+            <div class="rule">${linkCitations(s.rule)}</div>
             <h4>${s.name}</h4>
             ${signalStrip(s)}
             <div class="sigplay">
@@ -8361,7 +8851,7 @@ function nextSoundQuestion() {
       showSoundProgress();
       // Always show the pattern once answered, whether or not they heard it.
       $('sStrip').innerHTML = signalStrip(sound.signal);
-      $('sVerdict').textContent = sound.explain;
+      $('sVerdict').innerHTML = linkCitations(sound.explain);
       sound = null;
     });
     $('sOpts').appendChild(b);
@@ -8396,7 +8886,7 @@ let wpm = DEFAULT_WPM;
 let pickedChar = 'A';
 
 $('annexNote').innerHTML = `
-  <div class="rule">${ANNEX_IV_PROHIBITION.rule}</div>
+  <div class="rule">${linkCitations(ANNEX_IV_PROHIBITION.rule)}</div>
   <p>${ANNEX_IV_PROHIBITION.text}</p>
   <p class="mem">${ANNEX_IV_PROHIBITION.memory}</p>`;
 
@@ -8411,7 +8901,7 @@ function drawDistressList() {
           const drawing = renderDistress(sig.id);
           const audible = audibleFor(sig, { wpm });
           return `<div class="sigcard">
-            <div class="rule">${sig.rule}</div>
+            <div class="rule">${linkCitations(sig.rule)}</div>
             <h4>${sig.name}</h4>
             <div class="kit"><span class="modality">${sig.modality}</span></div>
             ${drawing ? `<div class="drawn">${drawing}</div>` : ''}
@@ -8571,7 +9061,8 @@ function makeDrill(cfg) {
         // Always reveal the pattern, heard or not.
         const shown = cfg.audible(live, wpm);
         if (shown) $(cfg.strip).innerHTML = signalStrip(shown);
-        $(cfg.verdict).textContent = live.explain;
+        // Citations in the explanation become links into the rule index.
+        $(cfg.verdict).innerHTML = linkCitations(live.explain);
         progress();
         live = null;
       });
@@ -8686,7 +9177,7 @@ function drawFlagList() {
               `<p class="variant">${v.when}: ${v.meaning}</p>`).join("")}
             ${morse || sound ? `<div class="link">
               ${morse ? `morse ${morse}` : ""}${morse && sound ? " · " : ""}
-              ${sound ? `whistle ${sound.name.toLowerCase()} (${sound.rule})` : ""}
+              ${sound ? `whistle ${sound.name.toLowerCase()} (${linkCitations(sound.rule)})` : ""}
             </div>` : ""}
             ${f.verify ? `<div class="unverified">design not verified</div>` : ""}
           </div>`;
@@ -8748,7 +9239,7 @@ function drawManoeuvreList() {
               <div class="who">you: ${CATEGORY_NAMES[s.own.category]}<br>
                 <span class="her">her: ${CATEGORY_NAMES[s.target.category]}</span></div>
               <div class="mvrole ${o.role || ""}">${role}${o.doubt ? " · doubt" : ""}</div>
-              <div class="rules">${o.rules.join(" · ")}</div>
+              <div class="rules">${linkCitations(o.rules.join(" · "))}</div>
               <ol>${(o.notApplicable ? [o.notApplicable.reason] : o.obligations)
                 .map(x => `<li>${x}</li>`).join("")}</ol>
               <p class="why">${s.explanation}</p>
@@ -8802,7 +9293,7 @@ function drawDefinitionList() {
       <div class="defcards">
         ${DEFINITIONS.filter(d => d.rule.split(',')[0].trim() === rule).map(d => `
           <div class="defcard">
-            <div class="rule">${d.rule}</div>
+            <div class="rule">${linkCitations(d.rule)}</div>
             <h4>${d.term}</h4>
             <p class="says">${d.definition}</p>
             <ul>${d.keyPoints.map(k => `<li>${k}</li>`).join("")}</ul>
@@ -8836,6 +9327,95 @@ makeDrill({
 
 drawDefinitionList();
 
+// --- rule text --------------------------------------------------------------
+
+const TEXT_UNIVERSE = ruleTextUniverse();
+$('xTotal').textContent = TEXT_UNIVERSE.length;
+
+const PENDING = RULE_TEXT.filter(x => x.status !== "verified").length;
+$('textNote').innerHTML = `
+  <div class="rule">The text has not been supplied</div>
+  <p>All ${PENDING} paragraphs are addressable and every citation in the app links to the right
+  one, but the wording itself is not here. This is the only section that quotes rather than
+  paraphrases, which is exactly why it was not written from memory: a misquoted regulation
+  presented as the regulation is worse than an obvious gap.</p>
+  <p class="mem">Fill <code>text</code> in data/rule-text.js from 33 CFR Subchapter E,
+  paragraph by paragraph.</p>`;
+
+/**
+ * Turns every citation in a piece of text into a link into the rule index.
+ * This is the layer that makes the section worth having: answer a lights
+ * question, see "Rule 26(b)", tap it, read the paragraph.
+ */
+function linkCitations(text) {
+  if (!text) return '';
+  const found = findCitations(text);
+  if (!found.length) return text;
+  let out = '', at = 0;
+  for (const f of found) {
+    out += text.slice(at, f.index);
+    out += f.id && paragraphById(f.id)
+      ? `<a class="rulelink" data-rule="${f.id}">${f.citation}</a>`
+      : f.citation;
+    at = f.index + f.citation.length;
+  }
+  return out + text.slice(at);
+}
+
+function drawRuleIndex(hits) {
+  const show = hits ? new Set(hits.map(h => h.id)) : null;
+  $('textIndex').innerHTML = [...RULE_PARTS.map(part => ({ id: part.id, name: part.name })),
+    { id: 'Annex', name: 'Annexes' }].map(part => {
+    const paras = RULE_TEXT.filter(x => x.part === part.id && (!show || show.has(x.id)));
+    if (!paras.length) return "";
+    return `<div class="rulepart"><h3>${part.name}</h3>
+      ${paras.map(x => `<div class="para d${x.path.length} ${show ? "hit" : ""}" id="p-${x.id}">
+        <span class="cite">${x.citation}</span>
+        ${x.heading ? `<span class="head">${x.heading}</span>` : ""}
+        <div class="body3">${x.text
+          ? linkCitations(x.text)
+          : `<span class="pending">Text pending. Supply from 33 CFR Subchapter E.</span>`}</div>
+      </div>`).join("")}</div>`;
+  }).join("");
+}
+
+$('textSearch').addEventListener('input', e => {
+  const q = e.target.value.trim();
+  if (!q) {
+    $('searchCount').textContent = '';
+    drawRuleIndex(null);
+    return;
+  }
+  const hits = searchRuleText(q);
+  $('searchCount').textContent = `${hits.length} paragraph${hits.length === 1 ? '' : 's'}`;
+  drawRuleIndex(hits);
+});
+
+// Delegated so links work wherever they are rendered, in any tab.
+document.addEventListener('click', e => {
+  const id = e.target.closest('[data-rule]')?.dataset.rule;
+  if (!id) return;
+  e.preventDefault();
+  switchTab('text');
+  $('textSearch').value = '';
+  $('searchCount').textContent = '';
+  drawRuleIndex(null);
+  const el = $(`p-${id}`);
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+});
+
+makeDrill({
+  universe: TEXT_UNIVERSE,
+  build: card => resolveAnswerId(ruleTextQuestionFor(card)),
+  audible: () => null,
+  clear: () => {},
+  prompt: 'xPrompt', verdict: 'xVerdict', next: 'xNext', easy: 'xEasy',
+  strip: 'xStrip', opts: 'xOpts', hint: null, play: null, stopBtn: null,
+  seen: 'xSeen', due: 'xDue', streak: 'xStreak'
+});
+
+drawRuleIndex(null);
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
 $('tab-sound').addEventListener('click', () => switchTab('sound'));
@@ -8844,6 +9424,7 @@ $('tab-morse').addEventListener('click', () => switchTab('morse'));
 $('tab-flags').addEventListener('click', () => switchTab('flags'));
 $('tab-manoeuvre').addEventListener('click', () => switchTab('manoeuvre'));
 $('tab-defs').addEventListener('click', () => switchTab('defs'));
+$('tab-text').addEventListener('click', () => switchTab('text'));
 function switchTab(t) {
   stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
@@ -8854,6 +9435,7 @@ function switchTab(t) {
   $('view-flags').classList.toggle('hidden', t !== 'flags');
   $('view-manoeuvre').classList.toggle('hidden', t !== 'manoeuvre');
   $('view-defs').classList.toggle('hidden', t !== 'defs');
+  $('view-text').classList.toggle('hidden', t !== 'text');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
   $('tab-sound').setAttribute('aria-selected', t === 'sound');
@@ -8862,6 +9444,7 @@ function switchTab(t) {
   $('tab-flags').setAttribute('aria-selected', t === 'flags');
   $('tab-manoeuvre').setAttribute('aria-selected', t === 'manoeuvre');
   $('tab-defs').setAttribute('aria-selected', t === 'defs');
+  $('tab-text').setAttribute('aria-selected', t === 'text');
 }
 
 draw(); sync();

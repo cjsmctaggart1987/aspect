@@ -197,6 +197,21 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .edgecard .no{background:var(--magenta)}
 .edgecard p{margin:0 0 6px;font-size:13px}
 .edgecard .why2{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
+.searchbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
+.searchbar input{font-family:var(--label);font-size:15px;padding:8px 11px;
+  border:1px solid var(--ink);background:var(--paper);color:var(--ink);min-width:340px;max-width:100%}
+.rulepart{margin-top:22px}
+.rulepart > h3{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+  margin:0 0 4px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.para{padding:7px 0 7px 11px;border-left:2px solid transparent;font-size:13.5px}
+.para:target,.para.hit{border-left-color:var(--magenta);background:rgba(195,0,107,.05)}
+.para .cite{font-family:var(--data);font-size:11px;color:var(--magenta);letter-spacing:.06em}
+.para .head{font-weight:500;margin-left:7px}
+.para .body3{margin-top:3px;color:var(--ink-soft)}
+.para.d1{margin-left:16px}.para.d2{margin-left:32px}
+.pending{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
+.rulelink{color:var(--magenta);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.rulelink:hover{background:rgba(195,0,107,.10)}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -223,6 +238,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <button role="tab" id="tab-flags" aria-selected="false">Code flags</button>
   <button role="tab" id="tab-manoeuvre" aria-selected="false">Manoeuvres</button>
   <button role="tab" id="tab-defs" aria-selected="false">Definitions</button>
+  <button role="tab" id="tab-text" aria-selected="false">Rule text</button>
 </div>
 
 <section id="view-lights">
@@ -518,6 +534,39 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <div id="defList"></div>
 </section>
 
+<section id="view-text" class="hidden">
+  <p class="sub" style="max-width:74ch;margin:0 0 8px">
+    The rules themselves, addressable paragraph by paragraph. Every citation elsewhere in the
+    app links here. This is a layer under the other sections as much as a section of its own.
+  </p>
+  <div class="standing" id="textNote"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="xPrompt">Press start.</p>
+      <div class="opts" id="xOpts"></div>
+      <div id="xStrip" class="stripwrap"></div>
+      <p class="verdict" id="xVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="xNext">Start a drill</button>
+        <button class="btn ghost hidden" id="xEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="xSeen">0</b> of <b id="xTotal">0</b></span>
+        <span>Due today <b id="xDue">0</b></span>
+        <span>Streak <b id="xStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="searchbar">
+    <input type="search" id="textSearch" placeholder="Search the rules, or type a citation such as 13(b)">
+    <span class="sighint" id="searchCount"></span>
+  </div>
+  <div id="textIndex"></div>
+</section>
+
 <footer>
   Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
   33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
@@ -552,6 +601,10 @@ import { manoeuvreUniverse, manoeuvreQuestionFor } from './src/manoeuvre-questio
 import { DEFINITIONS, DEFINITION_RULES, DEFINITION_BOUNDARIES, definitionsForState }
   from './data/definitions.js';
 import { definitionUniverse, definitionQuestionFor } from './src/definition-questions.js';
+import { RULE_TEXT, RULE_PARTS, paragraphById, citationToId, findCitations, searchRuleText }
+  from './data/rule-text.js';
+import { ruleTextUniverse, ruleTextQuestionFor, resolveAnswerId }
+  from './src/rule-text-questions.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -602,7 +655,7 @@ function draw() {
   $('legend').innerHTML = legend;
 
   if (!drill) {
-    $('mRule').textContent = current.rule;
+    $('mRule').innerHTML = linkCitations(current.rule);
     $('mName').textContent = current.name;
     $('mSummary').textContent = current.summary;
     $('mHint').textContent = current.dutyHint;
@@ -611,7 +664,7 @@ function draw() {
     // topics rather than one connected thing.
     const govern = definitionsForState(current.id);
     $('mGovern').innerHTML = govern.length
-      ? `<b>Defined as:</b> ${govern.map(d => `${d.term} (${d.rule})`).join(' · ')}`
+      ? `<b>Defined as:</b> ${govern.map(d => `${d.term} (${linkCitations(d.rule)})`).join(' · ')}`
       : '';
   }
 }
@@ -724,9 +777,9 @@ function nextQuestion() {
       grade(key, right ? GRADE.GOOD : GRADE.AGAIN);
       $('qEasy').classList.toggle('hidden', !right);
       showProgress();
-      $('qVerdict').textContent = drill.explain;
+      $('qVerdict').innerHTML = linkCitations(drill.explain);
       $('mName').textContent = drill.state.name;
-      $('mRule').textContent = drill.state.rule;
+      $('mRule').innerHTML = linkCitations(drill.state.rule);
       drill = null;
     });
     $('qOpts').appendChild(b);
@@ -801,7 +854,7 @@ function drawSignalList() {
       <div class="sigcards">
         ${SOUND_SIGNALS.filter(s => s.group === group).map(s => `
           <div class="sigcard">
-            <div class="rule">${s.rule}</div>
+            <div class="rule">${linkCitations(s.rule)}</div>
             <h4>${s.name}</h4>
             ${signalStrip(s)}
             <div class="sigplay">
@@ -867,7 +920,7 @@ function nextSoundQuestion() {
       showSoundProgress();
       // Always show the pattern once answered, whether or not they heard it.
       $('sStrip').innerHTML = signalStrip(sound.signal);
-      $('sVerdict').textContent = sound.explain;
+      $('sVerdict').innerHTML = linkCitations(sound.explain);
       sound = null;
     });
     $('sOpts').appendChild(b);
@@ -902,7 +955,7 @@ let wpm = DEFAULT_WPM;
 let pickedChar = 'A';
 
 $('annexNote').innerHTML = `
-  <div class="rule">${ANNEX_IV_PROHIBITION.rule}</div>
+  <div class="rule">${linkCitations(ANNEX_IV_PROHIBITION.rule)}</div>
   <p>${ANNEX_IV_PROHIBITION.text}</p>
   <p class="mem">${ANNEX_IV_PROHIBITION.memory}</p>`;
 
@@ -917,7 +970,7 @@ function drawDistressList() {
           const drawing = renderDistress(sig.id);
           const audible = audibleFor(sig, { wpm });
           return `<div class="sigcard">
-            <div class="rule">${sig.rule}</div>
+            <div class="rule">${linkCitations(sig.rule)}</div>
             <h4>${sig.name}</h4>
             <div class="kit"><span class="modality">${sig.modality}</span></div>
             ${drawing ? `<div class="drawn">${drawing}</div>` : ''}
@@ -1077,7 +1130,8 @@ function makeDrill(cfg) {
         // Always reveal the pattern, heard or not.
         const shown = cfg.audible(live, wpm);
         if (shown) $(cfg.strip).innerHTML = signalStrip(shown);
-        $(cfg.verdict).textContent = live.explain;
+        // Citations in the explanation become links into the rule index.
+        $(cfg.verdict).innerHTML = linkCitations(live.explain);
         progress();
         live = null;
       });
@@ -1192,7 +1246,7 @@ function drawFlagList() {
               `<p class="variant">${v.when}: ${v.meaning}</p>`).join("")}
             ${morse || sound ? `<div class="link">
               ${morse ? `morse ${morse}` : ""}${morse && sound ? " · " : ""}
-              ${sound ? `whistle ${sound.name.toLowerCase()} (${sound.rule})` : ""}
+              ${sound ? `whistle ${sound.name.toLowerCase()} (${linkCitations(sound.rule)})` : ""}
             </div>` : ""}
             ${f.verify ? `<div class="unverified">design not verified</div>` : ""}
           </div>`;
@@ -1254,7 +1308,7 @@ function drawManoeuvreList() {
               <div class="who">you: ${CATEGORY_NAMES[s.own.category]}<br>
                 <span class="her">her: ${CATEGORY_NAMES[s.target.category]}</span></div>
               <div class="mvrole ${o.role || ""}">${role}${o.doubt ? " · doubt" : ""}</div>
-              <div class="rules">${o.rules.join(" · ")}</div>
+              <div class="rules">${linkCitations(o.rules.join(" · "))}</div>
               <ol>${(o.notApplicable ? [o.notApplicable.reason] : o.obligations)
                 .map(x => `<li>${x}</li>`).join("")}</ol>
               <p class="why">${s.explanation}</p>
@@ -1308,7 +1362,7 @@ function drawDefinitionList() {
       <div class="defcards">
         ${DEFINITIONS.filter(d => d.rule.split(',')[0].trim() === rule).map(d => `
           <div class="defcard">
-            <div class="rule">${d.rule}</div>
+            <div class="rule">${linkCitations(d.rule)}</div>
             <h4>${d.term}</h4>
             <p class="says">${d.definition}</p>
             <ul>${d.keyPoints.map(k => `<li>${k}</li>`).join("")}</ul>
@@ -1342,6 +1396,95 @@ makeDrill({
 
 drawDefinitionList();
 
+// --- rule text --------------------------------------------------------------
+
+const TEXT_UNIVERSE = ruleTextUniverse();
+$('xTotal').textContent = TEXT_UNIVERSE.length;
+
+const PENDING = RULE_TEXT.filter(x => x.status !== "verified").length;
+$('textNote').innerHTML = `
+  <div class="rule">The text has not been supplied</div>
+  <p>All ${PENDING} paragraphs are addressable and every citation in the app links to the right
+  one, but the wording itself is not here. This is the only section that quotes rather than
+  paraphrases, which is exactly why it was not written from memory: a misquoted regulation
+  presented as the regulation is worse than an obvious gap.</p>
+  <p class="mem">Fill <code>text</code> in data/rule-text.js from 33 CFR Subchapter E,
+  paragraph by paragraph.</p>`;
+
+/**
+ * Turns every citation in a piece of text into a link into the rule index.
+ * This is the layer that makes the section worth having: answer a lights
+ * question, see "Rule 26(b)", tap it, read the paragraph.
+ */
+function linkCitations(text) {
+  if (!text) return '';
+  const found = findCitations(text);
+  if (!found.length) return text;
+  let out = '', at = 0;
+  for (const f of found) {
+    out += text.slice(at, f.index);
+    out += f.id && paragraphById(f.id)
+      ? `<a class="rulelink" data-rule="${f.id}">${f.citation}</a>`
+      : f.citation;
+    at = f.index + f.citation.length;
+  }
+  return out + text.slice(at);
+}
+
+function drawRuleIndex(hits) {
+  const show = hits ? new Set(hits.map(h => h.id)) : null;
+  $('textIndex').innerHTML = [...RULE_PARTS.map(part => ({ id: part.id, name: part.name })),
+    { id: 'Annex', name: 'Annexes' }].map(part => {
+    const paras = RULE_TEXT.filter(x => x.part === part.id && (!show || show.has(x.id)));
+    if (!paras.length) return "";
+    return `<div class="rulepart"><h3>${part.name}</h3>
+      ${paras.map(x => `<div class="para d${x.path.length} ${show ? "hit" : ""}" id="p-${x.id}">
+        <span class="cite">${x.citation}</span>
+        ${x.heading ? `<span class="head">${x.heading}</span>` : ""}
+        <div class="body3">${x.text
+          ? linkCitations(x.text)
+          : `<span class="pending">Text pending. Supply from 33 CFR Subchapter E.</span>`}</div>
+      </div>`).join("")}</div>`;
+  }).join("");
+}
+
+$('textSearch').addEventListener('input', e => {
+  const q = e.target.value.trim();
+  if (!q) {
+    $('searchCount').textContent = '';
+    drawRuleIndex(null);
+    return;
+  }
+  const hits = searchRuleText(q);
+  $('searchCount').textContent = `${hits.length} paragraph${hits.length === 1 ? '' : 's'}`;
+  drawRuleIndex(hits);
+});
+
+// Delegated so links work wherever they are rendered, in any tab.
+document.addEventListener('click', e => {
+  const id = e.target.closest('[data-rule]')?.dataset.rule;
+  if (!id) return;
+  e.preventDefault();
+  switchTab('text');
+  $('textSearch').value = '';
+  $('searchCount').textContent = '';
+  drawRuleIndex(null);
+  const el = $(`p-${id}`);
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+});
+
+makeDrill({
+  universe: TEXT_UNIVERSE,
+  build: card => resolveAnswerId(ruleTextQuestionFor(card)),
+  audible: () => null,
+  clear: () => {},
+  prompt: 'xPrompt', verdict: 'xVerdict', next: 'xNext', easy: 'xEasy',
+  strip: 'xStrip', opts: 'xOpts', hint: null, play: null, stopBtn: null,
+  seen: 'xSeen', due: 'xDue', streak: 'xStreak'
+});
+
+drawRuleIndex(null);
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
 $('tab-sound').addEventListener('click', () => switchTab('sound'));
@@ -1350,6 +1493,7 @@ $('tab-morse').addEventListener('click', () => switchTab('morse'));
 $('tab-flags').addEventListener('click', () => switchTab('flags'));
 $('tab-manoeuvre').addEventListener('click', () => switchTab('manoeuvre'));
 $('tab-defs').addEventListener('click', () => switchTab('defs'));
+$('tab-text').addEventListener('click', () => switchTab('text'));
 function switchTab(t) {
   stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
@@ -1360,6 +1504,7 @@ function switchTab(t) {
   $('view-flags').classList.toggle('hidden', t !== 'flags');
   $('view-manoeuvre').classList.toggle('hidden', t !== 'manoeuvre');
   $('view-defs').classList.toggle('hidden', t !== 'defs');
+  $('view-text').classList.toggle('hidden', t !== 'text');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
   $('tab-sound').setAttribute('aria-selected', t === 'sound');
@@ -1368,6 +1513,7 @@ function switchTab(t) {
   $('tab-flags').setAttribute('aria-selected', t === 'flags');
   $('tab-manoeuvre').setAttribute('aria-selected', t === 'manoeuvre');
   $('tab-defs').setAttribute('aria-selected', t === 'defs');
+  $('tab-text').setAttribute('aria-selected', t === 'text');
 }
 
 draw(); sync();

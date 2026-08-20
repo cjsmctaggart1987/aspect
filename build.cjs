@@ -34,6 +34,7 @@ const MODULES = [
   'src/manoeuvre-engine.js',  // no imports; Rules 11 to 18
   'data/manoeuvre-scenarios.js',
   'data/definitions.js',      // links to data/vessel-states.js by id
+  'data/rule-text.js',        // structure only; the text is pending a source
   'src/engine.js',
   'src/render-lights.js',
   'src/render-buoy.js',
@@ -48,6 +49,7 @@ const MODULES = [
   'src/flag-questions.js',     // needs data/flags.js, sound-signals and render-flag
   'src/manoeuvre-questions.js',
   'src/definition-questions.js',
+  'src/rule-text-questions.js', // reads definitions, sound and distress for its stems
   'src/scheduler.js'
 ];
 
