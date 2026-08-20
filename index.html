@@ -218,10 +218,14 @@ function nearestBand(a) {
   }, { d: 999, b: ASPECT_BANDS[0] }).b;
 }
 
+// SMIL ignores prefers-reduced-motion, so it has to be honoured by hand. Used
+// by both the vessel scene and the buoyage marks.
+const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 function draw() {
   const makingWay = $('makingWay').checked;
   const mode = $('dayMode').checked ? 'day' : 'night';
-  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode);
+  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode, !stillness.matches);
   $('dial').innerHTML = renderDial(aspect);
   bindDial();
   $('aspectRead').textContent = String(Math.round(aspect)).padStart(3, '0') + '°';
@@ -390,9 +394,6 @@ showProgress();
 let region = 'B';
 let buoyMode = 'day';
 
-// SMIL ignores prefers-reduced-motion, so it has to be honoured by hand.
-const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
-
 function drawMarks() {
   const list = MARKS.filter(m => m.region === region || m.region === 'both');
   const motion = !stillness.matches;
@@ -412,7 +413,7 @@ $('buoyNight').addEventListener('click', () => {
   buoyMode = buoyMode === 'night' ? 'day' : 'night';
   sync();
 });
-stillness.addEventListener('change', drawMarks);
+stillness.addEventListener('change', () => { draw(); drawMarks(); });
 function sync() {
   $('regA').setAttribute('aria-pressed', region === 'A');
   $('regB').setAttribute('aria-pressed', region === 'B');

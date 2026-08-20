@@ -3371,7 +3371,17 @@ function dayShape(form, sx, sy, k) {
   }
 }
 
-function renderScene(state, aspect, makingWay = true, mode = 'night') {
+/**
+ * `motion` is threaded in rather than assumed, for the same reason the buoy
+ * lamp threads it: the page's prefers-reduced-motion rule suppresses CSS
+ * animation only, and SMIL ignores it entirely. A flashing light left running
+ * under that setting is exactly the sort of thing the setting exists to stop.
+ *
+ * When motion is off the light is drawn lit and steady rather than dropped,
+ * because a light that never comes on reads as no light at all, which would
+ * change what the picture says.
+ */
+function renderScene(state, aspect, makingWay = true, mode = 'night', motion = true) {
   const k = stateScale(state);
   const lights = visibleLights(state, aspect, makingWay);
   const shapes = mode === 'day' ? visibleShapes(state, aspect) : [];
@@ -3389,7 +3399,7 @@ function renderScene(state, aspect, makingWay = true, mode = 'night') {
 
   const bulbs = lights.map((l, i) => {
     const x = (l.sx * k).toFixed(1), y = (-l.sy * k).toFixed(1);
-    const flash = l.flash
+    const flash = l.flash && motion
       ? `<animate attributeName="opacity" values="1;1;0;0" dur="0.7s" repeatCount="indefinite"/>` : '';
     return mode === 'night'
       ? `<g><circle cx="${x}" cy="${y}" r="24" fill="url(#g${i})"/>
@@ -3803,10 +3813,14 @@ function nearestBand(a) {
   }, { d: 999, b: ASPECT_BANDS[0] }).b;
 }
 
+// SMIL ignores prefers-reduced-motion, so it has to be honoured by hand. Used
+// by both the vessel scene and the buoyage marks.
+const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 function draw() {
   const makingWay = $('makingWay').checked;
   const mode = $('dayMode').checked ? 'day' : 'night';
-  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode);
+  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode, !stillness.matches);
   $('dial').innerHTML = renderDial(aspect);
   bindDial();
   $('aspectRead').textContent = String(Math.round(aspect)).padStart(3, '0') + '°';
@@ -3975,9 +3989,6 @@ showProgress();
 let region = 'B';
 let buoyMode = 'day';
 
-// SMIL ignores prefers-reduced-motion, so it has to be honoured by hand.
-const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
-
 function drawMarks() {
   const list = MARKS.filter(m => m.region === region || m.region === 'both');
   const motion = !stillness.matches;
@@ -3997,7 +4008,7 @@ $('buoyNight').addEventListener('click', () => {
   buoyMode = buoyMode === 'night' ? 'day' : 'night';
   sync();
 });
-stillness.addEventListener('change', drawMarks);
+stillness.addEventListener('change', () => { draw(); drawMarks(); });
 function sync() {
   $('regA').setAttribute('aria-pressed', region === 'A');
   $('regB').setAttribute('aria-pressed', region === 'B');

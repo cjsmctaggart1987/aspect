@@ -64,4 +64,23 @@ export default function run(t) {
   // Guards the guard: a matcher that silently stops matching would pass forever.
   t.ok('the matcher actually found structures', examined > 500, `${examined} examined`);
   t.ok('none overhang the hull', off.length === 0, [...new Set(off)].slice(0, 4).join(', '));
+
+  t.section('reduced motion suppresses SMIL on flashing lights');
+  // The air-cushion vessel and the WIG craft are the only two carrying a
+  // flashing light, so they are the only states where this can be observed.
+  const flashing = VESSEL_STATES.filter(s => s.lights.some(l => l.flash));
+  t.ok('two states carry a flashing light', flashing.length === 2,
+    flashing.map(s => s.id).join(', '));
+  const moving = flashing.map(s => renderScene(s, 20, true, 'night', true));
+  const stillLit = flashing.map(s => renderScene(s, 20, true, 'night', false));
+  t.ok('animates when motion is allowed',
+    moving.every(svg => svg.includes('repeatCount="indefinite"')));
+  t.ok('no SMIL at all when motion is reduced',
+    stillLit.every(svg => !svg.includes('<animate') && !svg.includes('repeatCount')));
+  t.ok('the light is still drawn, lit and steady',
+    stillLit.every(svg => (svg.match(/r="4\.2"/g) || []).length ===
+                          (moving[stillLit.indexOf(svg)].match(/r="4\.2"/g) || []).length));
+  t.ok('states with no flashing light are unaffected by the flag',
+    renderScene(VESSEL_STATES.find(s => s.id === 'pd-50plus'), 20, true, 'night', true) ===
+    renderScene(VESSEL_STATES.find(s => s.id === 'pd-50plus'), 20, true, 'night', false));
 }

@@ -304,7 +304,17 @@ function dayShape(form, sx, sy, k) {
   }
 }
 
-export function renderScene(state, aspect, makingWay = true, mode = 'night') {
+/**
+ * `motion` is threaded in rather than assumed, for the same reason the buoy
+ * lamp threads it: the page's prefers-reduced-motion rule suppresses CSS
+ * animation only, and SMIL ignores it entirely. A flashing light left running
+ * under that setting is exactly the sort of thing the setting exists to stop.
+ *
+ * When motion is off the light is drawn lit and steady rather than dropped,
+ * because a light that never comes on reads as no light at all, which would
+ * change what the picture says.
+ */
+export function renderScene(state, aspect, makingWay = true, mode = 'night', motion = true) {
   const k = stateScale(state);
   const lights = visibleLights(state, aspect, makingWay);
   const shapes = mode === 'day' ? visibleShapes(state, aspect) : [];
@@ -322,7 +332,7 @@ export function renderScene(state, aspect, makingWay = true, mode = 'night') {
 
   const bulbs = lights.map((l, i) => {
     const x = (l.sx * k).toFixed(1), y = (-l.sy * k).toFixed(1);
-    const flash = l.flash
+    const flash = l.flash && motion
       ? `<animate attributeName="opacity" values="1;1;0;0" dur="0.7s" repeatCount="indefinite"/>` : '';
     return mode === 'night'
       ? `<g><circle cx="${x}" cy="${y}" r="24" fill="url(#g${i})"/>
