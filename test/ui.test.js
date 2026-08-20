@@ -83,6 +83,26 @@ export default function run(t) {
     TABS.every(id => app.includes(`$('tab-${id}').addEventListener`)));
   t.ok('switching tabs stops any sound in progress', /function switchTab\([^)]*\)\s*\{\s*stop\(\)/.test(app));
 
+  t.section('each section introduces itself');
+  // The lights intro — "drag the observer round the dial" — sat in the header
+  // for eight tabs' worth of history, describing one of them. A line anchored
+  // above the tab strip is a claim about the whole app, so it had better be
+  // true of the whole app.
+  const sectionOf = id => {
+    const at = page.indexOf(`id="view-${id}"`);
+    return at < 0 ? '' : page.slice(at, page.indexOf('</section>', at));
+  };
+  const introless = TABS.filter(id => !/<p class="sub"/.test(sectionOf(id)));
+  t.ok('every tab opens with its own intro line', introless.length === 0,
+    introless.join(', ') || `${TABS.length} sections`);
+  const header = page.slice(page.indexOf('<header>'), page.indexOf('</header>'));
+  t.ok('the header carries the lockup and the readout, not a section\'s prose',
+    !/<p class="sub"/.test(header) && /class="lockup"/.test(header) &&
+    /id="space"/.test(header),
+    'a line about one tab does not belong above all nine');
+  t.ok('the intro that moved is now inside the lights section',
+    /Drag the observer round the\s+dial/.test(sectionOf('lights')));
+
   t.section('every section surfaces its own data');
   const surfaces = [
     ['vessel states', VESSEL_STATES.length, /VESSEL_STATES\.forEach/.test(app)],

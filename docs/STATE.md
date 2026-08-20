@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 54 commits.
+- **State:** working tree clean, 55 commits.
 
 ---
 
@@ -63,6 +63,18 @@ uses US spelling, cites Annex II where Rule 38(g) should cite Annex III, and rea
 the data, and the app prints it at the top of the tab. **Do not silently correct a quoted
 text** — the moment it is edited, a reader has no way to know which paragraphs are the
 regulation and which are somebody's improvement.
+
+**A section's prose belongs to that section.** The lights intro — "drag the observer round
+the dial" — sat in the header for eight tabs' worth of history, describing one of them as
+though it described all nine. It now opens the lights tab, and every tab has its own
+line; a test fails if one loses it or if a `.sub` reappears in the header. Moving it also
+freed the header, which is why the lockup could go to a 64px mark and drop the strapline
+fudge it needed at 36px.
+
+**The lockup is driven by one number.** `--mk` is the mark's size and every other
+measurement is `calc(var(--mk) * n / 72)`, the ratio from `aspect-lockup.svg` written as
+arithmetic rather than as the answer. Resize the mark and nothing is left behind at the
+old size. A test fails if any of the five becomes a constant.
 
 **The mark is 112.5 + 112.5 + 135, and that totals exactly 360.** The logo is a vessel's
 light pattern seen from above: the two sidelight arcs and the sternlight arc, closing a
@@ -184,7 +196,7 @@ To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 54, all pushed
+## Commits — 55, all pushed
 
 | | |
 |---|---|
@@ -351,7 +363,7 @@ the repo root. Currently green:
   started behind a DOM stub to prove the app actually comes up, and no two of its
   twenty-eight parts declare the same top-level name
 
-Run them with `npm test`. 423 checks. The suite reports the offending state and aspect
+Run them with `npm test`. 429 checks. The suite reports the offending state and aspect
 rather than a bare boolean, two checks guard the matchers themselves, and it has been
 confirmed to fail and exit 1 when a real regression is introduced.
 

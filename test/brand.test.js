@@ -97,16 +97,40 @@ export default function run(t) {
     missing.length ? `${missing.length} differ` : `${paths.length} paths match`);
   t.ok('the inline mark takes its colours from custom properties',
     ['--mk-green', '--mk-red', '--mk-white', '--mk-ink'].every(v => inline.includes(`var(${v})`)));
-  t.ok('the night palette is wired to those properties',
-    /\.lockup\.night \.lockup-mark\{[^}]*--mk-green:\s*#00B86E/.test(page.replace(/\s+/g, ' ')
-      .replace(/\.lockup\.night \.lockup-mark\{ /, '.lockup.night .lockup-mark{')) ||
-    /#00B86E/.test(page),
-    'brand/aspect-mark-night.svg colours');
+  // Read the night mark's own colours out of the generated SVG and require the
+  // CSS to use those, rather than checking for a hex somebody typed once.
+  const nightHexes = [...new Set([...brand('aspect-mark-night.svg')
+    .matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{6})"/g)].map(m => m[1].toUpperCase()))];
+  const nightRule = (page.replace(/\s+/g, ' ')
+    .match(/:root\[data-theme="night"\] \.lockup-mark\{([^}]*)\}/) || [, ''])[1].toUpperCase();
+  t.ok('the mark follows the page theme, not a class of its own',
+    /:root\[data-theme="night"\] \.lockup-mark\{/.test(page.replace(/\s+/g, ' ')) &&
+    !/\.lockup\.night/.test(page),
+    'one night mode, not two');
+  t.ok('and it takes the night colours from brand/aspect-mark-night.svg',
+    nightHexes.length > 0 && nightHexes.every(c => nightRule.includes(c)),
+    nightHexes.filter(c => !nightRule.includes(c)).join(', ') || nightHexes.join(' '));
   t.ok('the wordmark carries the lockup letter-spacing, as em so it scales',
     /letter-spacing:\.1289em/.test(page) && /letter-spacing:\.256em/.test(page),
     '4.9/38em and 3.2/12.5em, read off aspect-lockup.svg');
   t.ok('the strapline is there and the h1 still says Aspect',
     /<p class="lockup-sub">Rules of the Road<\/p>/.test(page) && /<h1>Aspect<\/h1>/.test(page));
+
+  // Every measurement is written as its ratio in aspect-lockup.svg rather than
+  // as the number that ratio works out to, so resizing the mark cannot leave
+  // five hand-computed values behind at the old size.
+  const ratios = { 'the rule height': 48, 'the gap to the rule': 20,
+    'the gap to the text': 22, 'the wordmark': 38, 'the strapline': 12.5 };
+  const offRatio = Object.entries(ratios)
+    .filter(([, n]) => !page.includes(`calc(var(--mk) * ${n} / 72)`))
+    .map(([what]) => what);
+  t.ok('every lockup measurement is a ratio of one number, not a computed constant',
+    offRatio.length === 0,
+    offRatio.join(', ') || 'mark, rule, gaps, wordmark and strapline all off --mk');
+  const mk = Number((page.match(/\.lockup\{[^}]*--mk:\s*(\d+)px/) || [])[1]);
+  t.ok('at the size it is set to, the strapline is large enough to read as words',
+    mk >= 58 && mk * 12.5 / 72 >= 10,
+    `--mk ${mk}px puts the strapline at ${(mk * 12.5 / 72).toFixed(1)}px`);
 
   t.section('the head');
   t.ok('the title and description are the brand ones',

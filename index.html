@@ -82,25 +82,26 @@ body{
   background-size:64px 64px; background-position:-1px -1px;
 }
 .wrap{max-width:1140px;margin:0 auto;padding:26px 20px 72px}
-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
-  border-bottom:1.5px solid var(--ink);padding-bottom:12px;margin-bottom:22px}
+header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  border-bottom:1.5px solid var(--ink);padding-bottom:14px;margin-bottom:22px}
 .headright{display:flex;align-items:center;gap:14px}
-.lockup{display:flex;align-items:center}
-.lockup-mark{width:36px;height:36px;flex:none;
+.lockup{display:flex;align-items:center;--mk:64px}
+@media (max-width:560px){.lockup{--mk:44px}}
+.lockup-mark{width:var(--mk);height:var(--mk);flex:none;
   --mk-green:#00A862; --mk-red:#CE2019; --mk-white:#FFFFFF; --mk-ink:#0E1F28}
 /* The night mark from brand/aspect-mark-night.svg: same geometry, brighter
    lights, paper-coloured edge. It follows the page theme. */
 :root[data-theme="night"] .lockup-mark{
   --mk-green:#00B86E; --mk-red:#E02B22; --mk-white:#FFFFFF; --mk-ink:#E7EEF0}
-.lockup-rule{width:1px;height:24px;background:var(--ink);opacity:.2;margin:0 11px 0 10px;flex:none}
+.lockup-rule{width:1px;height:calc(var(--mk) * 48 / 72);background:var(--ink);opacity:.2;
+  margin:0 calc(var(--mk) * 22 / 72) 0 calc(var(--mk) * 20 / 72);flex:none}
 :root[data-theme="night"] .lockup-rule{background:#2A3A45;opacity:1}
-.lockup-words{display:flex;flex-direction:column;gap:2px}
-h1{font-size:19px;font-weight:600;letter-spacing:.1289em;text-transform:uppercase;margin:0;line-height:1}
+.lockup-words{display:flex;flex-direction:column;gap:calc(var(--mk) * 4 / 72)}
+h1{font-size:calc(var(--mk) * 38 / 72);font-weight:600;letter-spacing:.1289em;
+  text-transform:uppercase;margin:0;line-height:1}
 :root[data-theme="night"] h1{color:#E7EEF0}
-/* 9px, not the 6.25px the lockup's ratio gives at a 36px mark: below about 8px
-   the tracking closes up and it reads as a smear rather than as words. */
-.lockup-sub{font-size:9px;font-weight:400;letter-spacing:.256em;text-transform:uppercase;
-  color:var(--ink-soft);margin:0;line-height:1}
+.lockup-sub{font-size:calc(var(--mk) * 12.5 / 72);font-weight:400;letter-spacing:.256em;
+  text-transform:uppercase;color:var(--ink-soft);margin:0;line-height:1}
 :root[data-theme="night"] .lockup-sub{color:#8BA1AD}
 .sub{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:15px;max-width:44ch}
 .tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--ink);width:max-content}
@@ -349,7 +350,6 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
         <p class="lockup-sub">Rules of the Road</p>
       </div>
     </div>
-    <p class="sub">Every picture below is generated from the rule, not drawn. Drag the observer round the dial and watch the arcs do the work.</p>
   </div>
   <div class="headright">
     <button class="btn ghost" id="themeToggle" aria-pressed="false">Night</button>
@@ -370,6 +370,10 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 </div>
 
 <section id="view-lights">
+  <p class="sub" style="max-width:70ch;margin:0 0 14px">
+    Every picture here is generated from the rule, not drawn. Drag the observer round the
+    dial and watch the arcs do the work.
+  </p>
   <div class="grid">
     <div>
       <div class="panel" id="observerPanel">
@@ -430,6 +434,10 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 </section>
 
 <section id="view-buoys" class="hidden">
+  <p class="sub" style="max-width:70ch;margin:0 0 14px">
+    Sixteen marks, drawn from their own description: body, topmark and rhythm. Switch region
+    to see which side of the channel red belongs on, and switch to night to see the light alone.
+  </p>
   <div class="buoybar">
     <div class="regions">
       <button id="regA" aria-pressed="false">Region A</button>

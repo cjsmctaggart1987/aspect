@@ -97,18 +97,32 @@ header in `index.html` rebuilds it in HTML rather than embedding the SVG, so the
 mark can take the night palette from CSS custom properties, and it keeps the
 lockup's ratios:
 
-| | In the lockup | Why it carries across |
-|---|---|---|
-| ASPECT tracking | `4.9 / 38em` = `.1289em` | Letter-spacing set in em is scale-free |
-| Strapline tracking | `3.2 / 12.5em` = `.256em` | Same |
-| Rule height | `48 / 72` of the mark | |
-| Gap, mark to rule | `20 / 72` of the mark | 10px at a 36px mark |
-| Gap, rule to text | `22 / 72` of the mark | 11px at a 36px mark |
+**One number drives it.** `--mk` is the mark's size and every other measurement
+is written as its ratio in `aspect-lockup.svg` — the arithmetic, not the answer —
+so the lockup can be resized without anybody recomputing five values by hand.
 
-**One deliberate deviation.** At a 36px mark the lockup's ratio puts the
-strapline at 6.25px. Below about 8px the tracking closes up and RULES OF THE
-ROAD reads as a smear rather than as words, so it is set at 9px. Everything else
-is the ratio.
+| | In the lockup | In the CSS | At `--mk: 64px` |
+|---|---|---|---|
+| Mark | `72` | `var(--mk)` | 64px |
+| ASPECT | `38 / 72` | `calc(var(--mk) * 38 / 72)` | 33.8px |
+| Strapline | `12.5 / 72` | `calc(var(--mk) * 12.5 / 72)` | 11.1px |
+| Rule height | `48 / 72` | `calc(var(--mk) * 48 / 72)` | 42.7px |
+| Gap, mark to rule | `20 / 72` | `calc(var(--mk) * 20 / 72)` | 17.8px |
+| Gap, rule to text | `22 / 72` | `calc(var(--mk) * 22 / 72)` | 19.6px |
+| ASPECT tracking | `4.9 / 38em` | `.1289em` | scale-free |
+| Strapline tracking | `3.2 / 12.5em` | `.256em` | scale-free |
+
+Letter-spacing stays in em because em is already a ratio of the type size, so it
+needs no calc and survives any `--mk`.
+
+**These are now the lockup's proportions exactly, with no deviation.** An earlier
+pass set the mark at 36px, which put the strapline at 6.25px — below about 8px
+the tracking closes up and RULES OF THE ROAD reads as a smear rather than as
+words, so it had to be overridden to 9px. Moving the lights intro out of the
+header freed the space for a 64px mark, and at that size every ratio lands
+legible on its own. `--mk` drops to 44px under 560px wide, where the strapline is
+7.6px — small, but it is a strapline under a mark that is still perfectly
+readable, not running text.
 
 ## What is generated and what is not
 
