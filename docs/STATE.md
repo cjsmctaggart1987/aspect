@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 27 commits.
+- **State:** working tree clean, 29 commits.
 
 ---
 
@@ -102,14 +102,14 @@ npm install
 npm run dev      # serve on :5173 — the module version needs HTTP, not file://
 npm run build    # regenerate aspect-standalone.html
 npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
-npm test         # 121 checks against the real modules
+npm test         # 147 checks against the real modules
 ```
 
 To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 27, all pushed
+## Commits — 29, all pushed
 
 | | |
 |---|---|
@@ -141,7 +141,8 @@ To just look at it: double-click `aspect-standalone.html`.
 | `11a6858` | Draw the visual distress signals |
 | `57da773` | Morse: code, timing, a tone voice and a lamp |
 | `cd5fc31` | Distress and Morse drill questions |
-| `<build>` | Bundle the distress and Morse modules |
+| `8d5e283` | Bundle the distress and Morse modules, and test them |
+| `8c7c5cd` | Surface the distress and Morse sections, and test reachability |
 
 ### Spaced repetition — `src/scheduler.js`
 
@@ -215,8 +216,9 @@ Flag N, flag C, the square and ball, and the arm signal are all generated. A
 traced flag is a picture of one flag; a generated chequer is the description, so
 a wrong description looks wrong.
 
-**Not yet wired into the UI.** The modules are built and bundled but no tab
-surfaces them.
+Both are surfaced: Distress groups by modality with the Annex IV(2) prohibition as a
+standing note on the tab, and Morse has the full character grid with hear, see and both,
+and a speed control that states the dit in milliseconds.
 
 ### Buoyage rhythms — `data/buoyage.js`, `src/render-buoy.js`
 
@@ -251,6 +253,9 @@ the repo root. Currently green:
   matches the pattern, all 51 card keys unique
 - Morse ratios exact, SOS carries no character gap, all 100 distress and Morse
   card keys unique, every Annex IV signal attributable
+- **Reachability**: all five tabs exist and switch, each surfaces its own data, all
+  nine declared question types reach the scheduler, every renderer is called, and no
+  drill plays anything outside a click
 - **The built bundle is parsed as a classic script**, and no two of its sixteen parts
   declare the same top-level name
 
@@ -268,13 +273,10 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
 
 ## Open
 
-1. **The distress and Morse sections have no UI.** The data, rendering, audio and
-   questions all exist and are bundled, but nothing surfaces them. This was not in
-   the brief for that round; it is the obvious next step.
-2. **Nothing has been reviewed by eye, or by ear.** The sound signals have never been
+1. **Nothing has been reviewed by eye, or by ear.** The sound signals have never been
    listened to: the synthesis is unheard, and whether a whistle sounds like a whistle
    rather than a buzz is not something a test can answer.
-3. **Nothing visual has been reviewed by eye.** The silhouettes and rhythm strips are verified
+2. **Nothing visual has been reviewed by eye.** The silhouettes and rhythm strips are verified
    geometrically only. No assertion can settle whether a cargo ship reads as a cargo
    ship. Contact sheets: `docs/silhouettes.html`, `docs/buoyage.html`.
 
@@ -304,6 +306,26 @@ them as bugs.
 - ~~Test suites not in the repo.~~ Done in `b6366ab`. `test/` with `npm test`, importing
    the real modules from the repo root. Confirmed the suite fails and exits 1 when a real
    regression is introduced.
+
+## The five tabs
+
+| Tab | Data | Drill types |
+|---|---|---|
+| Lights and shapes | 30 vessel states | identify, aspect |
+| Buoyage | 16 marks | — (explore only) |
+| Sound signals | 18 signals | sound-identify, sound-select, sound-pitch |
+| Distress | 13 Annex IV signals | distress-identify, distress-select |
+| Morse | 37 characters | morse-hear, morse-see |
+
+Nine question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
+needed to change. Buoyage is deliberately explore-only; it has no drill and no cards.
+
+**Reduced motion.** `prefers-reduced-motion` in CSS suppresses CSS animation only —
+SMIL ignores it entirely — so every animated thing here threads an explicit `motion`
+flag instead. For `morse-see` that is not enough: a lamp that never flashes is not a
+blank, it is a steady light, which is a different signal. `deliveryFor()` substitutes
+sound and returns the reason, and the UI prints it. Do not "simplify" that to just
+hiding the lamp.
 
 ## Environment notes
 
