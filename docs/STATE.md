@@ -61,12 +61,14 @@ data/buoyage.js         16 buoyage marks                           270
 data/sound-signals.js   18 sound signals, Rules 32 to 35            305
 data/morse.js           A-Z, 0-9, SOS prosign, timing               112
 data/distress-signals.js 13 distress signals, Annex IV              190
+data/flags.js           40 code flags, ICS                          260
 src/engine.js           arcs, projection, question generation      146
 src/render-lights.js    scene and aspect dial renderers            393
 src/render-buoy.js      buoy renderer                              140
 src/render-signal.js    blast timelines                            135
 src/audio.js            synthesised whistle, bell and gong         200
-src/render-distress.js  code flags, square and ball, arm signal     150
+src/render-flag.js      code flags from geometry                   210
+src/render-distress.js  square and ball, arm signal, NC halyard    110
 src/buoyage-questions.js buoyage drill questions                   120
 src/sound-questions.js  sound drill questions                      146
 src/distress-questions.js distress and Morse questions             130
@@ -320,8 +322,9 @@ them as bugs.
 | Sound signals | 18 signals | sound-identify, sound-select, sound-pitch |
 | Distress | 13 Annex IV signals | distress-identify, distress-select |
 | Morse | 37 characters | morse-hear, morse-see |
+| Code flags | 40 flags | flag-identify, flag-select, flag-signal |
 
-Twelve question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
+Fifteen question types, all reachable, all keyed `x:y:z` so `scheduler.js` has never
 needed to change.
 
 **The middle slot.** For lights it is the aspect and for buoyage it is the mode,
