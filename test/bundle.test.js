@@ -109,7 +109,7 @@ export default function run(t) {
     runError = err;
   }
   t.ok('startup completes with no exception', runError === null,
-    runError ? `${runError.message}` : 'all eight tabs built');
+    runError ? `${runError.message}` : 'all nine tabs built');
 
   // A missing id is not fatal on its own — the stub invents one — but it means
   // the app is reaching for something the markup does not have.

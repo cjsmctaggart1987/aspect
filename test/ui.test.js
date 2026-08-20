@@ -26,6 +26,7 @@ import { DISTRESS_SIGNALS } from '../data/distress-signals.js';
 import { MORSE_CHARACTERS } from '../data/morse.js';
 import { VESSEL_STATES } from '../data/vessel-states.js';
 import { MARKS } from '../data/buoyage.js';
+import { RULE_TEXT_QUESTION_TYPES, ruleTextUniverse } from '../src/rule-text-questions.js';
 
 const html = () => readFileSync('index.html', 'utf8');
 const appScript = () => {
@@ -35,17 +36,27 @@ const appScript = () => {
   return h.slice(o, h.indexOf('\n</script>', o));
 };
 
-const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags', 'manoeuvre', 'defs'];
+const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags', 'manoeuvre', 'defs',
+  'text'];
+
+/**
+ * Question types that are built and wired but deal no cards yet, and why.
+ *
+ * Both need the verbatim rule text, which is pending a source. Listing them
+ * here rather than dropping them from the count keeps the gap visible: if
+ * somebody fills the text, these start dealing and the exception should go.
+ */
+const PENDING_TYPES = ['text-complete-list', 'text-cloze'];
 
 export default function run(t) {
   const page = html();
   const app = appScript();
 
-  t.section('eight tabs, each with a view and a drill or a list');
+  t.section('nine tabs, each with a view and a drill or a list');
   t.ok('every tab has a button and a section',
     TABS.every(id => page.includes(`id="tab-${id}"`) && page.includes(`id="view-${id}"`)),
     TABS.filter(id => !page.includes(`id="view-${id}"`)).join(', ') || `${TABS.length} tabs`);
-  t.ok('switchTab shows and hides all eight',
+  t.ok('switchTab shows and hides all nine',
     TABS.every(id => app.includes(`$('view-${id}').classList.toggle('hidden'`)));
   t.ok('every tab button is wired to switchTab',
     TABS.every(id => app.includes(`$('tab-${id}').addEventListener`)));
@@ -70,8 +81,10 @@ export default function run(t) {
   const lightTypes = (app.match(/const LIGHT_QUESTION_TYPES = \[([^\]]+)\]/) || [, ''])[1]
     .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
   const declared = [...lightTypes, ...BUOY_QUESTION_TYPES, ...SOUND_TYPES,
-    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES, ...FLAG_QUESTION_TYPES, ...MANOEUVRE_QUESTION_TYPES, ...DEFINITION_QUESTION_TYPES];
-  t.ok('twenty-three question types declared across the app', declared.length === 23, declared.join(', '));
+    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES, ...FLAG_QUESTION_TYPES, ...MANOEUVRE_QUESTION_TYPES, ...DEFINITION_QUESTION_TYPES,
+    ...RULE_TEXT_QUESTION_TYPES];
+  t.ok('twenty-six question types declared across the app', declared.length === 26,
+    declared.join(', '));
 
   // Reachable means: some universe the app builds contains the type, and that
   // universe is handed to selectCard.
@@ -82,12 +95,20 @@ export default function run(t) {
     ...manoeuvreUniverse().map(c => c.questionType),
     ...definitionUniverse().map(c => c.questionType),
     ...soundUniverse().map(c => c.questionType),
-    ...distressUniverse().map(c => c.questionType)
+    ...distressUniverse().map(c => c.questionType),
+    ...ruleTextUniverse().map(c => c.questionType)
   ]);
-  const unreachable = declared.filter(type => !reachable.has(type));
-  t.ok('every declared type appears in a universe', unreachable.length === 0, unreachable.join(', '));
+  const unreachable = declared.filter(type => !reachable.has(type) && !PENDING_TYPES.includes(type));
+  t.ok('every declared type appears in a universe, bar the ones waiting on a source',
+    unreachable.length === 0, unreachable.join(', '));
+  // The exception must stay honest in both directions: a pending type that has
+  // quietly started dealing cards is no longer pending and should be counted.
+  t.ok('the pending types really are dealing nothing',
+    PENDING_TYPES.every(type => !reachable.has(type)),
+    PENDING_TYPES.join(', ') + ' — both need the rule text');
 
-  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE', 'FLAG_UNIVERSE', 'MV_UNIVERSE', 'DEF_UNIVERSE'];
+  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE', 'FLAG_UNIVERSE', 'MV_UNIVERSE', 'DEF_UNIVERSE',
+    'TEXT_UNIVERSE'];
   t.ok('every universe the app builds reaches the scheduler',
     universeNames.every(n => app.includes(`selectCard(${n}`) ||
       new RegExp(`universe: ${n}`).test(app)),
@@ -97,12 +118,45 @@ export default function run(t) {
   // the wrong assertion — count the drills.
   const ownDrills = (app.match(/selectCard\((UNIVERSE|SOUND_UNIVERSE)\)/g) || []).length;
   const sharedDrills = (app.match(/^makeDrill\(\{/gm) || []).length;
-  t.ok('eight drills, two with their own loop and six sharing one',
-    ownDrills === 2 && sharedDrills === 6,
+  t.ok('nine drills, two with their own loop and seven sharing one',
+    ownDrills === 2 && sharedDrills === 7,
     `${ownDrills} own + ${sharedDrills} shared`);
   t.ok('every drill grades through the scheduler',
     (app.match(/grade\([^)]*right \? GRADE\.GOOD : GRADE\.AGAIN\)/g) || []).length === ownDrills + 1,
     'one grade path per drill loop');
+
+  t.section('the rule text is a layer under the app, not a tab on its own');
+  // The whole case for this section is that a citation is tappable wherever it
+  // appears. A rule printed as plain text is a dead end the reader has to go
+  // and look up by hand, which is what the section was built to stop.
+  const plain = [...app.matchAll(/textContent = [^;]*\.(explain|rule)\b/g)].map(m => m[0]);
+  t.ok('no rule or explanation is printed without passing through the link layer',
+    plain.length === 0, plain.slice(0, 3).join(' | '));
+  const cards = [...app.matchAll(/class="rules?">\${([^}]*)}/g)].map(m => m[1]);
+  t.ok('every rule shown on a reference card is linked',
+    cards.length > 0 && cards.every(c => c.includes('linkCitations(')),
+    cards.filter(c => !c.includes('linkCitations(')).join(' | ') || `${cards.length} cards`);
+  t.ok('the link layer is applied in every section, not just one',
+    (app.match(/linkCitations\(/g) || []).length >= 8,
+    `${(app.match(/linkCitations\(/g) || []).length} call sites`);
+  t.ok('a click on a citation opens the text tab at that paragraph',
+    /data-rule\b/.test(app) && /switchTab\('text'\)/.test(app) &&
+    /scrollIntoView/.test(app));
+  t.ok('links are delegated from the document, so they work in any tab',
+    /document\.addEventListener\('click'/.test(app));
+
+  t.section('the index is browsable and searchable');
+  t.ok('the index tab carries a search box and a place to draw the rules',
+    page.includes('id="textSearch"') && page.includes('id="textIndex"'));
+  t.ok('typing in the search box redraws the index',
+    /\$\('textSearch'\)\.addEventListener\('input'/.test(app) &&
+    /searchRuleText\(/.test(app));
+  t.ok('the index draws once on load, not only after a search',
+    /drawRuleIndex\(null\);/.test(app));
+  t.ok('a paragraph with no text says so rather than showing an empty line',
+    /Text pending/.test(app));
+  t.ok('the missing text is declared on the section itself',
+    app.includes("$('textNote').innerHTML") && /33 CFR/.test(app));
 
   t.section('no built content is left unreachable');
   // Anything exported as a renderer should be called somewhere in the app.
