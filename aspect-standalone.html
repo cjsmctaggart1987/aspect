@@ -144,6 +144,19 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .buoyshown svg{display:block;width:100%;height:200px}
 .panel.masked .maskable{visibility:hidden}
 .mask-toggle{margin-top:2px}
+.flagcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
+.flagcard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px}
+.flagcard .codeflag{display:block;width:100%;height:auto;margin-bottom:8px}
+.flagcard h4{margin:0 0 2px;font-size:17px;font-weight:500}
+.flagcard .phon{font-family:var(--data);font-size:11px;color:var(--ink-soft);letter-spacing:.1em;text-transform:uppercase}
+.flagcard p{margin:8px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.flagcard .variant{font-family:var(--note);font-style:italic;font-size:13px;margin-top:5px;color:var(--ink)}
+.flagcard .link{margin-top:8px;padding-top:7px;border-top:1px solid var(--rule);
+  font-family:var(--data);font-size:10.5px;color:var(--magenta);letter-spacing:.06em}
+.flagcard .unverified{font-family:var(--data);font-size:10px;color:var(--magenta);
+  letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.flagshown{max-width:190px;margin:0 0 14px}
+.flagshown .codeflag{display:block;width:100%;height:auto}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -167,6 +180,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <button role="tab" id="tab-sound" aria-selected="false">Sound signals</button>
   <button role="tab" id="tab-distress" aria-selected="false">Distress</button>
   <button role="tab" id="tab-morse" aria-selected="false">Morse</button>
+  <button role="tab" id="tab-flags" aria-selected="false">Code flags</button>
 </div>
 
 <section id="view-lights">
@@ -372,6 +386,36 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
     <div class="chargrid" id="charGrid"></div>
     <div id="charDetail" class="chardetail"></div>
   </div>
+</section>
+
+<section id="view-flags" class="hidden">
+  <p class="sub" style="max-width:70ch;margin:0 0 8px">
+    International Code of Signals. Meanings paraphrased from Pub 102; every design is
+    generated from geometry, nothing traced. Several single-letter signals say the same
+    thing as a Rule 34 whistle signal, and those are shown together.
+  </p>
+  <div class="standing" id="flagNote"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="fPrompt">Press start.</p>
+      <div id="fShown" class="flagshown"></div>
+      <div class="opts" id="fOpts"></div>
+      <p class="verdict" id="fVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="fNext">Start a drill</button>
+        <button class="btn ghost hidden" id="fEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="fSeen">0</b> of <b id="fTotal">0</b></span>
+        <span>Due today <b id="fDue">0</b></span>
+        <span>Streak <b id="fStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="flagList"></div>
 </section>
 
 <footer>
@@ -3725,6 +3769,233 @@ const ANNEX_IV_PROHIBITION = {
 const DISTRESS_BY_MODALITY = modality => DISTRESS_SIGNALS.filter(s => s.modality === modality);
 
 
+/* ===== data/flags.js ===== */
+/**
+ * International Code of Signals: alphabet flags, numeral pennants, substitutes
+ * and the answering pennant.
+ *
+ * Meanings are paraphrased from Pub 102 (NGA), a US Government work. Designs
+ * are encoded as geometry rather than traced, the same discipline as the buoys:
+ * a flag here is a description a renderer executes, so a wrong description
+ * draws a visibly wrong flag rather than a quietly wrong one.
+ *
+ * DESIGN VOCABULARY
+ *
+ * The closed set: vertical, horizontal, quarters, cross, saltire, border,
+ * diamond, circle — plus a swallowtail or triangular cut carried on `shape`.
+ *
+ * Four primitives are added beyond that set, deliberately, because four flags
+ * cannot be expressed without them:
+ *
+ *   checker    N is a four by four chequer. Nothing else in the set repeats.
+ *   diagonal   O is divided corner to corner, which is not a band or a saltire.
+ *   diagbands  Y is a run of diagonal stripes.
+ *   triangles  Z is four triangles meeting at the centre, cut by both diagonals.
+ *
+ * `border` takes layers rather than a single ring, so W — blue outside, white,
+ * red centre — is one primitive rather than two nested ones.
+ *
+ * VERIFICATION
+ *
+ * `verify: true` marks an entry whose design I could not confirm against Pub
+ * 102 in this environment. It is not a guess presented as fact: it is a flag on
+ * the record that the geometry needs eyes on it before anyone learns from it.
+ * docs/flags.html exists to make that review possible. Clear the field only
+ * after checking against the publication.
+ */
+
+
+
+const FLAG_SHAPES = ['rectangle', 'pennant', 'triangle', 'swallowtail'];
+
+const FLAG_PRIMITIVES = [
+  'vertical', 'horizontal', 'quarters', 'cross', 'saltire',
+  'border', 'diamond', 'circle',
+  'checker', 'diagonal', 'diagbands', 'triangles'
+];
+
+const FLAG_HEX = {
+  red: '#D0231C',
+  blue: '#0B4EA2',
+  yellow: '#F2C200',
+  black: '#141A1E',
+  white: '#F6F4EE'
+};
+
+const flag = f => ({ variants: [], soundSignal: null, verify: false, ...f });
+
+// --- the alphabet ---------------------------------------------------------
+
+const ALPHABET_FLAGS = [
+  flag({ id: 'A', letter: 'A', phonetic: 'Alfa', shape: 'swallowtail',
+    design: { type: 'vertical', bands: ['white', 'blue'] },
+    meaning: 'I have a diver down; keep well clear at slow speed.', morse: 'A' }),
+  flag({ id: 'B', letter: 'B', phonetic: 'Bravo', shape: 'swallowtail',
+    design: { type: 'vertical', bands: ['red'] },
+    meaning: 'I am taking in, discharging, or carrying dangerous goods.', morse: 'B' }),
+  flag({ id: 'C', letter: 'C', phonetic: 'Charlie', shape: 'rectangle',
+    design: { type: 'horizontal', bands: ['blue', 'white', 'red', 'white', 'blue'] },
+    meaning: 'Yes. Affirmative.', morse: 'C' }),
+  flag({ id: 'D', letter: 'D', phonetic: 'Delta', shape: 'rectangle',
+    design: { type: 'horizontal', bands: ['yellow', 'blue', 'yellow'], weights: [1, 2, 1] },
+    meaning: 'Keep clear of me; I am manoeuvring with difficulty.', morse: 'D' }),
+  flag({ id: 'E', letter: 'E', phonetic: 'Echo', shape: 'rectangle',
+    design: { type: 'horizontal', bands: ['blue', 'red'] },
+    meaning: 'I am altering my course to starboard.', morse: 'E',
+    soundSignal: 'r34-starboard' }),
+  flag({ id: 'F', letter: 'F', phonetic: 'Foxtrot', shape: 'rectangle',
+    design: { type: 'diamond', field: 'white', figure: 'red' },
+    meaning: 'I am disabled; communicate with me.', morse: 'F' }),
+  flag({ id: 'G', letter: 'G', phonetic: 'Golf', shape: 'rectangle',
+    design: { type: 'vertical', bands: ['yellow', 'blue', 'yellow', 'blue', 'yellow', 'blue'] },
+    meaning: 'I require a pilot.', morse: 'G',
+    variants: [{ when: 'fishing', meaning: 'I am hauling nets.' }] }),
+  flag({ id: 'H', letter: 'H', phonetic: 'Hotel', shape: 'rectangle',
+    design: { type: 'vertical', bands: ['white', 'red'] },
+    meaning: 'I have a pilot on board.', morse: 'H' }),
+  flag({ id: 'I', letter: 'I', phonetic: 'India', shape: 'rectangle',
+    design: { type: 'circle', field: 'yellow', figure: 'black' },
+    meaning: 'I am altering my course to port.', morse: 'I',
+    soundSignal: 'r34-port' }),
+  flag({ id: 'J', letter: 'J', phonetic: 'Juliett', shape: 'rectangle',
+    design: { type: 'horizontal', bands: ['blue', 'white', 'blue'] },
+    meaning: 'I am on fire and have dangerous cargo aboard; keep well clear.', morse: 'J' }),
+  flag({ id: 'K', letter: 'K', phonetic: 'Kilo', shape: 'rectangle',
+    design: { type: 'vertical', bands: ['yellow', 'blue'] },
+    meaning: 'I wish to communicate with you.', morse: 'K' }),
+  flag({ id: 'L', letter: 'L', phonetic: 'Lima', shape: 'rectangle',
+    design: { type: 'quarters', colours: ['yellow', 'black', 'black', 'yellow'] },
+    meaning: 'Stop your vessel instantly.', morse: 'L' }),
+  flag({ id: 'M', letter: 'M', phonetic: 'Mike', shape: 'rectangle',
+    design: { type: 'saltire', field: 'blue', figure: 'white' },
+    meaning: 'My vessel is stopped and making no way through the water.', morse: 'M' }),
+  flag({ id: 'N', letter: 'N', phonetic: 'November', shape: 'rectangle',
+    design: { type: 'checker', colours: ['blue', 'white'], rows: 4, cols: 4 },
+    meaning: 'No. Negative.', morse: 'N' }),
+  flag({ id: 'O', letter: 'O', phonetic: 'Oscar', shape: 'rectangle',
+    design: { type: 'diagonal', colours: ['red', 'yellow'] },
+    meaning: 'Man overboard.', morse: 'O' }),
+  flag({ id: 'P', letter: 'P', phonetic: 'Papa', shape: 'rectangle',
+    design: { type: 'border', layers: ['blue', 'white'] },
+    meaning: 'The Blue Peter.',
+    variants: [
+      { when: 'in harbour', meaning: 'All persons are to report on board; the vessel is about to proceed to sea.' },
+      { when: 'at sea', meaning: 'Used by fishing vessels: my nets have come fast upon an obstruction.' }
+    ],
+    morse: 'P' }),
+  flag({ id: 'Q', letter: 'Q', phonetic: 'Quebec', shape: 'rectangle',
+    design: { type: 'vertical', bands: ['yellow'] },
+    meaning: 'My vessel is healthy and I request free pratique.', morse: 'Q' }),
+  flag({ id: 'R', letter: 'R', phonetic: 'Romeo', shape: 'rectangle',
+    design: { type: 'cross', field: 'red', figure: 'yellow' },
+    // Recorded as a fact, not an omission: the current code assigns R no
+    // single-letter meaning. NOT verified against Pub 102 in this environment.
+    meaning: null,
+    noMeaning: 'No single-letter meaning is assigned to R in the current code. '
+             + 'It carries meaning only in combination with other flags.',
+    verify: true, morse: 'R' }),
+  flag({ id: 'S', letter: 'S', phonetic: 'Sierra', shape: 'rectangle',
+    design: { type: 'border', layers: ['white', 'blue'] },
+    meaning: 'I am operating astern propulsion.', morse: 'S',
+    soundSignal: 'r34-astern' }),
+  flag({ id: 'T', letter: 'T', phonetic: 'Tango', shape: 'rectangle',
+    design: { type: 'vertical', bands: ['red', 'white', 'blue'] },
+    meaning: 'Keep clear of me; I am engaged in pair trawling.', morse: 'T',
+    variants: [{ when: 'fishing', meaning: 'Keep clear of me; I am engaged in pair trawling.' }] }),
+  flag({ id: 'U', letter: 'U', phonetic: 'Uniform', shape: 'rectangle',
+    design: { type: 'quarters', colours: ['red', 'white', 'white', 'red'] },
+    meaning: 'You are running into danger.', morse: 'U' }),
+  flag({ id: 'V', letter: 'V', phonetic: 'Victor', shape: 'rectangle',
+    design: { type: 'saltire', field: 'white', figure: 'red' },
+    meaning: 'I require assistance.', morse: 'V' }),
+  flag({ id: 'W', letter: 'W', phonetic: 'Whiskey', shape: 'rectangle',
+    design: { type: 'border', layers: ['blue', 'white', 'red'] },
+    meaning: 'I require medical assistance.', morse: 'W' }),
+  flag({ id: 'X', letter: 'X', phonetic: 'Xray', shape: 'rectangle',
+    design: { type: 'cross', field: 'white', figure: 'blue' },
+    meaning: 'Stop carrying out your intentions and watch for my signals.', morse: 'X' }),
+  flag({ id: 'Y', letter: 'Y', phonetic: 'Yankee', shape: 'rectangle',
+    design: { type: 'diagbands', colours: ['yellow', 'red'], count: 10 },
+    meaning: 'I am dragging my anchor.', morse: 'Y' }),
+  flag({ id: 'Z', letter: 'Z', phonetic: 'Zulu', shape: 'rectangle',
+    design: { type: 'triangles', colours: ['black', 'yellow', 'blue', 'red'] },
+    meaning: 'I require a tug.', morse: 'Z',
+    variants: [{ when: 'fishing', meaning: 'I am shooting nets.' }] })
+];
+
+// --- numeral pennants -----------------------------------------------------
+//
+// Every one of these carries verify: true. The alphabet designs I am confident
+// of; these I am not, and a drill that teaches a wrong pennant is worse than no
+// drill. Check them against Pub 102 using docs/flags.html before clearing.
+
+const numeral = (n, phonetic, design) => flag({
+  id: `N${n}`, numeral: String(n), phonetic, shape: 'pennant', design,
+  meaning: `Numeral ${n}.`, morse: String(n), verify: true
+});
+
+const NUMERAL_PENNANTS = [
+  numeral(0, 'Nadazero', { type: 'horizontal', bands: ['red', 'yellow', 'red'] }),
+  numeral(1, 'Unaone', { type: 'circle', field: 'white', figure: 'red' }),
+  numeral(2, 'Bissotwo', { type: 'circle', field: 'blue', figure: 'white' }),
+  numeral(3, 'Terrathree', { type: 'vertical', bands: ['red', 'white', 'blue'] }),
+  numeral(4, 'Kartefour', { type: 'quarters', colours: ['red', 'white', 'white', 'red'] }),
+  numeral(5, 'Pantafive', { type: 'diagonal', colours: ['yellow', 'blue'] }),
+  numeral(6, 'Soxisix', { type: 'horizontal', bands: ['black', 'white'] }),
+  numeral(7, 'Setteseven', { type: 'horizontal', bands: ['yellow', 'red'] }),
+  numeral(8, 'Oktoeight', { type: 'saltire', field: 'white', figure: 'red' }),
+  numeral(9, 'Novenine', { type: 'quarters', colours: ['white', 'black', 'black', 'white'] })
+];
+
+// --- substitutes and the answering pennant --------------------------------
+
+const SUBSTITUTE_FLAGS = [
+  flag({ id: 'SUB1', letter: '1st sub', phonetic: 'First substitute', shape: 'triangle',
+    design: { type: 'horizontal', bands: ['yellow', 'blue'] },
+    meaning: 'Repeats the first flag of the same class in the hoist.',
+    morse: null, verify: true }),
+  flag({ id: 'SUB2', letter: '2nd sub', phonetic: 'Second substitute', shape: 'triangle',
+    design: { type: 'horizontal', bands: ['blue', 'white'] },
+    meaning: 'Repeats the second flag of the same class in the hoist.',
+    morse: null, verify: true }),
+  flag({ id: 'SUB3', letter: '3rd sub', phonetic: 'Third substitute', shape: 'triangle',
+    design: { type: 'horizontal', bands: ['black', 'white'] },
+    meaning: 'Repeats the third flag of the same class in the hoist.',
+    morse: null, verify: true }),
+  flag({ id: 'ANS', letter: 'Answering', phonetic: 'Answering pennant', shape: 'pennant',
+    design: { type: 'vertical', bands: ['red', 'white', 'red', 'white', 'red'] },
+    meaning: 'Hoisted at the dip to show a signal is seen but not understood, '
+           + 'close up when it is understood. Also used as the decimal point.',
+    morse: null, verify: true })
+];
+
+const FLAGS = [...ALPHABET_FLAGS, ...NUMERAL_PENNANTS, ...SUBSTITUTE_FLAGS];
+
+const FLAG_GROUPS = [
+  { id: 'alphabet', name: 'Alphabet', flags: ALPHABET_FLAGS },
+  { id: 'numerals', name: 'Numeral pennants', flags: NUMERAL_PENNANTS },
+  { id: 'substitutes', name: 'Substitutes and answering pennant', flags: SUBSTITUTE_FLAGS }
+];
+
+/** The Morse for a flag, looked up rather than restated. */
+const flagMorse = f => (f.morse ? morseFor(f.morse) : null);
+
+/** Flags that also correspond to a Rule 34 manoeuvring signal. */
+const MANOEUVRING_FLAGS = ALPHABET_FLAGS.filter(f => f.soundSignal);
+
+/** What a flag actually means, given the circumstance. */
+function flagMeaning(f, when = null) {
+  if (when) {
+    const v = (f.variants || []).find(x => x.when === when);
+    if (v) return v.meaning;
+  }
+  return f.meaning || f.noMeaning;
+}
+
+/** Entries whose geometry still needs checking against the publication. */
+const NEEDS_VERIFYING = FLAGS.filter(f => f.verify);
+
+
 /* ===== src/engine.js ===== */
 /**
  * Engine: arc visibility, aspect projection, question generation.
@@ -4605,6 +4876,221 @@ function stripKey() {
 }
 
 
+/* ===== src/render-flag.js ===== */
+/**
+ * Code flags, drawn from their geometry.
+ *
+ * Same discipline as the buoys and the distress signals: every flag is executed
+ * from its description, nothing is traced. A chequer is a loop, a saltire is two
+ * lines, a border is nested rectangles. If the description is wrong the flag is
+ * visibly wrong, which is the property that makes docs/flags.html worth looking
+ * at.
+ *
+ * Shape and design are separate. The design fills a rectangle; the shape then
+ * cuts it — a swallowtail notch, a pennant taper, a triangle. That keeps the
+ * twelve primitives from each needing four variants.
+ */
+
+
+
+const hex = c => FLAG_HEX[c] || c;
+const FLAG_OUTLINE = '#0B1116';
+
+// The rectangle every design is painted into, before the shape cuts it.
+const W = 120;
+const H = 80;
+
+/** The cut that turns a painted rectangle into this kind of flag. */
+function clipShape(shape, id) {
+  switch (shape) {
+    case 'swallowtail':
+      return `<path d="M 0 0 L ${W} 0 L ${W * 0.72} ${H / 2} L ${W} ${H} L 0 ${H} Z"/>`;
+    case 'pennant':
+      return `<path d="M 0 0 L ${W} ${H * 0.34} L ${W} ${H * 0.66} L 0 ${H} Z"/>`;
+    case 'triangle':
+      return `<path d="M 0 0 L ${W} ${H / 2} L 0 ${H} Z"/>`;
+    default:
+      return `<rect x="0" y="0" width="${W}" height="${H}"/>`;
+  }
+}
+
+/**
+ * The design, painted across the full rectangle. The shape clip does the rest,
+ * so a pennant's bands taper with it rather than needing their own geometry.
+ */
+function paint(design) {
+  const d = design;
+  switch (d.type) {
+    case 'vertical': {
+      const n = d.bands.length, w = W / n;
+      return d.bands.map((c, i) =>
+        `<rect x="${(i * w).toFixed(2)}" y="0" width="${w.toFixed(2)}" height="${H}" fill="${hex(c)}"/>`).join('');
+    }
+    case 'horizontal': {
+      // `weights` lets D carry a deep centre band without a new primitive.
+      const weights = d.weights || d.bands.map(() => 1);
+      const total = weights.reduce((a, b) => a + b, 0);
+      let y = 0;
+      return d.bands.map((c, i) => {
+        const h = (weights[i] / total) * H;
+        const rect = `<rect x="0" y="${y.toFixed(2)}" width="${W}" height="${h.toFixed(2)}" fill="${hex(c)}"/>`;
+        y += h;
+        return rect;
+      }).join('');
+    }
+    case 'quarters': {
+      const [tl, tr, bl, br] = d.colours;
+      return `<rect x="0" y="0" width="${W / 2}" height="${H / 2}" fill="${hex(tl)}"/>
+        <rect x="${W / 2}" y="0" width="${W / 2}" height="${H / 2}" fill="${hex(tr)}"/>
+        <rect x="0" y="${H / 2}" width="${W / 2}" height="${H / 2}" fill="${hex(bl)}"/>
+        <rect x="${W / 2}" y="${H / 2}" width="${W / 2}" height="${H / 2}" fill="${hex(br)}"/>`;
+    }
+    case 'cross': {
+      const t = H * 0.3;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="${hex(d.field)}"/>
+        <rect x="0" y="${(H - t) / 2}" width="${W}" height="${t}" fill="${hex(d.figure)}"/>
+        <rect x="${(W - t) / 2}" y="0" width="${t}" height="${H}" fill="${hex(d.figure)}"/>`;
+    }
+    case 'saltire': {
+      const t = H * 0.22;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="${hex(d.field)}"/>
+        <g stroke="${hex(d.figure)}" stroke-width="${t}">
+          <line x1="0" y1="0" x2="${W}" y2="${H}"/>
+          <line x1="${W}" y1="0" x2="0" y2="${H}"/>
+        </g>`;
+    }
+    case 'border': {
+      // Nested rectangles, outermost first. W is three deep.
+      const n = d.layers.length;
+      return d.layers.map((c, i) => {
+        const inset = (i / n) * (H * 0.5);
+        return `<rect x="${inset.toFixed(2)}" y="${inset.toFixed(2)}"
+          width="${(W - inset * 2).toFixed(2)}" height="${(H - inset * 2).toFixed(2)}" fill="${hex(c)}"/>`;
+      }).join('');
+    }
+    case 'diamond':
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="${hex(d.field)}"/>
+        <path d="M ${W / 2} ${H * 0.12} L ${W * 0.78} ${H / 2} L ${W / 2} ${H * 0.88} L ${W * 0.22} ${H / 2} Z"
+          fill="${hex(d.figure)}"/>`;
+    case 'circle':
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="${hex(d.field)}"/>
+        <circle cx="${W / 2}" cy="${H / 2}" r="${H * 0.28}" fill="${hex(d.figure)}"/>`;
+
+    // --- the four added deliberately, documented in data/flags.js -----------
+    case 'checker': {
+      const rows = d.rows || 4, cols = d.cols || 4;
+      const cw = W / cols, ch = H / rows;
+      const out = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          out.push(`<rect x="${(c * cw).toFixed(2)}" y="${(r * ch).toFixed(2)}"
+            width="${cw.toFixed(2)}" height="${ch.toFixed(2)}"
+            fill="${hex(d.colours[(r + c) % d.colours.length])}"/>`);
+        }
+      }
+      return out.join('');
+    }
+    case 'diagonal':
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="${hex(d.colours[0])}"/>
+        <path d="M 0 0 L ${W} 0 L 0 ${H} Z" fill="${hex(d.colours[1])}"/>`;
+    case 'diagbands': {
+      // Drawn as thick diagonal strokes over a base, clipped by the flag shape.
+      const n = d.count || 10;
+      const step = (W + H) / n;
+      const lines = [];
+      for (let i = 0; i < n; i++) {
+        const x = -H + i * step;
+        lines.push(`<line x1="${x.toFixed(1)}" y1="0" x2="${(x + H).toFixed(1)}" y2="${H}"
+          stroke="${hex(d.colours[1])}" stroke-width="${(step / 2).toFixed(1)}"/>`);
+      }
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="${hex(d.colours[0])}"/>${lines.join('')}`;
+    }
+    case 'triangles': {
+      // Four triangles meeting at the centre: top, hoist, bottom, fly.
+      const [top, hoist, bottom, fly] = d.colours;
+      const c = `${W / 2} ${H / 2}`;
+      return `<path d="M 0 0 L ${W} 0 L ${c} Z" fill="${hex(top)}"/>
+        <path d="M 0 0 L ${c} L 0 ${H} Z" fill="${hex(hoist)}"/>
+        <path d="M 0 ${H} L ${c} L ${W} ${H} Z" fill="${hex(bottom)}"/>
+        <path d="M ${W} 0 L ${W} ${H} L ${c} Z" fill="${hex(fly)}"/>`;
+    }
+    default:
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="#888"/>`;
+  }
+}
+
+let uid = 0;
+
+/**
+ * One flag.
+ *
+ * `anonymous` keeps the letter and the meaning out of the accessible label, so
+ * a drill can show the flag without a screen reader reading out the answer.
+ * Built in from the start rather than retrofitted.
+ */
+function renderFlag(f, { width = 150, anonymous = false, showLabel = false } = {}) {
+  const clipId = `flagclip-${f.id}-${uid++}`;
+  const label = anonymous
+    ? 'A code flag'
+    : `Code flag ${f.letter || f.numeral}, ${f.phonetic}`;
+  const h = Math.round((width / W) * H);
+  return `<svg viewBox="-2 -2 ${W + 4} ${H + 4}" width="${width}" height="${h + 4}"
+    xmlns="http://www.w3.org/2000/svg" class="codeflag" role="img" aria-label="${label}">
+    <defs><clipPath id="${clipId}">${clipShape(f.shape, clipId)}</clipPath></defs>
+    <g clip-path="url(#${clipId})">${paint(f.design)}</g>
+    <g fill="none" stroke="${FLAG_OUTLINE}" stroke-width="1.2" opacity=".55">${clipShape(f.shape, clipId)}</g>
+    ${showLabel && !anonymous
+      ? `<text x="${W / 2}" y="${H + 1}" text-anchor="middle" font-family="ui-monospace,monospace"
+          font-size="9" fill="#4A626E">${f.letter || f.numeral}</text>` : ''}
+  </svg>`;
+}
+
+/**
+ * A hoist: flags one above another, read top to bottom.
+ *
+ * NC is the distress signal, and it is N above C. Drawn from the flag data
+ * rather than from hardcoded geometry, so there is one source of truth for what
+ * those two flags look like.
+ */
+function renderHoist(flags, { width = 130, anonymous = false } = {}) {
+  const mastX = 26;
+  const fw = width - mastX - 26;
+  const fh = Math.round((fw / W) * H);
+  const gap = 14;
+  const total = flags.length * fh + (flags.length - 1) * gap + 28;
+  const rows = flags.map((f, i) => {
+    const y = 14 + i * (fh + gap);
+    return `<g transform="translate(${mastX + 8}, ${y}) scale(${fw / (W + 4)})">
+        ${renderFlag(f, { width: W + 4, anonymous })}
+      </g>
+      ${anonymous ? '' : `<text x="${mastX + 12 + fw}" y="${y + fh / 2 + 4}"
+        font-family="ui-monospace,monospace" font-size="12" fill="${FLAG_OUTLINE}">${f.letter || f.numeral}</text>`}`;
+  }).join('');
+  return `<svg viewBox="0 0 ${width} ${total}" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="${anonymous ? 'A hoist of code flags'
+      : `Code flags ${flags.map(f => f.letter || f.numeral).join(' above ')}`}">
+    <line x1="${mastX}" y1="6" x2="${mastX}" y2="${total - 6}" stroke="${FLAG_OUTLINE}" stroke-width="2.5"/>
+    ${rows}
+  </svg>`;
+}
+
+/** How alike two designs look, for choosing distractors. */
+function designSimilarity(a, b) {
+  let score = 0;
+  if (a.design.type === b.design.type) score += 3;
+  if (a.shape === b.shape) score += 1.5;
+  const colours = f => new Set([
+    ...(f.design.bands || []), ...(f.design.colours || []), ...(f.design.layers || []),
+    f.design.field, f.design.figure
+  ].filter(Boolean));
+  const ca = colours(a), cb = colours(b);
+  const shared = [...ca].filter(c => cb.has(c)).length;
+  score += shared * 0.8;
+  if (ca.size === cb.size) score += 0.4;
+  return score;
+}
+
+
 /* ===== src/render-distress.js ===== */
 /**
  * Distress signals, drawn.
@@ -4619,6 +5105,9 @@ function stripKey() {
  * drawing is visibly wrong rather than quietly right.
  */
 
+
+
+
 const CODE_HEX = {
   blue: '#0B4EA2',
   white: '#F6F4EE',
@@ -4630,55 +5119,18 @@ const CODE_HEX = {
 const OUTLINE = '#0B1116';
 
 /**
- * Flag N: four by four chequer, blue and white, blue in the top left.
- * Sixteen squares, generated. Getting the parity wrong would be obvious.
- */
-function flagN(x, y, w, h) {
-  const n = 4, cw = w / n, ch = h / n;
-  const squares = [];
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      squares.push(`<rect x="${(x + c * cw).toFixed(2)}" y="${(y + r * ch).toFixed(2)}"
-        width="${cw.toFixed(2)}" height="${ch.toFixed(2)}"
-        fill="${(r + c) % 2 === 0 ? CODE_HEX.blue : CODE_HEX.white}"/>`);
-    }
-  }
-  return squares.join('');
-}
-
-/** Flag C: five horizontal bands, blue white red white blue, top to bottom. */
-function flagC(x, y, w, h) {
-  const bands = ['blue', 'white', 'red', 'white', 'blue'];
-  const bh = h / bands.length;
-  return bands.map((b, i) =>
-    `<rect x="${x}" y="${(y + i * bh).toFixed(2)}" width="${w}" height="${bh.toFixed(2)}"
-      fill="${CODE_HEX[b]}"/>`).join('');
-}
-
-/**
  * The code signal NC: N hoisted above C, in that order.
  *
  * Drawn on a halyard because the order is the whole signal. C over N is not a
  * distress signal, and a picture of two flags side by side would not say so.
  */
-function renderFlagNC({ width = 200, height = 170 } = {}) {
-  const fw = 92, fh = 62, x = 62, mast = 46;
-  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="Code flag N above code flag C, the International Code signal of distress">
-    <line x1="${mast}" y1="8" x2="${mast}" y2="${height - 8}" stroke="${OUTLINE}" stroke-width="2.5"/>
-    <g>
-      ${flagN(x, 14, fw, fh)}
-      <rect x="${x}" y="14" width="${fw}" height="${fh}" fill="none" stroke="${OUTLINE}" stroke-width="1.2"/>
-      <text x="${x + fw + 6}" y="${14 + fh / 2 + 4}" font-family="ui-monospace,monospace"
-        font-size="13" fill="${OUTLINE}">N</text>
-    </g>
-    <g>
-      ${flagC(x, 90, fw, fh)}
-      <rect x="${x}" y="90" width="${fw}" height="${fh}" fill="none" stroke="${OUTLINE}" stroke-width="1.2"/>
-      <text x="${x + fw + 6}" y="${90 + fh / 2 + 4}" font-family="ui-monospace,monospace"
-        font-size="13" fill="${OUTLINE}">C</text>
-    </g>
-  </svg>`;
+function renderFlagNC({ width = 200 } = {}) {
+  // N above C, drawn from data/flags.js. The two flags were hardcoded here
+  // before the code flag section existed, which meant two descriptions of the
+  // same flags that could drift apart. There is now one.
+  const n = ALPHABET_FLAGS.find(f => f.id === 'N');
+  const c = ALPHABET_FLAGS.find(f => f.id === 'C');
+  return renderHoist([n, c], { width });
 }
 
 /**
@@ -5550,6 +6002,129 @@ const distressSpace = () => ({
 });
 
 
+/* ===== src/flag-questions.js ===== */
+/**
+ * Drill questions about the code flags.
+ *
+ * The third type is the one worth having. E, I and S are single-letter signals
+ * that mean exactly what three Rule 34 whistle signals mean, so the same
+ * message exists as a flag, as Morse, and as a sound. flag-signal asks for all
+ * three at once, which is the connection a candidate is least likely to make
+ * on their own and most likely to need.
+ *
+ * Card keys keep the three-part shape. The middle slot carries the circumstance
+ * where a flag has variant meanings — G, P, T and Z mean different things to a
+ * fishing vessel or in harbour — and 'plain' otherwise. That is a real second
+ * dimension, like day and night in the buoyage section, not a placeholder.
+ */
+
+
+
+
+
+const FLAG_QUESTION_TYPES = ['flag-identify', 'flag-select', 'flag-signal'];
+
+/** "E — one short blast": a flag paired with a whistle signal. */
+const pairText = (flag, sound) =>
+  `${flag.letter} — ${sound ? sound.name.toLowerCase() : 'no whistle signal'}`;
+
+const shuffleFlags = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+
+/** Flags with something to say. A flag with no assigned meaning cannot be drilled on meaning. */
+const meaningful = FLAGS.filter(f => f.meaning);
+
+/** The circumstances a flag can be asked about. */
+function circumstancesFor(f) {
+  return ['plain', ...(f.variants || []).map(v => v.when)];
+}
+
+function flagDistractors(f, n = 3, pool = meaningful) {
+  return pool
+    .filter(o => o.id !== f.id)
+    .map(o => ({ o, score: designSimilarity(f, o) + Math.random() * 0.9 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map(x => x.o);
+}
+
+const flagUniverse = () => [
+  ...meaningful.flatMap(f => circumstancesFor(f).flatMap(when => [
+    { stateId: f.id, aspect: when, questionType: 'flag-identify' },
+    { stateId: f.id, aspect: when, questionType: 'flag-select' }
+  ])),
+  ...MANOEUVRING_FLAGS.map(f => ({ stateId: f.id, aspect: 'plain', questionType: 'flag-signal' }))
+];
+
+function flagQuestionFor({ stateId, aspect: when, questionType }) {
+  const f = FLAGS.find(x => x.id === stateId);
+  if (!f) return null;
+  const circumstance = when === 'plain' ? null : when;
+  const meaning = flagMeaning(f, circumstance);
+  const wrong = flagDistractors(f, 3);
+
+  if (questionType === 'flag-select') {
+    return {
+      type: 'flag-select',
+      flag: f, when: circumstance, showFlag: false,
+      prompt: circumstance
+        ? `${meaning} Which flag is flown${circumstance === 'fishing' ? ' by a fishing vessel' : ` ${circumstance}`}?`
+        : `${meaning} Which flag is flown?`,
+      options: shuffleFlags([f, ...wrong]).map(o => ({ id: o.id, text: `${o.letter || o.numeral} — ${o.phonetic}` })),
+      answerId: f.id,
+      explain: `${f.letter || f.numeral}, ${f.phonetic}. ${meaning}`
+    };
+  }
+
+  if (questionType === 'flag-signal') {
+    const sound = SOUND_SIGNALS.find(s => s.id === f.soundSignal);
+    return {
+      type: 'flag-signal',
+      flag: f, when: null, showFlag: false, sound,
+      prompt: `${f.meaning} Which flag, and what do you sound?`,
+      // The wrong answers are mismatched pairings, not flags without a sound.
+      // Offering "C — no whistle signal" would answer the question by
+      // elimination: only one option would have a whistle signal at all.
+      options: shuffleFlags([
+        { id: f.id, text: pairText(f, sound) },
+        ...MANOEUVRING_FLAGS
+          .filter(o => o.id !== f.id)
+          .map(o => ({ id: `${o.id}-${f.soundSignal}`, text: pairText(o, sound) }))
+          .slice(0, 2),
+        {
+          id: `${f.id}-wrong`,
+          text: pairText(f, SOUND_SIGNALS.find(x =>
+            x.id !== f.soundSignal && MANOEUVRING_FLAGS.some(m => m.soundSignal === x.id)))
+        }
+      ]),
+      answerId: f.id,
+      // The three-way link, spelled out: this is the point of the question.
+      explain: `${f.letter}, ${f.phonetic}. ${f.meaning} `
+             + `In Morse that is ${flagMorse(f)}, and on the whistle ${sound ? `${sound.name.toLowerCase()} (${sound.rule})` : 'nothing'}.`
+    };
+  }
+
+  return {
+    type: 'flag-identify',
+    flag: f, when: circumstance, showFlag: true,
+    prompt: circumstance
+      ? `This flag is flown ${circumstance === 'fishing' ? 'by a fishing vessel' : circumstance}. What does it mean?`
+      : 'What does this flag mean?',
+    options: shuffleFlags([
+      { id: f.id, text: meaning },
+      ...wrong.map(o => ({ id: o.id, text: flagMeaning(o) }))
+    ]),
+    answerId: f.id,
+    explain: `${f.letter || f.numeral}, ${f.phonetic}. ${meaning}`
+  };
+}
+
+const flagSpace = () => ({
+  flags: FLAGS.length,
+  drillable: meaningful.length,
+  cards: flagUniverse().length
+});
+
+
 /* ===== src/scheduler.js ===== */
 /**
  * Spaced repetition over the drill, scheduled by FSRS.
@@ -5725,6 +6300,9 @@ function reset() {
 
 
 /* ===== app ===== */
+
+
+
 
 
 
@@ -6345,11 +6923,72 @@ $('hideDetail').addEventListener('change', e => {
   $('targetPanel').classList.toggle('masked', e.target.checked);
 });
 
+// --- code flags -------------------------------------------------------------
+
+const FLAG_UNIVERSE = flagUniverse();
+$('fTotal').textContent = FLAG_UNIVERSE.length;
+
+$('flagNote').innerHTML = `
+  <div class="rule">Designs not yet checked</div>
+  <p>${NEEDS_VERIFYING.length} of these designs have not been verified against Pub 102 and are
+  marked below. Treat them as provisional until they have been checked.</p>
+  <p class="mem">The alphabet flags are on firmer ground than the numeral pennants.</p>`;
+
+function drawFlagList() {
+  $('flagList').innerHTML = FLAG_GROUPS.map(g => `
+    <div class="siggroup">
+      <h3>${g.name}</h3>
+      <div class="flagcards">
+        ${g.flags.map(f => {
+          const morse = flagMorse(f);
+          const sound = f.soundSignal ? SOUND_SIGNALS.find(s => s.id === f.soundSignal) : null;
+          return `<div class="flagcard">
+            ${renderFlag(f, { width: 190 })}
+            <h4>${f.letter || f.numeral}</h4>
+            <div class="phon">${f.phonetic}</div>
+            <p>${flagMeaning(f) || ""}</p>
+            ${(f.variants || []).map(v =>
+              `<p class="variant">${v.when}: ${v.meaning}</p>`).join("")}
+            ${morse || sound ? `<div class="link">
+              ${morse ? `morse ${morse}` : ""}${morse && sound ? " · " : ""}
+              ${sound ? `whistle ${sound.name.toLowerCase()} (${sound.rule})` : ""}
+            </div>` : ""}
+            ${f.verify ? `<div class="unverified">design not verified</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+}
+
+makeDrill({
+  universe: FLAG_UNIVERSE,
+  build: flagQuestionFor,
+  audible: () => null,                  // flags are seen, never heard
+  // Only flag-identify shows the flag, and it shows it anonymously: the
+  // accessible label would otherwise name the letter, which is the answer.
+  show: q => {
+    $('fShown').innerHTML = q.showFlag
+      ? renderFlag(q.flag, { width: 190, anonymous: true })
+      : '';
+  },
+  clear: () => { $('fShown').innerHTML = ''; },
+  // Named on reveal, with the letter shown.
+  reveal: q => {
+    $('fShown').innerHTML = renderFlag(q.flag, { width: 190, showLabel: true });
+  },
+  prompt: 'fPrompt', verdict: 'fVerdict', next: 'fNext', easy: 'fEasy',
+  strip: 'fShown', opts: 'fOpts', hint: null, play: null, stopBtn: null,
+  seen: 'fSeen', due: 'fDue', streak: 'fStreak'
+});
+
+drawFlagList();
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
 $('tab-sound').addEventListener('click', () => switchTab('sound'));
 $('tab-distress').addEventListener('click', () => switchTab('distress'));
 $('tab-morse').addEventListener('click', () => switchTab('morse'));
+$('tab-flags').addEventListener('click', () => switchTab('flags'));
 function switchTab(t) {
   stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
@@ -6357,11 +6996,13 @@ function switchTab(t) {
   $('view-sound').classList.toggle('hidden', t !== 'sound');
   $('view-distress').classList.toggle('hidden', t !== 'distress');
   $('view-morse').classList.toggle('hidden', t !== 'morse');
+  $('view-flags').classList.toggle('hidden', t !== 'flags');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
   $('tab-sound').setAttribute('aria-selected', t === 'sound');
   $('tab-distress').setAttribute('aria-selected', t === 'distress');
   $('tab-morse').setAttribute('aria-selected', t === 'morse');
+  $('tab-flags').setAttribute('aria-selected', t === 'flags');
 }
 
 draw(); sync();

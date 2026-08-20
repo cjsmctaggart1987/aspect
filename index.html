@@ -144,6 +144,19 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .buoyshown svg{display:block;width:100%;height:200px}
 .panel.masked .maskable{visibility:hidden}
 .mask-toggle{margin-top:2px}
+.flagcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
+.flagcard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px}
+.flagcard .codeflag{display:block;width:100%;height:auto;margin-bottom:8px}
+.flagcard h4{margin:0 0 2px;font-size:17px;font-weight:500}
+.flagcard .phon{font-family:var(--data);font-size:11px;color:var(--ink-soft);letter-spacing:.1em;text-transform:uppercase}
+.flagcard p{margin:8px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.flagcard .variant{font-family:var(--note);font-style:italic;font-size:13px;margin-top:5px;color:var(--ink)}
+.flagcard .link{margin-top:8px;padding-top:7px;border-top:1px solid var(--rule);
+  font-family:var(--data);font-size:10.5px;color:var(--magenta);letter-spacing:.06em}
+.flagcard .unverified{font-family:var(--data);font-size:10px;color:var(--magenta);
+  letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.flagshown{max-width:190px;margin:0 0 14px}
+.flagshown .codeflag{display:block;width:100%;height:auto}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -167,6 +180,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <button role="tab" id="tab-sound" aria-selected="false">Sound signals</button>
   <button role="tab" id="tab-distress" aria-selected="false">Distress</button>
   <button role="tab" id="tab-morse" aria-selected="false">Morse</button>
+  <button role="tab" id="tab-flags" aria-selected="false">Code flags</button>
 </div>
 
 <section id="view-lights">
@@ -374,6 +388,36 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   </div>
 </section>
 
+<section id="view-flags" class="hidden">
+  <p class="sub" style="max-width:70ch;margin:0 0 8px">
+    International Code of Signals. Meanings paraphrased from Pub 102; every design is
+    generated from geometry, nothing traced. Several single-letter signals say the same
+    thing as a Rule 34 whistle signal, and those are shown together.
+  </p>
+  <div class="standing" id="flagNote"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="fPrompt">Press start.</p>
+      <div id="fShown" class="flagshown"></div>
+      <div class="opts" id="fOpts"></div>
+      <p class="verdict" id="fVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="fNext">Start a drill</button>
+        <button class="btn ghost hidden" id="fEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="fSeen">0</b> of <b id="fTotal">0</b></span>
+        <span>Due today <b id="fDue">0</b></span>
+        <span>Streak <b id="fStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="flagList"></div>
+</section>
+
 <footer>
   Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
   33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
@@ -398,6 +442,9 @@ import { renderDistress } from './src/render-distress.js';
 import { lightSignal } from './src/render-signal.js';
 import { distressUniverse, distressQuestionFor, audibleFor, deliveryFor } from './src/distress-questions.js';
 import { buoyUniverse, buoyageQuestionFor } from './src/buoyage-questions.js';
+import { FLAG_GROUPS, flagMeaning, flagMorse, NEEDS_VERIFYING } from './data/flags.js';
+import { renderFlag } from './src/render-flag.js';
+import { flagUniverse, flagQuestionFor } from './src/flag-questions.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -1002,11 +1049,72 @@ $('hideDetail').addEventListener('change', e => {
   $('targetPanel').classList.toggle('masked', e.target.checked);
 });
 
+// --- code flags -------------------------------------------------------------
+
+const FLAG_UNIVERSE = flagUniverse();
+$('fTotal').textContent = FLAG_UNIVERSE.length;
+
+$('flagNote').innerHTML = `
+  <div class="rule">Designs not yet checked</div>
+  <p>${NEEDS_VERIFYING.length} of these designs have not been verified against Pub 102 and are
+  marked below. Treat them as provisional until they have been checked.</p>
+  <p class="mem">The alphabet flags are on firmer ground than the numeral pennants.</p>`;
+
+function drawFlagList() {
+  $('flagList').innerHTML = FLAG_GROUPS.map(g => `
+    <div class="siggroup">
+      <h3>${g.name}</h3>
+      <div class="flagcards">
+        ${g.flags.map(f => {
+          const morse = flagMorse(f);
+          const sound = f.soundSignal ? SOUND_SIGNALS.find(s => s.id === f.soundSignal) : null;
+          return `<div class="flagcard">
+            ${renderFlag(f, { width: 190 })}
+            <h4>${f.letter || f.numeral}</h4>
+            <div class="phon">${f.phonetic}</div>
+            <p>${flagMeaning(f) || ""}</p>
+            ${(f.variants || []).map(v =>
+              `<p class="variant">${v.when}: ${v.meaning}</p>`).join("")}
+            ${morse || sound ? `<div class="link">
+              ${morse ? `morse ${morse}` : ""}${morse && sound ? " · " : ""}
+              ${sound ? `whistle ${sound.name.toLowerCase()} (${sound.rule})` : ""}
+            </div>` : ""}
+            ${f.verify ? `<div class="unverified">design not verified</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+}
+
+makeDrill({
+  universe: FLAG_UNIVERSE,
+  build: flagQuestionFor,
+  audible: () => null,                  // flags are seen, never heard
+  // Only flag-identify shows the flag, and it shows it anonymously: the
+  // accessible label would otherwise name the letter, which is the answer.
+  show: q => {
+    $('fShown').innerHTML = q.showFlag
+      ? renderFlag(q.flag, { width: 190, anonymous: true })
+      : '';
+  },
+  clear: () => { $('fShown').innerHTML = ''; },
+  // Named on reveal, with the letter shown.
+  reveal: q => {
+    $('fShown').innerHTML = renderFlag(q.flag, { width: 190, showLabel: true });
+  },
+  prompt: 'fPrompt', verdict: 'fVerdict', next: 'fNext', easy: 'fEasy',
+  strip: 'fShown', opts: 'fOpts', hint: null, play: null, stopBtn: null,
+  seen: 'fSeen', due: 'fDue', streak: 'fStreak'
+});
+
+drawFlagList();
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
 $('tab-sound').addEventListener('click', () => switchTab('sound'));
 $('tab-distress').addEventListener('click', () => switchTab('distress'));
 $('tab-morse').addEventListener('click', () => switchTab('morse'));
+$('tab-flags').addEventListener('click', () => switchTab('flags'));
 function switchTab(t) {
   stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
@@ -1014,11 +1122,13 @@ function switchTab(t) {
   $('view-sound').classList.toggle('hidden', t !== 'sound');
   $('view-distress').classList.toggle('hidden', t !== 'distress');
   $('view-morse').classList.toggle('hidden', t !== 'morse');
+  $('view-flags').classList.toggle('hidden', t !== 'flags');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
   $('tab-sound').setAttribute('aria-selected', t === 'sound');
   $('tab-distress').setAttribute('aria-selected', t === 'distress');
   $('tab-morse').setAttribute('aria-selected', t === 'morse');
+  $('tab-flags').setAttribute('aria-selected', t === 'flags');
 }
 
 draw(); sync();

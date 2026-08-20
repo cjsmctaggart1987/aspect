@@ -14,6 +14,8 @@
 import { readFileSync } from 'node:fs';
 import { QUESTION_TYPES as SOUND_TYPES, soundUniverse } from '../src/sound-questions.js';
 import { BUOY_QUESTION_TYPES, buoyUniverse } from '../src/buoyage-questions.js';
+import { FLAG_QUESTION_TYPES, flagUniverse } from '../src/flag-questions.js';
+import { FLAGS } from '../data/flags.js';
 import { DISTRESS_QUESTION_TYPES, MORSE_QUESTION_TYPES, distressUniverse, deliveryFor,
   distressQuestionFor } from '../src/distress-questions.js';
 import { SOUND_SIGNALS } from '../data/sound-signals.js';
@@ -30,17 +32,17 @@ const appScript = () => {
   return h.slice(o, h.indexOf('\n</script>', o));
 };
 
-const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse'];
+const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags'];
 
 export default function run(t) {
   const page = html();
   const app = appScript();
 
-  t.section('five tabs, each with a view and a drill or a list');
+  t.section('six tabs, each with a view and a drill or a list');
   t.ok('every tab has a button and a section',
     TABS.every(id => page.includes(`id="tab-${id}"`) && page.includes(`id="view-${id}"`)),
     TABS.filter(id => !page.includes(`id="view-${id}"`)).join(', ') || `${TABS.length} tabs`);
-  t.ok('switchTab shows and hides all five',
+  t.ok('switchTab shows and hides all six',
     TABS.every(id => app.includes(`$('view-${id}').classList.toggle('hidden'`)));
   t.ok('every tab button is wired to switchTab',
     TABS.every(id => app.includes(`$('tab-${id}').addEventListener`)));
@@ -52,7 +54,8 @@ export default function run(t) {
     ['buoyage marks', MARKS.length, /MARKS\.filter\(m =>/.test(app)],
     ['sound signals', SOUND_SIGNALS.length, /SOUND_SIGNALS\.filter\(s => s\.group/.test(app)],
     ['distress signals', DISTRESS_SIGNALS.length, /DISTRESS_SIGNALS\.filter\(s => s\.modality/.test(app)],
-    ['morse characters', MORSE_CHARACTERS.length, /MORSE_CHARACTERS\.map\(c =>/.test(app)]
+    ['morse characters', MORSE_CHARACTERS.length, /MORSE_CHARACTERS\.map\(c =>/.test(app)],
+    ['code flags', FLAGS.length, /FLAG_GROUPS\.map\(g =>/.test(app)]
   ];
   for (const [what, count, listed] of surfaces) {
     t.ok(`${what} are listed in the UI`, listed, `${count} items`);
@@ -63,21 +66,22 @@ export default function run(t) {
   const lightTypes = (app.match(/const LIGHT_QUESTION_TYPES = \[([^\]]+)\]/) || [, ''])[1]
     .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
   const declared = [...lightTypes, ...BUOY_QUESTION_TYPES, ...SOUND_TYPES,
-    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES];
-  t.ok('twelve question types declared across the app', declared.length === 12, declared.join(', '));
+    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES, ...FLAG_QUESTION_TYPES];
+  t.ok('fifteen question types declared across the app', declared.length === 15, declared.join(', '));
 
   // Reachable means: some universe the app builds contains the type, and that
   // universe is handed to selectCard.
   const reachable = new Set([
     ...lightTypes,
     ...buoyUniverse().map(c => c.questionType),
+    ...flagUniverse().map(c => c.questionType),
     ...soundUniverse().map(c => c.questionType),
     ...distressUniverse().map(c => c.questionType)
   ]);
   const unreachable = declared.filter(type => !reachable.has(type));
   t.ok('every declared type appears in a universe', unreachable.length === 0, unreachable.join(', '));
 
-  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE'];
+  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE', 'FLAG_UNIVERSE'];
   t.ok('every universe the app builds reaches the scheduler',
     universeNames.every(n => app.includes(`selectCard(${n}`) ||
       new RegExp(`universe: ${n}`).test(app)),
@@ -87,8 +91,8 @@ export default function run(t) {
   // the wrong assertion — count the drills.
   const ownDrills = (app.match(/selectCard\((UNIVERSE|SOUND_UNIVERSE)\)/g) || []).length;
   const sharedDrills = (app.match(/^makeDrill\(\{/gm) || []).length;
-  t.ok('five drills, two with their own loop and three sharing one',
-    ownDrills === 2 && sharedDrills === 3,
+  t.ok('six drills, two with their own loop and four sharing one',
+    ownDrills === 2 && sharedDrills === 4,
     `${ownDrills} own + ${sharedDrills} shared`);
   t.ok('every drill grades through the scheduler',
     (app.match(/grade\([^)]*right \? GRADE\.GOOD : GRADE\.AGAIN\)/g) || []).length === ownDrills + 1,
@@ -96,7 +100,7 @@ export default function run(t) {
 
   t.section('no built content is left unreachable');
   // Anything exported as a renderer should be called somewhere in the app.
-  const renderers = ['renderScene', 'renderDial', 'renderBuoy', 'signalStrip', 'renderDistress', 'lightSignal'];
+  const renderers = ['renderScene', 'renderDial', 'renderBuoy', 'signalStrip', 'renderDistress', 'lightSignal', 'renderFlag'];
   const uncalled = renderers.filter(r => !new RegExp(`${r}\\(`).test(app));
   t.ok('every renderer is called by the UI', uncalled.length === 0, uncalled.join(', '));
   t.ok('the Annex IV prohibition is shown as a standing note, not per signal',

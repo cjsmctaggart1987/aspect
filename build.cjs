@@ -30,15 +30,18 @@ const MODULES = [
   'data/sound-signals.js',
   'data/morse.js',
   'data/distress-signals.js',
+  'data/flags.js',            // imports morseFor from data/morse.js
   'src/engine.js',
   'src/render-lights.js',
   'src/render-buoy.js',
   'src/render-signal.js',      // draws sound, Morse and audible distress patterns
+  'src/render-flag.js',       // render-distress draws the NC halyard from it
   'src/render-distress.js',
   'src/audio.js',              // reads the Annex III bands from data/sound-signals.js
   'src/buoyage-questions.js',  // needs data/buoyage.js only
   'src/sound-questions.js',    // needs the data, and describe() from render-signal.js
   'src/distress-questions.js', // needs data/distress-signals.js and data/morse.js
+  'src/flag-questions.js',     // needs data/flags.js, sound-signals and render-flag
   'src/scheduler.js'
 ];
 

@@ -11,6 +11,7 @@ import { DISTRESS_SIGNALS, DISTRESS_MODALITIES, ANNEX_IV_PROHIBITION }
 import { MORSE_ALPHABET, MORSE_PROSIGNS, MORSE_CHARACTERS, MORSE_UNIT, MORSE_IN_USE,
   ditSeconds, morseFor, morseSignal, morsePattern, DEFAULT_WPM } from '../data/morse.js';
 import { signalStrip, lightSignal, describe } from '../src/render-signal.js';
+import { readFileSync } from 'node:fs';
 import { renderFlagNC, renderSquareAndBall, renderArmSignal, renderDistress, DRAWN_DISTRESS }
   from '../src/render-distress.js';
 import { distressUniverse, distressQuestionFor, morseDistractors, morseDistance }
@@ -103,9 +104,16 @@ export default function run(t) {
       const svg = renderDistress(id);
       return /<svg/.test(svg) && !/NaN|undefined/.test(svg);
     }));
-  t.ok('flag N is a 4x4 chequer, blue in the top left',
-    (renderFlagNC().match(/<rect/g) || []).length === 23 && renderFlagNC().includes('#0B4EA2'));
-  t.ok('flag C has a red centre band', renderFlagNC().includes('#D0231C'));
+  // NC is now drawn from data/flags.js rather than from geometry hardcoded
+  // here, so these check the halyard rather than a rect count.
+  const nc = renderFlagNC();
+  t.ok('flag N draws its chequer, sixteen squares of blue and white',
+    (nc.match(/<rect/g) || []).length >= 16 && nc.includes('#0B4EA2'));
+  t.ok('flag C draws its red centre band', nc.includes('#D0231C'));
+  t.ok('N is hoisted above C, and both are lettered',
+    nc.includes('>N<') && nc.includes('>C<') && nc.indexOf('>N<') < nc.indexOf('>C<'));
+  t.ok('the halyard draws from the flag data, not from a second copy',
+    !readFileSync('src/render-distress.js', 'utf8').includes('function flagN'));
   t.ok('the square and ball shows the permitted alternative too',
     /or below/.test(renderSquareAndBall()));
   t.ok('the arm signal shows two positions, not one',

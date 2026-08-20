@@ -11,6 +11,9 @@
  * drawing is visibly wrong rather than quietly right.
  */
 
+import { ALPHABET_FLAGS } from '../data/flags.js';
+import { renderHoist } from './render-flag.js';
+
 const CODE_HEX = {
   blue: '#0B4EA2',
   white: '#F6F4EE',
@@ -22,55 +25,18 @@ const CODE_HEX = {
 const OUTLINE = '#0B1116';
 
 /**
- * Flag N: four by four chequer, blue and white, blue in the top left.
- * Sixteen squares, generated. Getting the parity wrong would be obvious.
- */
-function flagN(x, y, w, h) {
-  const n = 4, cw = w / n, ch = h / n;
-  const squares = [];
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      squares.push(`<rect x="${(x + c * cw).toFixed(2)}" y="${(y + r * ch).toFixed(2)}"
-        width="${cw.toFixed(2)}" height="${ch.toFixed(2)}"
-        fill="${(r + c) % 2 === 0 ? CODE_HEX.blue : CODE_HEX.white}"/>`);
-    }
-  }
-  return squares.join('');
-}
-
-/** Flag C: five horizontal bands, blue white red white blue, top to bottom. */
-function flagC(x, y, w, h) {
-  const bands = ['blue', 'white', 'red', 'white', 'blue'];
-  const bh = h / bands.length;
-  return bands.map((b, i) =>
-    `<rect x="${x}" y="${(y + i * bh).toFixed(2)}" width="${w}" height="${bh.toFixed(2)}"
-      fill="${CODE_HEX[b]}"/>`).join('');
-}
-
-/**
  * The code signal NC: N hoisted above C, in that order.
  *
  * Drawn on a halyard because the order is the whole signal. C over N is not a
  * distress signal, and a picture of two flags side by side would not say so.
  */
-export function renderFlagNC({ width = 200, height = 170 } = {}) {
-  const fw = 92, fh = 62, x = 62, mast = 46;
-  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="Code flag N above code flag C, the International Code signal of distress">
-    <line x1="${mast}" y1="8" x2="${mast}" y2="${height - 8}" stroke="${OUTLINE}" stroke-width="2.5"/>
-    <g>
-      ${flagN(x, 14, fw, fh)}
-      <rect x="${x}" y="14" width="${fw}" height="${fh}" fill="none" stroke="${OUTLINE}" stroke-width="1.2"/>
-      <text x="${x + fw + 6}" y="${14 + fh / 2 + 4}" font-family="ui-monospace,monospace"
-        font-size="13" fill="${OUTLINE}">N</text>
-    </g>
-    <g>
-      ${flagC(x, 90, fw, fh)}
-      <rect x="${x}" y="90" width="${fw}" height="${fh}" fill="none" stroke="${OUTLINE}" stroke-width="1.2"/>
-      <text x="${x + fw + 6}" y="${90 + fh / 2 + 4}" font-family="ui-monospace,monospace"
-        font-size="13" fill="${OUTLINE}">C</text>
-    </g>
-  </svg>`;
+export function renderFlagNC({ width = 200 } = {}) {
+  // N above C, drawn from data/flags.js. The two flags were hardcoded here
+  // before the code flag section existed, which meant two descriptions of the
+  // same flags that could drift apart. There is now one.
+  const n = ALPHABET_FLAGS.find(f => f.id === 'N');
+  const c = ALPHABET_FLAGS.find(f => f.id === 'C');
+  return renderHoist([n, c], { width });
 }
 
 /**
