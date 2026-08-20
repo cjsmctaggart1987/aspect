@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, `main` in sync with origin, 15 commits.
+- **State:** working tree clean, 21 commits.
 
 ---
 
@@ -58,9 +58,13 @@ index.html              markup, styling, app as an ES module      436 lines
 vendor/ts-fsrs.js       vendored FSRS lib, generated               60 KB
 data/vessel-states.js   30 vessel states                           576
 data/buoyage.js         16 buoyage marks                           270
+data/sound-signals.js   18 sound signals, Rules 32 to 35            305
 src/engine.js           arcs, projection, question generation      146
 src/render-lights.js    scene and aspect dial renderers            393
 src/render-buoy.js      buoy renderer                              140
+src/render-signal.js    blast timelines                            135
+src/audio.js            synthesised whistle, bell and gong         200
+src/sound-questions.js  sound drill questions                      146
 src/scheduler.js        spaced repetition (FSRS)                   171
 build.cjs               regenerates the single-file bundle          85
 vendor.cjs              refreshes vendor/ts-fsrs.js                 41
@@ -94,14 +98,14 @@ npm install
 npm run dev      # serve on :5173 — the module version needs HTTP, not file://
 npm run build    # regenerate aspect-standalone.html
 npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
-npm test         # 38 checks against the real modules
+npm test         # 78 checks against the real modules
 ```
 
 To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 15, all pushed
+## Commits — 21, all pushed
 
 | | |
 |---|---|
@@ -121,6 +125,13 @@ To just look at it: double-click `aspect-standalone.html`.
 | `3964596` | Refresh the state snapshot |
 | `b6366ab` | Bring the verification suites into the repo |
 | `59a5954` | Honour reduced motion on the vessel lights |
+| `7b800a1` | Update the state snapshot |
+| `0246de0` | Sound signal data, Rules 32 to 35, International |
+| `abf9b48` | Synthesise the sound signals with Web Audio |
+| `8e38810` | Draw sound signals as a blast timeline |
+| `5fafb72` | Sound signal drill questions |
+| `aa2f329` | The sound signals tab |
+| `1d48694` | Bundle the sound modules, and test what the bundle can express |
 
 ### Spaced repetition — `src/scheduler.js`
 
@@ -149,6 +160,28 @@ lights, which wandered as lights came in and out of view with aspect.
 Sized as a diameter in metres through the state scale with a 14px floor. `cones-apex`
 takes one mounting height and draws both cones from it, apexes exactly coincident; used
 by all four fishing states at 13.5 m.
+
+### Sound signals — `data/sound-signals.js` and three modules
+
+Eighteen signals, Rules 32 to 35, International only. Rule 32 fixes the primitives:
+a short blast of one second, a prolonged of five, inside the four to six the rule
+allows. A pattern is the whole signal laid out in time with its gaps, so it can be
+played and drawn from one description. Rule 33 equipment thresholds and the Annex III
+whistle frequency bands are recorded alongside.
+
+Audio is synthesised, never sampled: the whistle pitch comes from the Annex III band
+for that length of vessel, so the pitch question asks about the rule. The AudioContext
+is created inside a click and never at load.
+
+Every signal is also drawn, because an audio-only question excludes anyone deaf or
+without sound. The drill reveals the timeline after every answer.
+
+Three question types over 51 cards, keyed `signalId:na:questionType` so scheduler.js
+needed no change. Distractors are chosen by edit distance over the blast sequence.
+
+**`inland` is null on every signal, deliberately.** The Inland Rules treat Rule 34
+as signals of intent answered by agreement rather than statements of action already
+taken. That is a fork, not a field to fill in.
 
 ### Buoyage rhythms — `data/buoyage.js`, `src/render-buoy.js`
 
@@ -179,6 +212,10 @@ the repo root. Currently green:
 - Flash counts off rendered SVG: N 6, E 3, S 6+LFl, W 9, isolated 2, preferred 2+1
 - 33 SMIL animations, keyTimes monotonic and normalised 0→1
 - Flashing lights emit no SMIL at all when reduced motion is set, and stay lit
+- Sound patterns sum to their declared totals, no blast runs into another, equipment
+  matches the pattern, all 51 card keys unique
+- **The built bundle is parsed as a classic script**, and no two of its twelve parts
+  declare the same top-level name
 
 Run them with `npm test`. 38 checks. The suite reports the offending state and aspect
 rather than a bare boolean, two checks guard the matchers themselves, and it has been
@@ -194,7 +231,10 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
 
 ## Open
 
-1. **Nothing has been reviewed by eye.** The silhouettes and rhythm strips are verified
+1. **Nothing has been reviewed by eye, or by ear.** The sound signals have never been
+   listened to: the synthesis is unheard, and whether a whistle sounds like a whistle
+   rather than a buzz is not something a test can answer.
+2. **Nothing visual has been reviewed by eye.** The silhouettes and rhythm strips are verified
    geometrically only. No assertion can settle whether a cargo ship reads as a cargo
    ship. Contact sheets: `docs/silhouettes.html`, `docs/buoyage.html`.
 
@@ -203,25 +243,25 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
 These are decisions, not outstanding work. They are recorded so nobody rediscovers
 them as bugs.
 
-2. **`SHAPE_D_M = 1.5`** in `render-lights.js` is a chosen value, not a rule value.
+- **`SHAPE_D_M = 1.5`** in `render-lights.js` is a chosen value, not a rule value.
    Annex I's minimum is 0.6 m, which is two or three pixels at this scale, so the 14px
    floor dominates on large vessels and the metre figure only takes over on small craft
    drawn large. Accepted: a rule-minimum shape would be invisible, which teaches nothing.
-3. **The `HULLS` proportions are authored** — where a funnel sits, how tall a gantry is.
+- **The `HULLS` proportions are authored** — where a funnel sits, how tall a gantry is.
    Accepted: only the projection behaviour is load-bearing, and that is tested. The
    proportions are presentation and can be tuned freely without risking correctness.
-6. **"Cayman, the Americas and Japan are Region B"** in `data/buoyage.js`. Accepted and
+- **"Cayman, the Americas and Japan are Region B"** in `data/buoyage.js`. Accepted and
    deliberately left as it is: it is a correct statement of IALA Region B membership and
    it is useful teaching text. Do not change it.
 
 ## Closed — done
 
-4. ~~Reduced motion unfixed for the vessel lights.~~ Fixed in `59a5954`. `renderScene`
+- ~~Reduced motion unfixed for the vessel lights.~~ Fixed in `59a5954`. `renderScene`
    takes an explicit `motion` flag, `index.html` checks `matchMedia` once and passes it
    to both views, and the listener redraws both so the setting takes effect without a
    reload. When motion is reduced the light is drawn lit and steady rather than dropped.
    Five checks cover it.
-5. ~~Test suites not in the repo.~~ Done in `b6366ab`. `test/` with `npm test`, importing
+- ~~Test suites not in the repo.~~ Done in `b6366ab`. `test/` with `npm test`, importing
    the real modules from the repo root. Confirmed the suite fails and exits 1 when a real
    regression is introduced.
 
@@ -232,5 +272,9 @@ them as bugs.
 - The browser automation in this setup connects to a Chrome instance that **cannot reach
   `localhost`** (`ERR_CONNECTION_REFUSED` while `curl` gets 200 on the same machine), so
   no rendering has been verified visually by the agent.
+- The bundle collapses every module and the app into one scope. Two modules declaring
+  the same top-level name is a SyntaxError only the built file shows, and an aliased
+  import silently becomes undefined there because build.cjs blanks import lines. Both
+  are now covered by tests; do not reintroduce either.
 - Stage explicit paths rather than `git add -A`. `-A` once swept unreviewed work into an
   unrelated commit, which then had to be split and force-pushed.
