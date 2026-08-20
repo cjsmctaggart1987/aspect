@@ -16,6 +16,7 @@ import { QUESTION_TYPES as SOUND_TYPES, soundUniverse } from '../src/sound-quest
 import { BUOY_QUESTION_TYPES, buoyUniverse } from '../src/buoyage-questions.js';
 import { FLAG_QUESTION_TYPES, flagUniverse } from '../src/flag-questions.js';
 import { MANOEUVRE_QUESTION_TYPES, manoeuvreUniverse } from '../src/manoeuvre-questions.js';
+import { DEFINITION_QUESTION_TYPES, definitionUniverse } from '../src/definition-questions.js';
 import { MANOEUVRE_SCENARIOS } from '../data/manoeuvre-scenarios.js';
 import { FLAGS } from '../data/flags.js';
 import { DISTRESS_QUESTION_TYPES, MORSE_QUESTION_TYPES, distressUniverse, deliveryFor,
@@ -34,17 +35,17 @@ const appScript = () => {
   return h.slice(o, h.indexOf('\n</script>', o));
 };
 
-const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags', 'manoeuvre'];
+const TABS = ['lights', 'buoys', 'sound', 'distress', 'morse', 'flags', 'manoeuvre', 'defs'];
 
 export default function run(t) {
   const page = html();
   const app = appScript();
 
-  t.section('seven tabs, each with a view and a drill or a list');
+  t.section('eight tabs, each with a view and a drill or a list');
   t.ok('every tab has a button and a section',
     TABS.every(id => page.includes(`id="tab-${id}"`) && page.includes(`id="view-${id}"`)),
     TABS.filter(id => !page.includes(`id="view-${id}"`)).join(', ') || `${TABS.length} tabs`);
-  t.ok('switchTab shows and hides all seven',
+  t.ok('switchTab shows and hides all eight',
     TABS.every(id => app.includes(`$('view-${id}').classList.toggle('hidden'`)));
   t.ok('every tab button is wired to switchTab',
     TABS.every(id => app.includes(`$('tab-${id}').addEventListener`)));
@@ -69,8 +70,8 @@ export default function run(t) {
   const lightTypes = (app.match(/const LIGHT_QUESTION_TYPES = \[([^\]]+)\]/) || [, ''])[1]
     .split(',').map(x => x.trim().replace(/['"]/g, '')).filter(Boolean);
   const declared = [...lightTypes, ...BUOY_QUESTION_TYPES, ...SOUND_TYPES,
-    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES, ...FLAG_QUESTION_TYPES, ...MANOEUVRE_QUESTION_TYPES];
-  t.ok('nineteen question types declared across the app', declared.length === 19, declared.join(', '));
+    ...DISTRESS_QUESTION_TYPES, ...MORSE_QUESTION_TYPES, ...FLAG_QUESTION_TYPES, ...MANOEUVRE_QUESTION_TYPES, ...DEFINITION_QUESTION_TYPES];
+  t.ok('twenty-three question types declared across the app', declared.length === 23, declared.join(', '));
 
   // Reachable means: some universe the app builds contains the type, and that
   // universe is handed to selectCard.
@@ -79,13 +80,14 @@ export default function run(t) {
     ...buoyUniverse().map(c => c.questionType),
     ...flagUniverse().map(c => c.questionType),
     ...manoeuvreUniverse().map(c => c.questionType),
+    ...definitionUniverse().map(c => c.questionType),
     ...soundUniverse().map(c => c.questionType),
     ...distressUniverse().map(c => c.questionType)
   ]);
   const unreachable = declared.filter(type => !reachable.has(type));
   t.ok('every declared type appears in a universe', unreachable.length === 0, unreachable.join(', '));
 
-  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE', 'FLAG_UNIVERSE', 'MV_UNIVERSE'];
+  const universeNames = ['UNIVERSE', 'SOUND_UNIVERSE', 'DISTRESS_UNIVERSE', 'BUOY_UNIVERSE', 'FLAG_UNIVERSE', 'MV_UNIVERSE', 'DEF_UNIVERSE'];
   t.ok('every universe the app builds reaches the scheduler',
     universeNames.every(n => app.includes(`selectCard(${n}`) ||
       new RegExp(`universe: ${n}`).test(app)),
@@ -95,8 +97,8 @@ export default function run(t) {
   // the wrong assertion — count the drills.
   const ownDrills = (app.match(/selectCard\((UNIVERSE|SOUND_UNIVERSE)\)/g) || []).length;
   const sharedDrills = (app.match(/^makeDrill\(\{/gm) || []).length;
-  t.ok('seven drills, two with their own loop and five sharing one',
-    ownDrills === 2 && sharedDrills === 5,
+  t.ok('eight drills, two with their own loop and six sharing one',
+    ownDrills === 2 && sharedDrills === 6,
     `${ownDrills} own + ${sharedDrills} shared`);
   t.ok('every drill grades through the scheduler',
     (app.match(/grade\([^)]*right \? GRADE\.GOOD : GRADE\.AGAIN\)/g) || []).length === ownDrills + 1,

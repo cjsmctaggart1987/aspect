@@ -33,6 +33,7 @@ const MODULES = [
   'data/flags.js',            // imports morseFor from data/morse.js
   'src/manoeuvre-engine.js',  // no imports; Rules 11 to 18
   'data/manoeuvre-scenarios.js',
+  'data/definitions.js',      // links to data/vessel-states.js by id
   'src/engine.js',
   'src/render-lights.js',
   'src/render-buoy.js',
@@ -46,6 +47,7 @@ const MODULES = [
   'src/distress-questions.js', // needs data/distress-signals.js and data/morse.js
   'src/flag-questions.js',     // needs data/flags.js, sound-signals and render-flag
   'src/manoeuvre-questions.js',
+  'src/definition-questions.js',
   'src/scheduler.js'
 ];
 

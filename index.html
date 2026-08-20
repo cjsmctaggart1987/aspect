@@ -174,6 +174,29 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .mvcard .why{font-family:var(--note);font-style:italic;font-size:12.5px;margin:0}
 .mvshown{max-width:230px;margin:0 0 14px}
 .mvshown .mvplan{display:block;width:100%;height:auto}
+.defcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.defcard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:13px}
+.defcard .rule{font-family:var(--data);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--magenta)}
+.defcard h4{margin:3px 0 7px;font-size:17px;font-weight:500}
+.defcard .says{font-size:13.5px;margin:0 0 8px}
+.defcard ul{margin:0 0 8px;padding-left:16px;font-size:12.5px;color:var(--ink-soft)}
+.defcard li{margin-bottom:3px}
+.defcard .err{font-family:var(--note);font-style:italic;font-size:12.5px;
+  border-left:2px solid var(--magenta);padding-left:9px;margin:0 0 8px}
+.defcard .states{font-family:var(--data);font-size:10px;color:var(--ink-soft);
+  border-top:1px solid var(--rule);padding-top:7px;letter-spacing:.04em}
+.defcard .states b{color:var(--ink);font-weight:500}
+.govern{margin-top:9px;padding-top:8px;border-top:1px solid var(--rule);
+  font-family:var(--data);font-size:10.5px;color:var(--ink-soft);letter-spacing:.04em}
+.govern b{color:var(--magenta);font-weight:500}
+.edgecard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px}
+.edgecard .verdict2{display:inline-block;font-family:var(--data);font-size:9.5px;
+  letter-spacing:.12em;text-transform:uppercase;padding:2px 7px;color:#fff;margin-bottom:6px}
+.edgecard .yes{background:#0E9E4F}
+.edgecard .no{background:var(--magenta)}
+.edgecard p{margin:0 0 6px;font-size:13px}
+.edgecard .why2{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -199,6 +222,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <button role="tab" id="tab-morse" aria-selected="false">Morse</button>
   <button role="tab" id="tab-flags" aria-selected="false">Code flags</button>
   <button role="tab" id="tab-manoeuvre" aria-selected="false">Manoeuvres</button>
+  <button role="tab" id="tab-defs" aria-selected="false">Definitions</button>
 </div>
 
 <section id="view-lights">
@@ -236,6 +260,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
         <h3 id="mName"></h3>
         <p id="mSummary"></p>
         <p class="hint" id="mHint"></p>
+        <div class="govern" id="mGovern"></div>
       </div>
 
       <div class="drill panel">
@@ -465,6 +490,34 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
   <div id="mvList"></div>
 </section>
 
+<section id="view-defs" class="hidden">
+  <p class="sub" style="max-width:74ch;margin:0 0 8px">
+    Part A. Rules 1 to 3 — where the rules apply, what they hold you to, and what the words
+    mean. Every vessel in the Lights tab is an instance of one or more of these terms.
+  </p>
+  <div class="standing" id="defNote"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="tPrompt">Press start.</p>
+      <div class="opts" id="tOpts"></div>
+      <p class="verdict" id="tVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="tNext">Start a drill</button>
+        <button class="btn ghost hidden" id="tEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="tSeen">0</b> of <b id="tTotal">0</b></span>
+        <span>Due today <b id="tDue">0</b></span>
+        <span>Streak <b id="tStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="defList"></div>
+</section>
+
 <footer>
   Rule text worked from 33 CFR Subchapter E, a US Government work. Buoyage described from
   33 CFR Part 62. Every diagram is generated here, so nothing is reproduced from IALA or IMO
@@ -496,6 +549,9 @@ import { MANOEUVRE_SCENARIOS, SCENARIO_CATEGORIES } from './data/manoeuvre-scena
 import { resolveManoeuvre, CATEGORY_NAMES } from './src/manoeuvre-engine.js';
 import { renderManoeuvre } from './src/render-manoeuvre.js';
 import { manoeuvreUniverse, manoeuvreQuestionFor } from './src/manoeuvre-questions.js';
+import { DEFINITIONS, DEFINITION_RULES, DEFINITION_BOUNDARIES, definitionsForState }
+  from './data/definitions.js';
+import { definitionUniverse, definitionQuestionFor } from './src/definition-questions.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -550,6 +606,13 @@ function draw() {
     $('mName').textContent = current.name;
     $('mSummary').textContent = current.summary;
     $('mHint').textContent = current.dutyHint;
+    // The link back to Part A. A vessel state is an instance of defined
+    // terms, and saying so here is what stops the sections being separate
+    // topics rather than one connected thing.
+    const govern = definitionsForState(current.id);
+    $('mGovern').innerHTML = govern.length
+      ? `<b>Defined as:</b> ${govern.map(d => `${d.term} (${d.rule})`).join(' · ')}`
+      : '';
   }
 }
 
@@ -640,6 +703,7 @@ function nextQuestion() {
   $('makingWay').checked = drill.makingWay;
   $('mRule').textContent = ''; $('mName').textContent = 'Unidentified contact';
   $('mSummary').textContent = ''; $('mHint').textContent = '';
+  $('mGovern').innerHTML = '';
   $('qPrompt').textContent = drill.prompt;
   $('qVerdict').textContent = '';
   $('qNext').textContent = 'Next';
@@ -1225,6 +1289,59 @@ makeDrill({
 
 drawManoeuvreList();
 
+// --- definitions ------------------------------------------------------------
+
+const DEF_UNIVERSE = definitionUniverse();
+$('tTotal').textContent = DEF_UNIVERSE.length;
+
+$('defNote').innerHTML = `
+  <div class="rule">Rule 2 is a standard, not a test</div>
+  <p>You will be asked what Rule 2 says and what it means, and nothing further. What Rule 2
+  requires of you in a particular situation is a judgement about the ordinary practice of
+  seamen, and a multiple-choice answer would teach that judgement can be memorised.</p>
+  <p class="mem">It adds an obligation on top of the rules. It never subtracts one.</p>`;
+
+function drawDefinitionList() {
+  $('defList').innerHTML = DEFINITION_RULES.map(rule => `
+    <div class="siggroup">
+      <h3>${rule}</h3>
+      <div class="defcards">
+        ${DEFINITIONS.filter(d => d.rule.split(',')[0].trim() === rule).map(d => `
+          <div class="defcard">
+            <div class="rule">${d.rule}</div>
+            <h4>${d.term}</h4>
+            <p class="says">${d.definition}</p>
+            <ul>${d.keyPoints.map(k => `<li>${k}</li>`).join("")}</ul>
+            <p class="err">${d.commonError}</p>
+            ${d.relatedStates.length ? `<div class="states"><b>Governs:</b> 
+              ${d.relatedStates.map(id => (VESSEL_STATES.find(v => v.id === id) || {}).name)
+                .filter(Boolean).join(" · ")}</div>` : ""}
+          </div>`).join("")}
+      </div>
+    </div>`).join("")
+    + `<div class="siggroup"><h3>Boundary cases</h3><div class="defcards">` +
+      DEFINITION_BOUNDARIES.map(b => {
+        const d = DEFINITIONS.find(x => x.id === b.term);
+        return `<div class="edgecard">
+          <div class="verdict2 ${b.meets ? "yes" : "no"}">${b.meets ? "meets" : "does not meet"} ${d.term.toLowerCase()}</div>
+          <p>${b.situation}</p>
+          <p class="why2">${b.because}</p>
+        </div>`;
+      }).join("") + `</div></div>`;
+}
+
+makeDrill({
+  universe: DEF_UNIVERSE,
+  build: definitionQuestionFor,
+  audible: () => null,
+  clear: () => {},
+  prompt: 'tPrompt', verdict: 'tVerdict', next: 'tNext', easy: 'tEasy',
+  strip: 'tVerdict', opts: 'tOpts', hint: null, play: null, stopBtn: null,
+  seen: 'tSeen', due: 'tDue', streak: 'tStreak'
+});
+
+drawDefinitionList();
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
 $('tab-sound').addEventListener('click', () => switchTab('sound'));
@@ -1232,6 +1349,7 @@ $('tab-distress').addEventListener('click', () => switchTab('distress'));
 $('tab-morse').addEventListener('click', () => switchTab('morse'));
 $('tab-flags').addEventListener('click', () => switchTab('flags'));
 $('tab-manoeuvre').addEventListener('click', () => switchTab('manoeuvre'));
+$('tab-defs').addEventListener('click', () => switchTab('defs'));
 function switchTab(t) {
   stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
@@ -1241,6 +1359,7 @@ function switchTab(t) {
   $('view-morse').classList.toggle('hidden', t !== 'morse');
   $('view-flags').classList.toggle('hidden', t !== 'flags');
   $('view-manoeuvre').classList.toggle('hidden', t !== 'manoeuvre');
+  $('view-defs').classList.toggle('hidden', t !== 'defs');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
   $('tab-sound').setAttribute('aria-selected', t === 'sound');
@@ -1248,6 +1367,7 @@ function switchTab(t) {
   $('tab-morse').setAttribute('aria-selected', t === 'morse');
   $('tab-flags').setAttribute('aria-selected', t === 'flags');
   $('tab-manoeuvre').setAttribute('aria-selected', t === 'manoeuvre');
+  $('tab-defs').setAttribute('aria-selected', t === 'defs');
 }
 
 draw(); sync();

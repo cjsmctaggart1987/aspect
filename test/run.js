@@ -16,6 +16,7 @@ import sound from './sound.test.js';
 import distress from './distress.test.js';
 import flags from './flags.test.js';
 import manoeuvre from './manoeuvre.test.js';
+import definitions from './definitions.test.js';
 import ui from './ui.test.js';
 
 const suites = [
@@ -26,6 +27,7 @@ const suites = [
   ['distress — Annex IV, Morse timing and prosigns', distress],
   ['flags — code flags, designs and cross-links', flags],
   ['manoeuvre — steering and sailing rules', manoeuvre],
+  ['definitions — Part A, and the links between sections', definitions],
   ['ui — every section reachable, nothing stranded', ui],
   // Reads build.cjs's own module list, so adding a module to the bundle
   // automatically brings it under this check.
