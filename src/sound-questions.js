@@ -21,8 +21,8 @@ export const QUESTION_TYPES = ['sound-identify', 'sound-select', 'sound-pitch'];
 /** The aspect slot of the card key. Sound signals do not have one. */
 export const NO_ASPECT = 'na';
 
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffled = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
 
 /**
  * A signal's shape: how many of each kind of blast, in order.
@@ -43,7 +43,7 @@ export function shapeOf(signal) {
  * offering as the wrong answer. Sharing a rule or a group adds a little, because
  * signals from the same part of the rules get muddled with each other.
  */
-export function similarity(a, b) {
+export function signalSimilarity(a, b) {
   const x = shapeOf(a), y = shapeOf(b);
   const d = editDistance(x, y);
   let score = -d * 2;
@@ -69,10 +69,10 @@ function editDistance(a, b) {
   return d[a.length][b.length];
 }
 
-export function distractors(signal, pool, n = 3) {
+export function signalDistractors(signal, pool, n = 3) {
   return pool
     .filter(s => s.id !== signal.id)
-    .map(s => ({ s, score: similarity(signal, s) + Math.random() * 0.4 }))
+    .map(s => ({ s, score: signalSimilarity(signal, s) + Math.random() * 0.4 }))
     .sort((a, b) => b.score - a.score)
     .slice(0, n)
     .map(d => d.s);
@@ -93,18 +93,18 @@ export const soundUniverse = () =>
  * power-driven vessel making way in restricted visibility, and no amount of
  * listening will separate them. The group is the disambiguator.
  */
-export function questionFor({ stateId, questionType }, pool = SOUND_SIGNALS) {
+export function soundQuestionFor({ stateId, questionType }, pool = SOUND_SIGNALS) {
   const signal = pool.find(s => s.id === stateId);
   if (!signal) return null;
 
   if (questionType === 'sound-pitch') {
-    const band = pick(WHISTLE_BANDS);
-    const wrong = shuffle(WHISTLE_BANDS.filter(b => b.id !== band.id)).slice(0, 3);
+    const band = pickOne(WHISTLE_BANDS);
+    const wrong = shuffled(WHISTLE_BANDS.filter(b => b.id !== band.id)).slice(0, 3);
     return {
       type: 'sound-pitch',
       signal, band: band.id,
       prompt: 'Listen to her whistle. What length of vessel is sounding it?',
-      options: shuffle([band, ...wrong]).map(b => ({ id: b.id, text: b.label })),
+      options: shuffled([band, ...wrong]).map(b => ({ id: b.id, text: b.label })),
       answerId: band.id,
       explain: `${band.label}: Annex III gives a fundamental frequency of ${band.hz[0]} to ${band.hz[1]} Hz. `
              + 'The larger the vessel, the lower her whistle.'
@@ -112,25 +112,25 @@ export function questionFor({ stateId, questionType }, pool = SOUND_SIGNALS) {
   }
 
   if (questionType === 'sound-select') {
-    const wrong = distractors(signal, pool, 3);
+    const wrong = signalDistractors(signal, pool, 3);
     return {
       type: 'sound-select',
       signal,
       prompt: `${signal.meaning} Which signal do you sound?`,
-      options: shuffle([signal, ...wrong]).map(s => ({ id: s.id, text: describe(s) })),
+      options: shuffled([signal, ...wrong]).map(s => ({ id: s.id, text: describe(s) })),
       answerId: signal.id,
       explain: `${signal.rule}. ${signal.name}. ${signal.memory}`
     };
   }
 
-  const wrong = distractors(signal, pool, 3);
+  const wrong = signalDistractors(signal, pool, 3);
   return {
     type: 'sound-identify',
     signal,
     prompt: signal.group === 'Restricted visibility'
       ? 'You are in restricted visibility and hear this. What is she?'
       : 'She is in sight of you and sounds this. What does it mean?',
-    options: shuffle([signal, ...wrong]).map(s => ({ id: s.id, text: s.meaning })),
+    options: shuffled([signal, ...wrong]).map(s => ({ id: s.id, text: s.meaning })),
     answerId: signal.id,
     explain: `${signal.rule}. ${describe(signal)}. ${signal.memory}`
   };

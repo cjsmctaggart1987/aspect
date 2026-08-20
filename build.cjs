@@ -27,9 +27,13 @@ const MODULES = [
   'vendor/ts-fsrs.js',
   'data/vessel-states.js',
   'data/buoyage.js',
+  'data/sound-signals.js',
   'src/engine.js',
   'src/render-lights.js',
   'src/render-buoy.js',
+  'src/render-signal.js',
+  'src/audio.js',              // reads the Annex III bands from data/sound-signals.js
+  'src/sound-questions.js',    // needs the data, and describe() from render-signal.js
   'src/scheduler.js'
 ];
 
@@ -78,8 +82,14 @@ function build() {
   return bundle;
 }
 
-const bundle = build();
-console.log(
-  `aspect-standalone.html  ${bundle.split('\n').length - 1} lines, ` +
-  `${Buffer.byteLength(bundle)} bytes, ${MODULES.length + 1} sections`
-);
+// Exported so the test suite can check the list the build actually uses,
+// rather than a copy of it that can drift out of step.
+module.exports = { MODULES, build };
+
+if (require.main === module) {
+  const bundle = build();
+  console.log(
+    `aspect-standalone.html  ${bundle.split('\n').length - 1} lines, ` +
+    `${Buffer.byteLength(bundle)} bytes, ${MODULES.length + 1} sections`
+  );
+}

@@ -253,7 +253,7 @@ import { cardKey, selectCard, grade, regradeLast, canRegrade, stats, reset, GRAD
 import { SOUND_SIGNALS, SIGNAL_GROUPS } from './data/sound-signals.js';
 import { signalStrip, describe, stripKey } from './src/render-signal.js';
 import { play, stop } from './src/audio.js';
-import { soundUniverse, questionFor as soundQuestionFor } from './src/sound-questions.js';
+import { soundUniverse, soundQuestionFor } from './src/sound-questions.js';
 
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
@@ -346,9 +346,9 @@ $('dayMode').addEventListener('change', draw);
 // --- drill ----------------------------------------------------------------
 
 // The full card space the scheduler picks from.
-const QUESTION_TYPES = ['identify', 'aspect'];
+const LIGHT_QUESTION_TYPES = ['identify', 'aspect'];
 const UNIVERSE = VESSEL_STATES.flatMap(s =>
-  ASPECT_BANDS.flatMap(b => QUESTION_TYPES.map(t => ({ stateId: s.id, aspect: b.deg, questionType: t }))));
+  ASPECT_BANDS.flatMap(b => LIGHT_QUESTION_TYPES.map(t => ({ stateId: s.id, aspect: b.deg, questionType: t }))));
 $('pTotal').textContent = UNIVERSE.length;
 
 /**

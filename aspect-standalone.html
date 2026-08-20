@@ -95,6 +95,24 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .mark.night p{color:#93A6B1}
 .mark.night .mem{color:#8296A2}
 .mark.night .egnote{color:#7C8F9B}
+.sigkeywrap{margin-bottom:16px;max-width:320px}
+.sigkey{display:block;width:100%;height:auto}
+.sigplay{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.sigplay .btn{margin-top:0}
+.sigplay .btn:disabled{opacity:.4;cursor:default}
+.sighint{font-family:var(--data);font-size:11px;color:var(--ink-soft)}
+.stripwrap{margin:0 0 14px;max-width:420px}
+.sigstrip{display:block;width:100%;height:auto}
+.siggroup{margin-top:26px}
+.siggroup > h3{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+  margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.sigcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.sigcard{border:1px solid var(--ink);background:rgba(255,255,255,.55);padding:12px}
+.sigcard .rule{font-family:var(--data);font-size:11px;letter-spacing:.12em;color:var(--magenta);text-transform:uppercase}
+.sigcard h4{margin:3px 0 8px;font-size:16px;font-weight:500}
+.sigcard p{margin:8px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.sigcard .mem{font-family:var(--note);font-style:italic;margin-top:6px;font-size:13.5px;color:var(--ink)}
+.sigcard .kit{font-family:var(--data);font-size:10.5px;color:var(--ink-soft);margin-top:8px;letter-spacing:.08em;text-transform:uppercase}
 .hidden{display:none}
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:13px;color:var(--ink-soft);max-width:72ch}
 @media (max-width:820px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
@@ -115,6 +133,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 <div class="tabs" role="tablist">
   <button role="tab" id="tab-lights" aria-selected="true">Lights and shapes</button>
   <button role="tab" id="tab-buoys" aria-selected="false">Buoyage</button>
+  <button role="tab" id="tab-sound" aria-selected="false">Sound signals</button>
 </div>
 
 <section id="view-lights">
@@ -181,6 +200,40 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
     </div>
   </div>
   <div class="marks" id="marks"></div>
+</section>
+
+<section id="view-sound" class="hidden">
+  <p class="sub" style="max-width:66ch;margin:0 0 14px">
+    Rules 32 to 35, International. Every signal can be read as well as heard:
+    filled is a blast, the space between is silence. Nothing plays until you ask it to.
+  </p>
+  <div id="soundKey" class="sigkeywrap"></div>
+
+  <div class="drill panel" style="margin-top:0">
+    <h2>Drill</h2>
+    <div class="body">
+      <p class="q" id="sPrompt">Press start. You will be given a signal to play, and asked about it.</p>
+      <div class="sigplay">
+        <button class="btn ghost" id="sPlay" disabled>Play signal</button>
+        <button class="btn ghost" id="sStop" disabled>Stop</button>
+        <span class="sighint" id="sHint"></span>
+      </div>
+      <div id="sStrip" class="stripwrap"></div>
+      <div class="opts" id="sOpts"></div>
+      <p class="verdict" id="sVerdict"></p>
+      <div class="drillbar">
+        <button class="btn" id="sNext">Start a drill</button>
+        <button class="btn ghost hidden" id="sEasy">That was easy</button>
+      </div>
+      <div class="progress">
+        <span>Seen <b id="sSeen">0</b> of <b id="sTotal">0</b></span>
+        <span>Due today <b id="sDue">0</b></span>
+        <span>Streak <b id="sStreak">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="signalList"></div>
 </section>
 
 <footer>
@@ -2915,6 +2968,307 @@ const MARKS = [
 const REGIONS = [REGION_A, REGION_B];
 
 
+/* ===== data/sound-signals.js ===== */
+/**
+ * Sound signals, Rules 32 to 35. International only.
+ *
+ * Rule 32 fixes the primitives: a short blast is about one second, a prolonged
+ * blast four to six. Five is used here as the middle of that band.
+ *
+ * A pattern is the whole signal laid out in time, gaps included, so it can be
+ * played and drawn from one description. Durations are seconds. `seconds` is
+ * the declared total and the tests check the pattern sums to it, which catches
+ * a gap quietly going missing when a signal is edited.
+ *
+ * `inland` is null throughout. The Inland Rules differ materially on Rule 34 —
+ * they are signals of intent answered by agreement, not statements of action
+ * already taken — and mixing the two would teach the wrong thing. That is a
+ * later fork, not a field to fill in casually.
+ *
+ * Source of truth: 33 CFR Subchapter E, a US Government work.
+ */
+
+// --- Rule 32 primitives ---------------------------------------------------
+
+const BLAST = {
+  short: 1,        // "about one second"
+  prolonged: 5     // "from four to six seconds"
+};
+
+const GAP = 1;
+
+/**
+ * Rule 34(d) asks for blasts "short and rapid", which one-second spacing is
+ * not. This is the only place the gap primitive is departed from, and it is
+ * departed from because the rule says so.
+ */
+const RAPID_GAP = 0.4;
+
+const DURATION = {
+  short: BLAST.short,
+  prolonged: BLAST.prolonged,
+  stroke: 1,        // one distinct stroke of the bell
+  bell: 5,          // rapid ringing, about five seconds
+  gong: 5           // rapid sounding, about five seconds
+};
+
+/** Lay a list of blast types out in time, putting a gap between each. */
+const seq = (types, gap = GAP) =>
+  types.flatMap((type, i) => {
+    const blast = { type, seconds: DURATION[type] };
+    return i === 0 ? [blast] : [{ type: 'gap', seconds: gap }, blast];
+  });
+
+const total = pattern => +pattern.reduce((sum, p) => sum + p.seconds, 0).toFixed(2);
+
+const signal = s => ({ ...s, seconds: total(s.pattern), inland: null });
+
+// --- Rule 33, equipment thresholds ----------------------------------------
+
+const EQUIPMENT_THRESHOLDS = [
+  { equipment: 'whistle', from: 12, note: 'A vessel of 12 m or more in length shall be provided with a whistle.' },
+  { equipment: 'bell', from: 20, note: 'A vessel of 20 m or more shall also be provided with a bell.' },
+  { equipment: 'gong', from: 100, note: 'A vessel of 100 m or more shall also carry a gong, of a tone and sound that cannot be confused with the bell.' }
+];
+
+/**
+ * Annex III whistle fundamental frequency bands, by vessel length. A big ship
+ * sounds low and a small one sounds high, and it is audible information about
+ * her size before you can see her — which is why there is a drill question on it.
+ */
+const WHISTLE_BANDS = [
+  { id: '200plus', label: '200 m or more', min: 200, max: null, hz: [70, 200] },
+  { id: '75to200', label: '75 m up to 200 m', min: 75, max: 200, hz: [130, 350] },
+  { id: '20to75', label: '20 m up to 75 m', min: 20, max: 75, hz: [250, 525] },
+  { id: 'under20', label: 'under 20 m', min: 0, max: 20, hz: [250, 700] }
+];
+
+const DEFAULT_BAND = '20to75';
+
+const bandFor = id => WHISTLE_BANDS.find(b => b.id === id) || WHISTLE_BANDS.find(b => b.id === DEFAULT_BAND);
+
+// --- the signals ----------------------------------------------------------
+
+const SOUND_SIGNALS = [
+  // --- Rule 34, manoeuvring and warning signals, vessels in sight ---------
+  signal({
+    id: 'r34-starboard',
+    rule: 'Rule 34(a)',
+    group: 'Manoeuvring and warning',
+    name: 'One short blast',
+    pattern: seq(['short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I am altering my course to starboard.',
+    memory: 'One blast, one word: starboard. Two blasts, two words: to port.'
+  }),
+  signal({
+    id: 'r34-port',
+    rule: 'Rule 34(a)',
+    group: 'Manoeuvring and warning',
+    name: 'Two short blasts',
+    pattern: seq(['short', 'short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I am altering my course to port.',
+    memory: 'International signals state what you are doing, not what you propose. She has already put the wheel over.'
+  }),
+  signal({
+    id: 'r34-astern',
+    rule: 'Rule 34(a)',
+    group: 'Manoeuvring and warning',
+    name: 'Three short blasts',
+    pattern: seq(['short', 'short', 'short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I am operating astern propulsion.',
+    memory: 'Astern propulsion, not "going astern". Her engines are astern; she may still be moving ahead through the water.'
+  }),
+  signal({
+    id: 'r34-doubt',
+    rule: 'Rule 34(d)',
+    group: 'Manoeuvring and warning',
+    name: 'Five or more short and rapid blasts',
+    pattern: seq(['short', 'short', 'short', 'short', 'short'], RAPID_GAP),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I doubt whether you are taking sufficient action to avoid collision, or I fail to understand your intentions.',
+    memory: 'At least five. There is no upper limit, and no obligation to stop at five if the doubt persists.'
+  }),
+  signal({
+    id: 'r34-overtake-stbd',
+    rule: 'Rule 34(c)(i)',
+    group: 'Manoeuvring and warning',
+    name: 'Two prolonged, one short',
+    pattern: seq(['prolonged', 'prolonged', 'short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I intend to overtake you on your starboard side. Narrow channel or fairway.',
+    memory: 'The short blasts at the end carry the side, the same way they do in Rule 34(a): one for starboard, two for port.'
+  }),
+  signal({
+    id: 'r34-overtake-port',
+    rule: 'Rule 34(c)(i)',
+    group: 'Manoeuvring and warning',
+    name: 'Two prolonged, two short',
+    pattern: seq(['prolonged', 'prolonged', 'short', 'short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I intend to overtake you on your port side. Narrow channel or fairway.',
+    memory: 'Two prolonged is the request to overtake. What follows says which side.'
+  }),
+  signal({
+    id: 'r34-agree',
+    rule: 'Rule 34(c)(ii)',
+    group: 'Manoeuvring and warning',
+    name: 'Prolonged, short, prolonged, short',
+    pattern: seq(['prolonged', 'short', 'prolonged', 'short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'I agree to be overtaken. Sounded by the vessel about to be overtaken.',
+    memory: 'Morse C, for consent. Only the vessel being overtaken sounds it, and only in a narrow channel.'
+  }),
+  signal({
+    id: 'r34-bend',
+    rule: 'Rule 34(e)',
+    group: 'Manoeuvring and warning',
+    name: 'One prolonged blast',
+    pattern: seq(['prolonged']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'Approaching a bend or an area where other vessels may be obscured. Answered by one prolonged blast from any vessel within hearing round the bend.',
+    memory: 'Identical to the Rule 35(a) fog signal. The difference is the circumstance, not the sound: this one is answered.'
+  }),
+
+  // --- Rule 35, restricted visibility -------------------------------------
+  signal({
+    id: 'r35-making-way',
+    rule: 'Rule 35(a)',
+    group: 'Restricted visibility',
+    name: 'One prolonged blast',
+    pattern: seq(['prolonged']),
+    equipment: ['whistle'],
+    repeat: 120,
+    meaning: 'Power-driven vessel making way through the water.',
+    memory: 'One prolonged, making way. The same sound as the Rule 34(e) bend signal, told apart by the fact that it repeats.'
+  }),
+  signal({
+    id: 'r35-stopped',
+    rule: 'Rule 35(b)',
+    group: 'Restricted visibility',
+    name: 'Two prolonged blasts',
+    pattern: seq(['prolonged', 'prolonged'], 2),
+    equipment: ['whistle'],
+    repeat: 120,
+    meaning: 'Power-driven vessel underway but stopped and making no way through the water.',
+    memory: 'Two prolonged, dead in the water. The gap between them is two seconds, longer than the one-second gap inside every other group.'
+  }),
+  signal({
+    id: 'r35-hampered',
+    rule: 'Rule 35(c)',
+    group: 'Restricted visibility',
+    name: 'One prolonged, two short',
+    pattern: seq(['prolonged', 'short', 'short']),
+    equipment: ['whistle'],
+    repeat: 120,
+    meaning: 'Not under command, restricted in ability to manoeuvre, constrained by draught, sailing, fishing, or towing or pushing another vessel.',
+    memory: 'One long and two short covers every vessel that cannot simply get out of your way. It does not tell you which of them she is.'
+  }),
+  signal({
+    id: 'r35-towed',
+    rule: 'Rule 35(e)',
+    group: 'Restricted visibility',
+    name: 'One prolonged, three short',
+    pattern: seq(['prolonged', 'short', 'short', 'short']),
+    equipment: ['whistle'],
+    repeat: 120,
+    meaning: 'Vessel being towed, or the last vessel of the tow if manned. Sounded immediately after the towing vessel\'s signal.',
+    memory: 'One prolonged and three short answers one prolonged and two short. Hearing the pair tells you there is a tow and roughly how long it is.'
+  }),
+  signal({
+    id: 'r35-anchored',
+    rule: 'Rule 35(g)',
+    group: 'Restricted visibility',
+    name: 'Rapid ringing of the bell, five seconds',
+    pattern: [{ type: 'bell', seconds: DURATION.bell }],
+    equipment: ['bell'],
+    repeat: 60,
+    meaning: 'Vessel at anchor, under 100 m in length.',
+    memory: 'Every minute, not every two. An anchored vessel is a fixed hazard and says so more often.'
+  }),
+  signal({
+    id: 'r35-anchored-100',
+    rule: 'Rule 35(g)',
+    group: 'Restricted visibility',
+    name: 'Bell forward, then gong aft',
+    pattern: [
+      { type: 'bell', seconds: DURATION.bell },
+      { type: 'gap', seconds: GAP },
+      { type: 'gong', seconds: DURATION.gong }
+    ],
+    equipment: ['bell', 'gong'],
+    repeat: 60,
+    meaning: 'Vessel at anchor, 100 m or more in length. Bell rung in the fore part, gong sounded in the after part.',
+    memory: 'Two sounds from two ends of her tells you she is long. The gong must be of a tone that cannot be confused with the bell.'
+  }),
+  signal({
+    id: 'r35-anchored-warning',
+    rule: 'Rule 35(g)',
+    group: 'Restricted visibility',
+    name: 'Short, prolonged, short',
+    pattern: seq(['short', 'prolonged', 'short']),
+    equipment: ['whistle'],
+    repeat: null,
+    meaning: 'Optional whistle signal from a vessel at anchor, warning an approaching vessel of her position and the possibility of collision.',
+    memory: 'Morse R. Not obligatory, and it is in addition to the bell rather than instead of it.'
+  }),
+  signal({
+    id: 'r35-aground',
+    rule: 'Rule 35(h)',
+    group: 'Restricted visibility',
+    name: 'Three strokes, rapid ringing, three strokes',
+    pattern: [
+      ...seq(['stroke', 'stroke', 'stroke']),
+      { type: 'gap', seconds: GAP },
+      { type: 'bell', seconds: DURATION.bell },
+      { type: 'gap', seconds: GAP },
+      ...seq(['stroke', 'stroke', 'stroke'])
+    ],
+    equipment: ['bell'],
+    repeat: 60,
+    meaning: 'Vessel aground. The anchor signal, with three separate and distinct strokes immediately before and after the rapid ringing.',
+    memory: 'Three, ring, three. The strokes are what separate aground from merely anchored, and they come at both ends.'
+  }),
+  signal({
+    id: 'r35-under12',
+    rule: 'Rule 35(i)',
+    group: 'Restricted visibility',
+    name: 'Some efficient sound signal',
+    pattern: seq(['short', 'short', 'short']),
+    equipment: ['whistle'],
+    repeat: 120,
+    meaning: 'A vessel of less than 12 m is not obliged to give the signals above, but if she does not she shall make some other efficient sound signal at intervals of not more than two minutes.',
+    memory: 'The rule prescribes no pattern here, only that something audible happens every two minutes. The pattern shown is one plausible example.'
+  }),
+  signal({
+    id: 'r35-pilot',
+    rule: 'Rule 35(j)',
+    group: 'Restricted visibility',
+    name: 'Four short blasts',
+    pattern: seq(['short', 'short', 'short', 'short']),
+    equipment: ['whistle'],
+    repeat: 120,
+    meaning: 'Identity signal of a pilot vessel engaged on pilotage duty. Sounded in addition to her signal under Rule 35(a), (b) or (g).',
+    memory: 'Four short is the only signal that identifies a trade rather than a state. It is additional, never a substitute.'
+  })
+];
+
+/** Signals whose pattern the rule does not actually prescribe. */
+const UNPRESCRIBED = ['r35-under12'];
+
+const SIGNAL_GROUPS = [...new Set(SOUND_SIGNALS.map(s => s.group))];
+
+
 /* ===== src/engine.js ===== */
 /**
  * Engine: arc visibility, aspect projection, question generation.
@@ -3611,6 +3965,501 @@ function renderBuoy(mark, mode = 'day', motion = true) {
 }
 
 
+/* ===== src/render-signal.js ===== */
+/**
+ * Sound signals, drawn.
+ *
+ * An audio-only question is unanswerable for anyone deaf, anyone with no
+ * sound, and anyone sitting somewhere they cannot turn it on. So every signal
+ * is also readable: the pattern laid out left to right in time, filled spans
+ * for blasts, empty for the gaps between them.
+ *
+ * This deliberately shares the visual language of the buoyage rhythm strip
+ * rather than the code. The two describe different things — a light character
+ * repeating forever against a sound pattern with a beginning and an end — and
+ * fusing them would mean one function serving two masters, which is how the
+ * buoyage renderer ended up with a hardcoded clip id shared across twelve
+ * marks. Same idiom, separate module, on purpose.
+ */
+
+const INK = '#0B1116';
+const SOFT = '#4A626E';
+
+/** A blast is filled, a gap is not. Bell and gong are hatched to read as struck. */
+const FILL = {
+  short: '#10222C',
+  prolonged: '#10222C',
+  stroke: '#C3006B',
+  bell: 'url(#ring)',
+  gong: 'url(#ring)'
+};
+
+// Read as a mariner would say it: "two prolonged blasts", not "two prolongeds".
+const LABEL = {
+  short: ['short blast', 'short blasts'],
+  prolonged: ['prolonged blast', 'prolonged blasts'],
+  stroke: ['stroke', 'strokes'],
+  bell: ['rapid ringing of the bell', 'rapid ringing of the bell'],
+  gong: ['rapid sounding of the gong', 'rapid sounding of the gong']
+};
+
+const COUNTED = new Set(['short', 'prolonged', 'stroke']);
+
+/**
+ * The whole signal as one strip.
+ *
+ * Width is fixed and time is scaled to fit, so a one-second blast and a
+ * seventeen-second aground signal both fill the card. That makes the shape of
+ * a signal comparable at a glance, which is the point, at the cost of the
+ * strips not sharing a common scale. The seconds are labelled so the trade is
+ * visible rather than misleading.
+ */
+function signalStrip(signal, { width = 260, height = 26 } = {}) {
+  const total = signal.seconds;
+  const at = t => (t / total) * width;
+
+  let cursor = 0;
+  const spans = signal.pattern.map(span => {
+    const x = at(cursor);
+    const w = Math.max(1.2, at(cursor + span.seconds) - x);
+    cursor += span.seconds;
+    if (span.type === 'gap') return '';
+    return `<rect x="${x.toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${height}"
+      fill="${FILL[span.type] || INK}"/>`;
+  }).join('');
+
+  // A tick every second while they are countable, then every five.
+  const step = total > 20 ? 5 : 1;
+  const ticks = [];
+  for (let t = step; t < total; t += step) {
+    ticks.push(`<line x1="${at(t).toFixed(1)}" y1="${height - 4}" x2="${at(t).toFixed(1)}" y2="${height}"
+      stroke="${INK}" stroke-width="0.75" opacity=".35"/>`);
+  }
+
+  return `<svg viewBox="0 -14 ${width} ${height + 20}" xmlns="http://www.w3.org/2000/svg"
+    class="sigstrip" role="img" aria-label="${describe(signal)}">
+    <defs>
+      <pattern id="ring" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="4" height="4" fill="#10222C" opacity=".18"/>
+        <line x1="0" y1="0" x2="0" y2="4" stroke="#10222C" stroke-width="2"/>
+      </pattern>
+    </defs>
+    <rect x="0" y="0" width="${width}" height="${height}" fill="${INK}" opacity=".07"/>
+    ${spans}
+    ${ticks.join('')}
+    <rect x="0" y="0" width="${width}" height="${height}" fill="none" stroke="${INK}"
+      stroke-width="1" opacity=".4"/>
+    <text x="${width}" y="-4" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="${SOFT}">${total}s${signal.repeat ? ` · every ${signal.repeat}s` : ''}</text>
+  </svg>`;
+}
+
+/**
+ * The signal in words, for the aria-label and for anywhere the strip will not
+ * fit. Counts runs so it reads "two prolonged, one short" rather than listing
+ * every span.
+ */
+function describe(signal) {
+  const blasts = signal.pattern.filter(p => p.type !== 'gap');
+  const runs = [];
+  for (const b of blasts) {
+    const last = runs[runs.length - 1];
+    if (last && last.type === b.type) last.n++;
+    else runs.push({ type: b.type, n: 1 });
+  }
+  const words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  return runs.map(r => {
+    const label = LABEL[r.type] || [r.type, r.type];
+    const noun = label[r.n > 1 ? 1 : 0];
+    // The bell and the gong are a continuous action, not a countable thing.
+    return COUNTED.has(r.type) ? `${words[r.n - 1] || r.n} ${noun}` : noun;
+  }).join(', ');
+}
+
+/** A compact legend of what the fills mean, shown once per view rather than per card. */
+function stripKey() {
+  return `<svg viewBox="0 0 300 14" xmlns="http://www.w3.org/2000/svg" class="sigkey" role="img"
+    aria-label="Key: filled is a blast, gap is silence, hatched is a bell or gong">
+    <rect x="0" y="2" width="26" height="10" fill="#10222C"/>
+    <text x="31" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">blast</text>
+    <rect x="70" y="2" width="26" height="10" fill="${INK}" opacity=".07"/>
+    <rect x="70" y="2" width="26" height="10" fill="none" stroke="${INK}" stroke-width="0.75" opacity=".4"/>
+    <text x="101" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">silence</text>
+    <rect x="150" y="2" width="26" height="10" fill="#C3006B"/>
+    <text x="181" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">stroke</text>
+    <rect x="225" y="2" width="26" height="10" fill="#10222C" opacity=".3"/>
+    <text x="256" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">bell/gong</text>
+  </svg>`;
+}
+
+
+/* ===== src/audio.js ===== */
+/**
+ * Sound signals, synthesised. No audio files.
+ *
+ * Everything is built from oscillators and shaped noise, for the same reason
+ * every diagram in this project is generated: a recording is a stored answer,
+ * and a stored answer drifts from the rule it came from. A whistle here is the
+ * Annex III frequency band for that length of vessel, so the pitch question is
+ * asking about the rule rather than about a sample somebody chose.
+ *
+ * The AudioContext is created on the first play() and never at module load.
+ * Browsers block audio started without a user gesture, and a context created
+ * on load arrives suspended and stays that way.
+ */
+
+
+
+let ctx = null;
+let master = null;
+let playing = null;      // { stopAt, nodes: [] }
+
+/** Created lazily, on a gesture. Resumed if the browser suspended it. */
+async function context() {
+  if (!ctx) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    ctx = new Ctor();
+    master = ctx.createGain();
+    master.gain.value = 0.7;
+    master.connect(ctx.destination);
+  }
+  if (ctx.state === 'suspended') await ctx.resume();
+  return ctx;
+}
+
+const isSupported = () => !!(window.AudioContext || window.webkitAudioContext);
+
+/** A short burst of filtered noise, reused for whistle breath and strike transients. */
+function noiseBuffer(seconds) {
+  const frames = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+  const buf = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+/**
+ * A ship's whistle.
+ *
+ * A single sine reads as a test tone, not a vessel. What makes it a whistle is
+ * the fundamental plus a few harmonics that are not quite in tune with each
+ * other, and a little air noise underneath. The envelope has real attack and
+ * release because a whistle takes a moment to sound and a moment to die, and
+ * because a hard edge on a gain node is an audible click.
+ */
+function whistle(at, seconds, hz, nodes) {
+  const out = ctx.createGain();
+  out.gain.setValueAtTime(0.0001, at);
+  out.gain.exponentialRampToValueAtTime(0.9, at + 0.06);      // attack
+  out.gain.setValueAtTime(0.9, at + seconds - 0.09);
+  out.gain.exponentialRampToValueAtTime(0.0001, at + seconds); // release
+  out.connect(master);
+  nodes.push(out);
+
+  // Slightly detuned partials: a real whistle is a resonating column, not a tone.
+  const partials = [[1, 1], [2, 0.42], [3, 0.2], [4.02, 0.09]];
+  for (const [mult, level] of partials) {
+    const osc = ctx.createOscillator();
+    osc.type = mult === 1 ? 'sawtooth' : 'sine';
+    osc.frequency.setValueAtTime(hz * mult, at);
+    // A touch of drift stops it sounding synthetic and dead.
+    osc.frequency.linearRampToValueAtTime(hz * mult * 0.995, at + seconds);
+    const g = ctx.createGain();
+    g.gain.value = level * (mult === 1 ? 0.35 : 1) * 0.3;
+    osc.connect(g).connect(out);
+    osc.start(at);
+    osc.stop(at + seconds + 0.05);
+    nodes.push(osc, g);
+  }
+
+  // Breath.
+  const air = ctx.createBufferSource();
+  air.buffer = noiseBuffer(seconds + 0.1);
+  const band = ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = hz * 3;
+  band.Q.value = 1.2;
+  const ag = ctx.createGain();
+  ag.gain.value = 0.05;
+  air.connect(band).connect(ag).connect(out);
+  air.start(at);
+  air.stop(at + seconds + 0.05);
+  nodes.push(air, band, ag);
+}
+
+/**
+ * A struck metal instrument: bell or gong.
+ *
+ * Bells are inharmonic — the partials are not integer multiples, which is why a
+ * bell has a pitch you can hum but does not sound like an organ. The ratios
+ * below are roughly those of a struck bell. A gong is the same construction an
+ * octave or so down, with longer decay and denser partials.
+ */
+function struck(at, seconds, { base, ratios, decay, strike }, nodes) {
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  out.connect(master);
+  nodes.push(out);
+
+  for (const [ratio, level] of ratios) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = base * ratio;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(level, at + 0.004);   // near-instant attack
+    g.gain.exponentialRampToValueAtTime(0.0001, at + seconds * decay);
+    osc.connect(g).connect(out);
+    osc.start(at);
+    osc.stop(at + seconds + 0.05);
+    nodes.push(osc, g);
+  }
+
+  // The clack of the striker itself.
+  const hit = ctx.createBufferSource();
+  hit.buffer = noiseBuffer(0.05);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = base * 4;
+  const hg = ctx.createGain();
+  hg.gain.setValueAtTime(strike, at);
+  hg.gain.exponentialRampToValueAtTime(0.0001, at + 0.05);
+  hit.connect(hp).connect(hg).connect(out);
+  hit.start(at);
+  hit.stop(at + 0.08);
+  nodes.push(hit, hp, hg);
+}
+
+const BELL = { base: 620, ratios: [[1, 0.5], [2.02, 0.3], [2.98, 0.18], [4.2, 0.1], [5.4, 0.06]], decay: 1, strike: 0.25 };
+const GONG = { base: 190, ratios: [[1, 0.5], [1.48, 0.32], [2.1, 0.22], [2.9, 0.14], [3.7, 0.09], [5.1, 0.05]], decay: 1, strike: 0.18 };
+
+/** Rapid ringing: repeated strikes for the span, rather than one long note. */
+function ringing(at, seconds, voice, nodes, every = 0.28) {
+  for (let t = 0; t < seconds - 0.05; t += every) {
+    struck(at + t, Math.min(1.4, seconds - t + 0.6), voice, nodes);
+  }
+}
+
+/**
+ * Play a whole signal.
+ *
+ * `lengthBand` selects the Annex III whistle band; it falls back to the 20 to
+ * 75 m band, which is the one most vessels a small-craft skipper meets sit in.
+ * Returns when the pattern has been scheduled, not when it has finished.
+ */
+async function play(signal, { lengthBand } = {}) {
+  stop();
+  const c = await context();
+  if (!c) return null;
+
+  const band = bandFor(lengthBand);
+  // Middle of the band, geometrically, so the two ends are equally far away.
+  const hz = Math.round(Math.sqrt(band.hz[0] * band.hz[1]));
+
+  const nodes = [];
+  let t = c.currentTime + 0.08;
+  const startedAt = t;
+
+  for (const span of signal.pattern) {
+    switch (span.type) {
+      case 'short':
+      case 'prolonged':
+        whistle(t, span.seconds, hz, nodes);
+        break;
+      case 'stroke':
+        struck(t, Math.min(1.5, span.seconds + 0.5), BELL, nodes);
+        break;
+      case 'bell':
+        ringing(t, span.seconds, BELL, nodes);
+        break;
+      case 'gong':
+        ringing(t, span.seconds, GONG, nodes, 0.42);
+        break;
+      default:
+        break;                                   // a gap is simply time passing
+    }
+    t += span.seconds;
+  }
+
+  playing = { nodes, endsAt: t };
+  return { startedAt, endsAt: t, hz, band: band.id };
+}
+
+/**
+ * Cut cleanly, mid-pattern.
+ *
+ * Stopping the sources is not enough on its own: a source cut at full amplitude
+ * clicks. The master gain is ramped down over a few milliseconds first, then
+ * everything scheduled is torn down and the gain restored for the next play.
+ */
+function stop() {
+  if (!ctx || !playing) return;
+  const now = ctx.currentTime;
+  master.gain.cancelScheduledValues(now);
+  master.gain.setValueAtTime(master.gain.value, now);
+  master.gain.linearRampToValueAtTime(0.0001, now + 0.012);
+
+  for (const node of playing.nodes) {
+    try { if (typeof node.stop === 'function') node.stop(now + 0.02); } catch { /* already stopped */ }
+  }
+  playing = null;
+
+  master.gain.setValueAtTime(0.0001, now + 0.03);
+  master.gain.linearRampToValueAtTime(0.7, now + 0.06);
+}
+
+/** Whether a signal is still sounding, for button state. */
+const isPlaying = () => !!(ctx && playing && ctx.currentTime < playing.endsAt);
+
+
+/* ===== src/sound-questions.js ===== */
+/**
+ * Drill questions about sound signals.
+ *
+ * Card keys keep the three-part `a:b:c` shape the scheduler already stores, so
+ * scheduler.js needs no change at all: the aspect slot is simply 'na', because
+ * a sound signal has no aspect. That is a small dishonesty in the name of not
+ * touching a working module, and it is written down here so nobody later reads
+ * `signalId:na:sound-identify` and assumes the key format is broken.
+ *
+ * Distractors are chosen by pattern similarity rather than at random, the same
+ * principle as the light-signature distractors in engine.js. A wrong answer
+ * that differs by one blast teaches something; a wrong answer that is obviously
+ * absurd teaches nothing and inflates your score.
+ */
+
+
+
+
+const QUESTION_TYPES = ['sound-identify', 'sound-select', 'sound-pitch'];
+
+/** The aspect slot of the card key. Sound signals do not have one. */
+const NO_ASPECT = 'na';
+
+const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffled = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+
+/**
+ * A signal's shape: how many of each kind of blast, in order.
+ *
+ * Deliberately ignores the gaps. Two signals that differ only in the spacing
+ * between blasts are near-indistinguishable by ear, which makes them excellent
+ * distractors, so the similarity measure should treat them as close.
+ */
+function shapeOf(signal) {
+  return signal.pattern.filter(p => p.type !== 'gap').map(p => p.type);
+}
+
+/**
+ * How plausible a confusion between two signals is. Higher is more confusable.
+ *
+ * Edit distance over the blast sequence carries most of it: one blast different
+ * is the classic error, and the classic error is exactly what a drill should be
+ * offering as the wrong answer. Sharing a rule or a group adds a little, because
+ * signals from the same part of the rules get muddled with each other.
+ */
+function signalSimilarity(a, b) {
+  const x = shapeOf(a), y = shapeOf(b);
+  const d = editDistance(x, y);
+  let score = -d * 2;
+  if (a.group === b.group) score += 1.5;
+  if (a.rule.slice(0, 7) === b.rule.slice(0, 7)) score += 1;
+  if (a.equipment[0] === b.equipment[0]) score += 0.75;
+  if (x.length === y.length) score += 0.5;
+  return score;
+}
+
+function editDistance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return d[a.length][b.length];
+}
+
+function signalDistractors(signal, pool, n = 3) {
+  return pool
+    .filter(s => s.id !== signal.id)
+    .map(s => ({ s, score: signalSimilarity(signal, s) + Math.random() * 0.4 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map(d => d.s);
+}
+
+/** The full card space, in the shape selectCard expects. */
+const soundUniverse = () =>
+  SOUND_SIGNALS.flatMap(s => QUESTION_TYPES
+    // A pitch question only makes sense where a whistle is actually sounded.
+    .filter(t => t !== 'sound-pitch' || s.equipment.includes('whistle'))
+    .map(t => ({ stateId: s.id, aspect: NO_ASPECT, questionType: t })));
+
+/**
+ * Build a question for one card.
+ *
+ * `sound-identify` states the circumstance in the prompt, because it has to:
+ * one prolonged blast is Rule 34(e) approaching a bend and Rule 35(a) a
+ * power-driven vessel making way in restricted visibility, and no amount of
+ * listening will separate them. The group is the disambiguator.
+ */
+function soundQuestionFor({ stateId, questionType }, pool = SOUND_SIGNALS) {
+  const signal = pool.find(s => s.id === stateId);
+  if (!signal) return null;
+
+  if (questionType === 'sound-pitch') {
+    const band = pickOne(WHISTLE_BANDS);
+    const wrong = shuffled(WHISTLE_BANDS.filter(b => b.id !== band.id)).slice(0, 3);
+    return {
+      type: 'sound-pitch',
+      signal, band: band.id,
+      prompt: 'Listen to her whistle. What length of vessel is sounding it?',
+      options: shuffled([band, ...wrong]).map(b => ({ id: b.id, text: b.label })),
+      answerId: band.id,
+      explain: `${band.label}: Annex III gives a fundamental frequency of ${band.hz[0]} to ${band.hz[1]} Hz. `
+             + 'The larger the vessel, the lower her whistle.'
+    };
+  }
+
+  if (questionType === 'sound-select') {
+    const wrong = signalDistractors(signal, pool, 3);
+    return {
+      type: 'sound-select',
+      signal,
+      prompt: `${signal.meaning} Which signal do you sound?`,
+      options: shuffled([signal, ...wrong]).map(s => ({ id: s.id, text: describe(s) })),
+      answerId: signal.id,
+      explain: `${signal.rule}. ${signal.name}. ${signal.memory}`
+    };
+  }
+
+  const wrong = signalDistractors(signal, pool, 3);
+  return {
+    type: 'sound-identify',
+    signal,
+    prompt: signal.group === 'Restricted visibility'
+      ? 'You are in restricted visibility and hear this. What is she?'
+      : 'She is in sight of you and sounds this. What does it mean?',
+    options: shuffled([signal, ...wrong]).map(s => ({ id: s.id, text: s.meaning })),
+    answerId: signal.id,
+    explain: `${signal.rule}. ${describe(signal)}. ${signal.memory}`
+  };
+}
+
+/** How large the sound question space is, for the header readout. */
+const soundSpace = () => ({
+  signals: SOUND_SIGNALS.length,
+  cards: soundUniverse().length,
+  bands: WHISTLE_BANDS.length
+});
+
+
 /* ===== src/scheduler.js ===== */
 /**
  * Spaced repetition over the drill, scheduled by FSRS.
@@ -3793,6 +4642,10 @@ function reset() {
 
 
 
+
+
+
+
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
 
@@ -3884,9 +4737,9 @@ $('dayMode').addEventListener('change', draw);
 // --- drill ----------------------------------------------------------------
 
 // The full card space the scheduler picks from.
-const QUESTION_TYPES = ['identify', 'aspect'];
+const LIGHT_QUESTION_TYPES = ['identify', 'aspect'];
 const UNIVERSE = VESSEL_STATES.flatMap(s =>
-  ASPECT_BANDS.flatMap(b => QUESTION_TYPES.map(t => ({ stateId: s.id, aspect: b.deg, questionType: t }))));
+  ASPECT_BANDS.flatMap(b => LIGHT_QUESTION_TYPES.map(t => ({ stateId: s.id, aspect: b.deg, questionType: t }))));
 $('pTotal').textContent = UNIVERSE.length;
 
 /**
@@ -4017,13 +4870,123 @@ function sync() {
   drawMarks();
 }
 
+// --- sound signals --------------------------------------------------------
+
+const SOUND_UNIVERSE = soundUniverse();
+$('sTotal').textContent = SOUND_UNIVERSE.length;
+$('soundKey').innerHTML = stripKey();
+
+let sound = null;          // the live question, or null once answered
+let soundKey = null;
+
+function drawSignalList() {
+  $('signalList').innerHTML = SIGNAL_GROUPS.map(group => `
+    <div class="siggroup">
+      <h3>${group}</h3>
+      <div class="sigcards">
+        ${SOUND_SIGNALS.filter(s => s.group === group).map(s => `
+          <div class="sigcard">
+            <div class="rule">${s.rule}</div>
+            <h4>${s.name}</h4>
+            ${signalStrip(s)}
+            <div class="sigplay">
+              <button class="btn ghost" data-play="${s.id}">Play</button>
+              <span class="sighint">${describe(s)}</span>
+            </div>
+            <p>${s.meaning}</p>
+            <p class="mem">${s.memory}</p>
+            <div class="kit">${s.equipment.join(' + ')}${s.repeat ? ` · every ${s.repeat}s` : ''}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// Delegated, so the buttons survive a redraw. Audio starts here and nowhere
+// else: the AudioContext is only ever created inside a real click.
+$('signalList').addEventListener('click', e => {
+  const id = e.target.closest('[data-play]')?.dataset.play;
+  if (!id) return;
+  play(SOUND_SIGNALS.find(s => s.id === id));
+});
+
+function showSoundProgress() {
+  const s = stats();
+  $('sSeen').textContent = s.seen;
+  $('sDue').textContent = s.dueToday;
+  $('sStreak').textContent = s.streak;
+}
+
+function nextSoundQuestion() {
+  stop();
+  const card = selectCard(SOUND_UNIVERSE);
+  soundKey = cardKey(card.stateId, card.aspect, card.questionType);
+  sound = soundQuestionFor(card);
+
+  $('sPrompt').textContent = sound.prompt;
+  $('sVerdict').textContent = '';
+  $('sNext').textContent = 'Next';
+  $('sEasy').classList.add('hidden');
+  // The strip is the answer for identify and pitch, so it stays hidden until
+  // the question is answered. For select, the strips are the options.
+  $('sStrip').innerHTML = '';
+  $('sPlay').disabled = false;
+  $('sStop').disabled = false;
+  $('sHint').textContent = sound.type === 'sound-pitch'
+    ? 'A whistle. Judge her length by its pitch.'
+    : 'Play it as many times as you like.';
+
+  $('sOpts').innerHTML = '';
+  sound.options.forEach(o => {
+    const b = document.createElement('button');
+    b.textContent = o.text;
+    b.addEventListener('click', () => {
+      [...$('sOpts').children].forEach(c => { c.disabled = true; });
+      const right = o.id === sound.answerId;
+      b.classList.add(right ? 'right' : 'wrong');
+      if (!right) {
+        [...$('sOpts').children].find(c => c.textContent ===
+          sound.options.find(x => x.id === sound.answerId).text)?.classList.add('right');
+      }
+      grade(soundKey, right ? GRADE.GOOD : GRADE.AGAIN);
+      $('sEasy').classList.toggle('hidden', !right);
+      showSoundProgress();
+      // Always show the pattern once answered, whether or not they heard it.
+      $('sStrip').innerHTML = signalStrip(sound.signal);
+      $('sVerdict').textContent = sound.explain;
+      sound = null;
+    });
+    $('sOpts').appendChild(b);
+  });
+}
+
+$('sPlay').addEventListener('click', () => {
+  const signal = sound ? sound.signal : null;
+  if (!signal) return;
+  play(signal, { lengthBand: sound.band });
+});
+$('sStop').addEventListener('click', stop);
+$('sNext').addEventListener('click', nextSoundQuestion);
+$('sEasy').addEventListener('click', () => {
+  if (!canRegrade()) return;
+  regradeLast(GRADE.EASY);
+  $('sEasy').classList.add('hidden');
+  showSoundProgress();
+});
+
+drawSignalList();
+showSoundProgress();
+
 $('tab-lights').addEventListener('click', () => switchTab('lights'));
 $('tab-buoys').addEventListener('click', () => switchTab('buoys'));
+$('tab-sound').addEventListener('click', () => switchTab('sound'));
 function switchTab(t) {
+  stop();                                   // never leave a signal sounding behind you
   $('view-lights').classList.toggle('hidden', t !== 'lights');
   $('view-buoys').classList.toggle('hidden', t !== 'buoys');
+  $('view-sound').classList.toggle('hidden', t !== 'sound');
   $('tab-lights').setAttribute('aria-selected', t === 'lights');
   $('tab-buoys').setAttribute('aria-selected', t === 'buoys');
+  $('tab-sound').setAttribute('aria-selected', t === 'sound');
 }
 
 draw(); sync();

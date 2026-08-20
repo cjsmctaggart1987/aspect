@@ -7,14 +7,21 @@
  * so it is exercised in a browser instead.
  */
 import { reporter } from './harness.js';
-import engine from './engine.test.js';
+import engine, { checkBundleNamespace } from './engine.test.js';
+import { readFileSync } from 'node:fs';
+import { MODULES } from '../build.cjs';
 import silhouette from './silhouette.test.js';
 import buoyage from './buoyage.test.js';
+import sound from './sound.test.js';
 
 const suites = [
   ['engine — arcs, and lights on the hull', engine],
   ['silhouette — profiles and projection', silhouette],
-  ['buoyage — patterns, strips and the night lamp', buoyage]
+  ['buoyage — patterns, strips and the night lamp', buoyage],
+  ['sound — signals, timings, cards and strips', sound],
+  // Reads build.cjs's own module list, so adding a module to the bundle
+  // automatically brings it under this check.
+  ['bundle — one shared scope', t => checkBundleNamespace(t, f => readFileSync(f, 'utf8'), MODULES)]
 ];
 
 let failures = 0;

@@ -49,3 +49,53 @@ export default function run(t) {
   t.ok('starboard hand mark clips to a cone path',
     /<clipPath id="[^"]+"><path d="M 0 -10 L 23 52/.test(renderBuoy(MARKS.find(m => m.id === 'lat-stbd-b'))));
 }
+
+/**
+ * Bundle safety.
+ *
+ * Modules keep their own scope; the bundle does not. Every module is
+ * concatenated into one classic script, so two modules declaring the same
+ * top-level name is a SyntaxError that only appears in the built file and
+ * never while developing. sound-questions.js shipped exactly that against
+ * engine.js — pick, shuffle, similarity, distractors — and the module app was
+ * perfectly happy.
+ *
+ * Kept in the engine suite rather than a file of its own because it is the same
+ * class of mistake as the shared clipPath id above: a namespace assumed to be
+ * private that is not.
+ */
+export function checkBundleNamespace(t, readFile, modules) {
+  t.section('no two parts of the bundle declare the same top-level name');
+  const DECL = /^(?:export )?(?:const|let|var|function|class|async function) ([A-Za-z0-9_$]+)/gm;
+
+  // The app script shares that scope too. Leaving it out is how QUESTION_TYPES
+  // got through after the module-only version of this check went green.
+  const html = readFile('index.html');
+  const tag = '<script type="module">\n';
+  const open = html.indexOf(tag) + tag.length;
+  const app = html.slice(open, html.indexOf('\n</script>', open));
+
+  const sources = [...modules.map(f => [f, readFile(f)]), ['index.html (app)', app]];
+  const owner = new Map();
+  const clashes = [];
+  for (const [name, code] of sources) {
+    for (const m of code.matchAll(DECL)) {
+      if (owner.has(m[1])) clashes.push(`${m[1]} (${owner.get(m[1])} vs ${name})`);
+      else owner.set(m[1], name);
+    }
+  }
+  t.ok('the scan covers the app as well as the modules',
+    sources.length === modules.length + 1 && app.includes('document.getElementById'),
+    `${sources.length} sources`);
+  t.ok('the scan found a plausible number of names', owner.size > 100, `${owner.size} names`);
+  t.ok('no collisions', clashes.length === 0, clashes.slice(0, 4).join('; '));
+
+  // build.cjs blanks import lines rather than rewriting them, so an alias
+  // introduced at the import site simply does not exist in the bundle: the
+  // module app works and the offline file throws ReferenceError. Rename the
+  // export instead.
+  const aliased = sources
+    .filter(([, code]) => /^import\s*\{[^}]*\sas\s/m.test(code))
+    .map(([name]) => name);
+  t.ok('no aliased imports, which the bundle cannot express', aliased.length === 0, aliased.join(', '));
+}
