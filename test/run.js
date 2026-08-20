@@ -18,6 +18,7 @@ import flags from './flags.test.js';
 import manoeuvre from './manoeuvre.test.js';
 import definitions from './definitions.test.js';
 import ui from './ui.test.js';
+import bundle from './bundle.test.js';
 
 const suites = [
   ['engine — arcs, and lights on the hull', engine],
@@ -31,7 +32,8 @@ const suites = [
   ['ui — every section reachable, nothing stranded', ui],
   // Reads build.cjs's own module list, so adding a module to the bundle
   // automatically brings it under this check.
-  ['bundle — one shared scope', t => checkBundleNamespace(t, f => readFileSync(f, 'utf8'), MODULES)]
+  ['bundle — one shared scope', t => checkBundleNamespace(t, f => readFileSync(f, 'utf8'), MODULES)],
+  ['bundle — does the built page actually run', bundle]
 ];
 
 let failures = 0;

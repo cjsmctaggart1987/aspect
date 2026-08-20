@@ -53,13 +53,35 @@ const MODULES = [
 
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
-/** Strip module syntax, preserving the line count. */
+/**
+ * Strip module syntax, preserving the line count.
+ *
+ * A statement can span lines. This one is real and it shipped a broken bundle:
+ *
+ *   import { DEFINITIONS, DEFINITION_BOUNDARIES, definitionsForState }
+ *     from '../data/definitions.js';
+ *
+ * A line-at-a-time matcher that wants a semicolon on the same line skips it,
+ * and a bare `import` in a classic script is a SyntaxError that kills the whole
+ * page. So the stripper carries state: once a module statement opens, every
+ * line is blanked until it closes.
+ */
 function debundle(source) {
+  let open = false;                       // inside an unterminated module statement
   return source
     .split('\n')
     .map(line => {
-      if (/^import\b[^;]*;\s*$/.test(line)) return '';        // blank, do not delete
-      if (/^export\s*\{[^}]*\}\s*;?\s*$/.test(line)) return ''; // `export { LIGHT_HEX };`
+      if (open) {
+        // A statement ends at the first semicolon, or at the specifier that
+        // follows `from` when the semicolon is omitted.
+        if (/;\s*$/.test(line) || /\bfrom\s+['"][^'"]+['"]\s*;?\s*$/.test(line)) open = false;
+        return '';
+      }
+      if (/^import\b/.test(line) || /^export\s*\{/.test(line)) {
+        const terminated = /;\s*$/.test(line) || /^export\s*\{[^}]*\}\s*$/.test(line);
+        if (!terminated) open = true;
+        return '';
+      }
       return line.replace(/^export (?=(const|let|var|function|class|async)\b)/, '');
     })
     .join('\n')
