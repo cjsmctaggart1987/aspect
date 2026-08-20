@@ -314,7 +314,13 @@ function dayShape(form, sx, sy, k) {
  * because a light that never comes on reads as no light at all, which would
  * change what the picture says.
  */
-export function renderScene(state, aspect, makingWay = true, mode = 'night', motion = true) {
+/**
+ * `anonymous` strips the vessel's name and her aspect out of the accessible
+ * label. A drill asks you to read the picture; leaving the answer in an
+ * aria-label hands it to a screen reader and to anyone who opens the DOM.
+ * Default off, so the explore view is unchanged.
+ */
+export function renderScene(state, aspect, makingWay = true, mode = 'night', motion = true, { anonymous = false } = {}) {
   const k = stateScale(state);
   const lights = visibleLights(state, aspect, makingWay);
   const shapes = mode === 'day' ? visibleShapes(state, aspect) : [];
@@ -345,7 +351,7 @@ export function renderScene(state, aspect, makingWay = true, mode = 'night', mot
     .join('');
 
   return `<svg viewBox="${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="${state.name} viewed from ${Math.round(aspect)} degrees aspect, ${mode}">
+    role="img" aria-label="${anonymous ? `An unidentified vessel, ${mode}` : `${state.name} viewed from ${Math.round(aspect)} degrees aspect, ${mode}`}">
     <defs>${glow}</defs>
     <rect x="${VIEW.x}" y="${VIEW.y}" width="${VIEW.w}" height="${VIEW.h}" fill="${sky}"/>
     <rect x="${VIEW.x}" y="0" width="${VIEW.w}" height="${VIEW.y + VIEW.h}" fill="${sea}"/>
@@ -360,7 +366,7 @@ export function renderScene(state, aspect, makingWay = true, mode = 'night', mot
  * The aspect dial. The arcs are the rule: dragging the observer round shows
  * you why the picture changes.
  */
-export function renderDial(aspect) {
+export function renderDial(aspect, { anonymous = false } = {}) {
   const rings = [
     { r: 78, from: -112.5, to: 112.5, stroke: '#FFF3D6' },
     { r: 64, from: 0, to: 112.5, stroke: '#00E06B' },
@@ -380,7 +386,7 @@ export function renderDial(aspect) {
 
   const [ox, oy] = polar(0, 0, 98, aspect);
   return `<svg viewBox="-115 -115 230 230" xmlns="http://www.w3.org/2000/svg" id="dialSvg"
-    role="img" aria-label="Aspect dial, observer at ${Math.round(aspect)} degrees">
+    role="img" aria-label="${anonymous ? 'Aspect dial' : `Aspect dial, observer at ${Math.round(aspect)} degrees`}">
     <circle cx="0" cy="0" r="98" fill="none" stroke="#10222C" stroke-width="1" opacity=".25"/>
     ${ticks}${arcs}
     <path d="M 0 -34 L 13 22 L 0 15 L -13 22 Z" fill="#10222C"/>

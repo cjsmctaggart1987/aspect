@@ -4183,7 +4183,13 @@ function dayShape(form, sx, sy, k) {
  * because a light that never comes on reads as no light at all, which would
  * change what the picture says.
  */
-function renderScene(state, aspect, makingWay = true, mode = 'night', motion = true) {
+/**
+ * `anonymous` strips the vessel's name and her aspect out of the accessible
+ * label. A drill asks you to read the picture; leaving the answer in an
+ * aria-label hands it to a screen reader and to anyone who opens the DOM.
+ * Default off, so the explore view is unchanged.
+ */
+function renderScene(state, aspect, makingWay = true, mode = 'night', motion = true, { anonymous = false } = {}) {
   const k = stateScale(state);
   const lights = visibleLights(state, aspect, makingWay);
   const shapes = mode === 'day' ? visibleShapes(state, aspect) : [];
@@ -4214,7 +4220,7 @@ function renderScene(state, aspect, makingWay = true, mode = 'night', motion = t
     .join('');
 
   return `<svg viewBox="${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="${state.name} viewed from ${Math.round(aspect)} degrees aspect, ${mode}">
+    role="img" aria-label="${anonymous ? `An unidentified vessel, ${mode}` : `${state.name} viewed from ${Math.round(aspect)} degrees aspect, ${mode}`}">
     <defs>${glow}</defs>
     <rect x="${VIEW.x}" y="${VIEW.y}" width="${VIEW.w}" height="${VIEW.h}" fill="${sky}"/>
     <rect x="${VIEW.x}" y="0" width="${VIEW.w}" height="${VIEW.y + VIEW.h}" fill="${sea}"/>
@@ -4229,7 +4235,7 @@ function renderScene(state, aspect, makingWay = true, mode = 'night', motion = t
  * The aspect dial. The arcs are the rule: dragging the observer round shows
  * you why the picture changes.
  */
-function renderDial(aspect) {
+function renderDial(aspect, { anonymous = false } = {}) {
   const rings = [
     { r: 78, from: -112.5, to: 112.5, stroke: '#FFF3D6' },
     { r: 64, from: 0, to: 112.5, stroke: '#00E06B' },
@@ -4249,7 +4255,7 @@ function renderDial(aspect) {
 
   const [ox, oy] = polar(0, 0, 98, aspect);
   return `<svg viewBox="-115 -115 230 230" xmlns="http://www.w3.org/2000/svg" id="dialSvg"
-    role="img" aria-label="Aspect dial, observer at ${Math.round(aspect)} degrees">
+    role="img" aria-label="${anonymous ? 'Aspect dial' : `Aspect dial, observer at ${Math.round(aspect)} degrees`}">
     <circle cx="0" cy="0" r="98" fill="none" stroke="#10222C" stroke-width="1" opacity=".25"/>
     ${ticks}${arcs}
     <path d="M 0 -34 L 13 22 L 0 15 L -13 22 Z" fill="#10222C"/>
@@ -4398,13 +4404,13 @@ function lamp(mark, mode, motion) {
   </g>`;
 }
 
-function renderBuoy(mark, mode = 'day', motion = true) {
+function renderBuoy(mark, mode = 'day', motion = true, { anonymous = false } = {}) {
   const night = mode === 'night';
   // At night the paint is gone: the rhythm is what identifies her.
   const bodyOpacity = night ? 0.14 : 1;
   const water = night ? '#101922' : '#8FA8B3';
   return `<svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="${mark.name}${night ? ', as seen at night' : ''}">
+    role="img" aria-label="${anonymous ? 'An unidentified mark' : mark.name}${night ? ', as seen at night' : ''}">
     ${rhythmStrip(mark)}
     <line x1="-56" y1="52" x2="56" y2="52" stroke="${water}" stroke-width="1.5"/>
     ${lamp(mark, mode, motion)}
@@ -4470,7 +4476,7 @@ const COUNTED = new Set(['short', 'prolonged', 'stroke', 'dit', 'dah', 'report']
  * strips not sharing a common scale. The seconds are labelled so the trade is
  * visible rather than misleading.
  */
-function signalStrip(signal, { width = 260, height = 26 } = {}) {
+function signalStrip(signal, { width = 260, height = 26, anonymous = false } = {}) {
   const total = signal.seconds;
   const at = t => (t / total) * width;
 
@@ -4493,7 +4499,7 @@ function signalStrip(signal, { width = 260, height = 26 } = {}) {
   }
 
   return `<svg viewBox="0 -14 ${width} ${height + 20}" xmlns="http://www.w3.org/2000/svg"
-    class="sigstrip" role="img" aria-label="${describe(signal)}">
+    class="sigstrip" role="img" aria-label="${anonymous ? 'A signal pattern' : describe(signal)}">
     <defs>
       <pattern id="ring" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <rect width="4" height="4" fill="#10222C" opacity=".18"/>
@@ -4543,7 +4549,7 @@ function describe(signal) {
  * prefers-reduced-motion suppresses CSS animation only, and SMIL ignores it. A
  * still lamp is shown lit, because a lamp that never comes on says nothing.
  */
-function lightSignal(signal, { motion = true, width = 260, height = 90 } = {}) {
+function lightSignal(signal, { motion = true, width = 260, height = 90, anonymous = false } = {}) {
   const total = signal.seconds;
   const cx = width / 2, cy = 40, r = 16;
 
@@ -4569,14 +4575,14 @@ function lightSignal(signal, { motion = true, width = 260, height = 90 } = {}) {
     : '';
 
   return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
-    class="lightsig" role="img" aria-label="${describe(signal)} shown as light">
+    class="lightsig" role="img" aria-label="${anonymous ? 'A character shown as light' : `${describe(signal)} shown as light`}">
     <rect x="0" y="0" width="${width}" height="${height}" fill="#04070C"/>
     <g>
       <circle cx="${cx}" cy="${cy}" r="${r * 2.4}" fill="#FFF3D6" opacity=".13">${anim}</circle>
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFF3D6">${anim}</circle>
     </g>
     <text x="${cx}" y="${height - 14}" text-anchor="middle" font-family="ui-monospace,monospace"
-      font-size="10" fill="#8FA8B3">${signal.code || ''}</text>
+      font-size="10" fill="#8FA8B3">${anonymous ? '' : (signal.code || '')}</text>
   </svg>`;
 }
 
@@ -5246,6 +5252,12 @@ const QUESTION_TYPES = ['sound-identify', 'sound-select', 'sound-pitch'];
 /** The aspect slot of the card key. Sound signals do not have one. */
 const NO_ASPECT = 'na';
 
+/** The first sentence of a meaning: the circumstance, without the signal. */
+const situationOf = signal => {
+  const first = String(signal.meaning).split(/(?<=.)s+/)[0];
+  return first || signal.meaning;
+};
+
 const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
 const shuffled = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
 
@@ -5341,7 +5353,10 @@ function soundQuestionFor({ stateId, questionType }, pool = SOUND_SIGNALS) {
     return {
       type: 'sound-select',
       signal,
-      prompt: `${signal.meaning} Which signal do you sound?`,
+      // Only the first sentence. Several meanings go on to quote the signal
+      // itself — Rule 34(e) says it is "answered by one prolonged blast" —
+      // which would put the answer in the question.
+      prompt: `${situationOf(signal)} Which signal do you sound?`,
       options: shuffled([signal, ...wrong]).map(s => ({ id: s.id, text: describe(s) })),
       answerId: signal.id,
       explain: `${signal.rule}. ${signal.name}. ${signal.memory}`
@@ -5472,7 +5487,10 @@ function distressQuestionFor({ stateId, questionType }) {
     return {
       type: 'distress-select',
       signal,
-      prompt: `${signal.description} Which Annex IV signal is this?`,
+      // Not the description: for several entries it is the name verbatim, so
+      // using it would print the answer above the options. The memory line is
+      // the surrounding fact rather than a restatement of the signal.
+      prompt: `${signal.memory} Which Annex IV signal is being described?`,
       options: mixed([signal, ...wrong]).map(s => ({ id: s.id, text: s.name })),
       answerId: signal.id,
       explain: `${signal.rule}. ${signal.memory}`
@@ -5734,11 +5752,17 @@ function reset() {
 
 
 
+
 const $ = id => document.getElementById(id);
 let aspect = 20, current = VESSEL_STATES[0], drill = null;
 
 const space = questionSpace(VESSEL_STATES, ASPECT_BANDS);
 $('space').textContent = `${space.pictures} pictures / ${space.questions} questions`;
+
+const holder = document.createElement('option');
+holder.value = '';
+holder.textContent = 'Unidentified contact';
+$('stateSel').appendChild(holder);
 
 VESSEL_STATES.forEach(s => {
   const o = document.createElement('option');
@@ -5746,6 +5770,44 @@ VESSEL_STATES.forEach(s => {
   o.textContent = s.name + ((s.dayShapes && s.dayShapes.length) ? ' \u25AA' : '');
   $('stateSel').appendChild(o);
 });
+
+// --- one revealed state -----------------------------------------------------
+
+// Explore is always revealed; a drill question sets it false until answered.
+// Nothing writes an answer-bearing field directly. It goes through show(),
+// which asks this flag, so a field nobody thought about is masked rather than
+// shown — the safe direction.
+let revealed = true;
+const revealable = new Map();
+
+function show(id, value) {
+  revealable.set(id, value);
+  paint(id);
+}
+
+function paint(id) {
+  const el = $(id);
+  if (!el) return;
+  const v = revealable.get(id);
+  if (el.dataset.html === 'true') {
+    el.innerHTML = revealed ? (v || '') : `<span class="masked">${PLACEHOLDER}</span>`;
+  } else {
+    el.textContent = revealed ? (v == null ? PLACEHOLDER : v) : PLACEHOLDER;
+  }
+}
+
+function setRevealed(state) {
+  revealed = state;
+  // Anything marked data-reveal in the markup is covered whether or not any
+  // code remembered to register it.
+  for (const el of document.querySelectorAll('[data-reveal]')) {
+    if (!revealable.has(el.id)) revealable.set(el.id, el.textContent);
+    paint(el.id);
+  }
+  for (const id of revealable.keys()) paint(id);
+  if (!revealed) $('stateSel').value = '';
+  draw();
+}
 
 function nearestBand(a) {
   return ASPECT_BANDS.reduce((best, b) => {
@@ -5761,33 +5823,41 @@ const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
 function draw() {
   const makingWay = $('makingWay').checked;
   const mode = $('dayMode').checked ? 'day' : 'night';
-  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode, !stillness.matches);
-  $('dial').innerHTML = renderDial(aspect);
+  const hide = anonymity(revealed);
+  $('scene').innerHTML = renderScene(current, aspect, makingWay, mode, !stillness.matches, hide);
+  $('dial').innerHTML = renderDial(aspect, hide);
   bindDial();
-  $('aspectRead').textContent = String(Math.round(aspect)).padStart(3, '0') + '°';
-  $('bandRead').textContent = nearestBand(aspect).label;
+  show('aspectRead', String(Math.round(aspect)).padStart(3, '0') + '°');
+  show('bandRead', nearestBand(aspect).label);
 
   const seen = visibleLights(current, aspect, makingWay);
   const shapes = current.dayShapes || [];
 
-  let legend = seen.length
-    ? seen.slice().reverse().map(l =>
-        `<span><i class="dot" style="background:${LIGHT_HEX[l.color]};color:${LIGHT_HEX[l.color]}"></i>${l.name}</span>`).join('')
-    : '<span>No lights visible from this aspect</span>';
-
-  if (mode === 'day') {
-    legend = shapes.length
-      ? shapes.map(sh => `<span><i class="dot" style="background:#0B1116;color:transparent"></i>${SHAPE_NAMES[sh.form] || sh.form}</span>`).join('')
-      : '<span class="none">Rules 21 to 31 prescribe no day signal for this vessel. She is identified by her hull and her behaviour alone.</span>';
+  // The legend names every light and every day shape in view, so it answers
+  // an identify question outright. It stays empty until the reveal.
+  let legend = '';
+  if (revealed) {
+    legend = seen.length
+      ? legendEntries(seen.slice().reverse(), revealed).map(l =>
+          `<span><i class="dot" style="background:${LIGHT_HEX[l.color]};color:${LIGHT_HEX[l.color]}"></i>${l.name}</span>`).join('')
+      : '<span>No lights visible from this aspect</span>';
+    if (mode === 'day') {
+      legend = shapes.length
+        ? shapes.map(sh => `<span><i class="dot" style="background:#0B1116;color:transparent"></i>${SHAPE_NAMES[sh.form] || sh.form}</span>`).join('')
+        : '<span class="none">Rules 21 to 31 prescribe no day signal for this vessel. She is identified by her hull and her behaviour alone.</span>';
+    }
   }
-  $('legend').innerHTML = legend;
+  show('legend', legend);
 
-  if (!drill) {
-    $('mRule').textContent = current.rule;
-    $('mName').textContent = current.name;
-    $('mSummary').textContent = current.summary;
-    $('mHint').textContent = current.dutyHint;
-  }
+  // The identifying panel. There is no `if (!drill)` guard any more: the reveal
+  // state decides, in one place, so these four fields cannot disagree with the
+  // legend or the readouts above them.
+  const f = panelFields({ state: current, aspect }, revealed,
+    { band: nearestBand(aspect).label });
+  show('mRule', f.rule);
+  show('mName', f.name);
+  show('mSummary', f.summary);
+  show('mHint', f.hint);
 }
 
 function bindDial() {
@@ -5798,7 +5868,7 @@ function bindDial() {
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const p = e.touches ? e.touches[0] : e;
     aspect = norm(Math.atan2(p.clientX - cx, cy - p.clientY) * 180 / Math.PI);
-    draw();
+    if (!revealed) { setRevealed(true); } else { draw(); }
   };
   const stop = () => {
     window.removeEventListener('pointermove', move);
@@ -5812,15 +5882,17 @@ function bindDial() {
 }
 
 $('stateSel').addEventListener('change', e => {
+  if (!e.target.value) return;
   current = VESSEL_STATES.find(s => s.id === e.target.value);
+  setRevealed(true);
   drill = null; $('qOpts').innerHTML = ''; $('qVerdict').textContent = '';
   $('qPrompt').textContent = 'Press start to be shown a picture with no label.';
   $('qNext').textContent = 'Start a drill';
   $('qEasy').classList.add('hidden');
   draw();
 });
-$('makingWay').addEventListener('change', draw);
-$('dayMode').addEventListener('change', draw);
+$('makingWay').addEventListener('change', () => setRevealed(true));
+$('dayMode').addEventListener('change', () => setRevealed(true));
 
 // --- drill ----------------------------------------------------------------
 
@@ -5873,10 +5945,8 @@ function nextQuestion() {
   const key = cardKey(card.stateId, card.aspect, card.questionType);
   drill = questionFor(card);
   current = drill.state; aspect = drill.aspect;
-  $('stateSel').value = current.id;
   $('makingWay').checked = drill.makingWay;
-  $('mRule').textContent = ''; $('mName').textContent = 'Unidentified contact';
-  $('mSummary').textContent = ''; $('mHint').textContent = '';
+  setRevealed(false);
   $('qPrompt').textContent = drill.prompt;
   $('qVerdict').textContent = '';
   $('qNext').textContent = 'Next';
@@ -5898,9 +5968,10 @@ function nextQuestion() {
       $('qEasy').classList.toggle('hidden', !right);
       showProgress();
       $('qVerdict').textContent = drill.explain;
-      $('mName').textContent = drill.state.name;
-      $('mRule').textContent = drill.state.rule;
       drill = null;
+      // The teaching moment: fuller than explore, not thinner.
+      setRevealed(true);
+      $('stateSel').value = current.id;
     });
     $('qOpts').appendChild(b);
   });
@@ -6154,13 +6225,13 @@ function drawCharDetail() {
  * lamp that never flashes is worse than no lamp: it reads as a steady light,
  * which is a different signal entirely.
  */
-function showLamp(target, sig) {
+function showLamp(target, sig, anon) {
   if (stillness.matches) {
     $(target).innerHTML = '<p class="substituted">Reduced motion is set, so the lamp is not '
       + 'flashed. Use Hear it instead.</p>';
     return false;
   }
-  $(target).innerHTML = lightSignal(sig, { motion: true });
+  $(target).innerHTML = lightSignal(sig, { motion: true, anonymous: !!anon });
   return true;
 }
 
@@ -6250,6 +6321,7 @@ function makeDrill(cfg) {
         // Always reveal the pattern, heard or not.
         const shown = cfg.audible(live, wpm);
         if (shown) $(cfg.strip).innerHTML = signalStrip(shown);
+        if (cfg.reveal) cfg.reveal(live);
         $(cfg.verdict).textContent = live.explain;
         progress();
         live = null;
@@ -6263,7 +6335,7 @@ function makeDrill(cfg) {
     if (!live) return;
     const delivery = deliveryFor(live, { motion: !stillness.matches });
     if (delivery.mode === 'light' && cfg.lamp) {
-      showLamp(cfg.lamp, live.signal);
+      showLamp(cfg.lamp, live.signal, true);
       return;
     }
     const audible = cfg.audible(live, wpm);
@@ -6318,9 +6390,14 @@ makeDrill({
   // revealed. At night that is the light and its rhythm; by day, the paint.
   show: q => {
     $('bShown').classList.toggle('night', q.night);
-    $('bShown').innerHTML = renderBuoy(q.mark, q.night ? 'night' : 'day', !stillness.matches);
+    $('bShown').innerHTML = renderBuoy(q.mark, q.night ? 'night' : 'day', !stillness.matches,
+      anonymity(false));
   },
   clear: () => { $('bShown').innerHTML = ''; },
+  // On reveal the mark is named, and the card says what it is and what to do.
+  reveal: q => {
+    $('bShown').innerHTML = renderBuoy(q.mark, q.night ? 'night' : 'day', !stillness.matches);
+  },
   prompt: 'bPrompt', verdict: 'bVerdict', next: 'bNext', easy: 'bEasy',
   strip: 'bShown', opts: 'bOpts', hint: null, play: null, stopBtn: null,
   seen: 'bSeen', due: 'bDue', streak: 'bStreak'

@@ -100,7 +100,10 @@ export function distressQuestionFor({ stateId, questionType }) {
     return {
       type: 'distress-select',
       signal,
-      prompt: `${signal.description} Which Annex IV signal is this?`,
+      // Not the description: for several entries it is the name verbatim, so
+      // using it would print the answer above the options. The memory line is
+      // the surrounding fact rather than a restatement of the signal.
+      prompt: `${signal.memory} Which Annex IV signal is being described?`,
       options: mixed([signal, ...wrong]).map(s => ({ id: s.id, text: s.name })),
       answerId: signal.id,
       explain: `${signal.rule}. ${signal.memory}`

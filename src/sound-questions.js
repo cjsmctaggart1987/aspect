@@ -21,6 +21,12 @@ export const QUESTION_TYPES = ['sound-identify', 'sound-select', 'sound-pitch'];
 /** The aspect slot of the card key. Sound signals do not have one. */
 export const NO_ASPECT = 'na';
 
+/** The first sentence of a meaning: the circumstance, without the signal. */
+const situationOf = signal => {
+  const first = String(signal.meaning).split(/(?<=.)s+/)[0];
+  return first || signal.meaning;
+};
+
 const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
 const shuffled = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
 
@@ -116,7 +122,10 @@ export function soundQuestionFor({ stateId, questionType }, pool = SOUND_SIGNALS
     return {
       type: 'sound-select',
       signal,
-      prompt: `${signal.meaning} Which signal do you sound?`,
+      // Only the first sentence. Several meanings go on to quote the signal
+      // itself — Rule 34(e) says it is "answered by one prolonged blast" —
+      // which would put the answer in the question.
+      prompt: `${situationOf(signal)} Which signal do you sound?`,
       options: shuffled([signal, ...wrong]).map(s => ({ id: s.id, text: describe(s) })),
       answerId: signal.id,
       explain: `${signal.rule}. ${signal.name}. ${signal.memory}`

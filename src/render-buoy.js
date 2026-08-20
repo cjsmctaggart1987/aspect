@@ -125,13 +125,13 @@ function lamp(mark, mode, motion) {
   </g>`;
 }
 
-export function renderBuoy(mark, mode = 'day', motion = true) {
+export function renderBuoy(mark, mode = 'day', motion = true, { anonymous = false } = {}) {
   const night = mode === 'night';
   // At night the paint is gone: the rhythm is what identifies her.
   const bodyOpacity = night ? 0.14 : 1;
   const water = night ? '#101922' : '#8FA8B3';
   return `<svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="${mark.name}${night ? ', as seen at night' : ''}">
+    role="img" aria-label="${anonymous ? 'An unidentified mark' : mark.name}${night ? ', as seen at night' : ''}">
     ${rhythmStrip(mark)}
     <line x1="-56" y1="52" x2="56" y2="52" stroke="${water}" stroke-width="1.5"/>
     ${lamp(mark, mode, motion)}
