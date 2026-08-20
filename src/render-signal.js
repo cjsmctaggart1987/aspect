@@ -19,6 +19,10 @@ const SOFT = '#4A626E';
 
 /** A blast is filled, a gap is not. Bell and gong are hatched to read as struck. */
 const FILL = {
+  dit: '#10222C',
+  dah: '#10222C',
+  report: '#C3006B',
+  continuous: '#10222C',
   short: '#10222C',
   prolonged: '#10222C',
   stroke: '#C3006B',
@@ -28,6 +32,10 @@ const FILL = {
 
 // Read as a mariner would say it: "two prolonged blasts", not "two prolongeds".
 const LABEL = {
+  dit: ['dit', 'dits'],
+  dah: ['dah', 'dahs'],
+  report: ['report', 'reports'],
+  continuous: ['continuous sounding', 'continuous sounding'],
   short: ['short blast', 'short blasts'],
   prolonged: ['prolonged blast', 'prolonged blasts'],
   stroke: ['stroke', 'strokes'],
@@ -35,7 +43,7 @@ const LABEL = {
   gong: ['rapid sounding of the gong', 'rapid sounding of the gong']
 };
 
-const COUNTED = new Set(['short', 'prolonged', 'stroke']);
+const COUNTED = new Set(['short', 'prolonged', 'stroke', 'dit', 'dah', 'report']);
 
 /**
  * The whole signal as one strip.
@@ -106,6 +114,54 @@ export function describe(signal) {
     // The bell and the gong are a continuous action, not a countable thing.
     return COUNTED.has(r.type) ? `${words[r.n - 1] || r.n} ${noun}` : noun;
   }).join(', ');
+}
+
+/**
+ * A signal shown as light rather than sound.
+ *
+ * Morse at sea is as often an Aldis lamp as a whistle, and a learner who only
+ * ever hears it will not read it off a bridge wing. The lamp flashes the same
+ * spans on the same timing, driven by one SMIL cycle built from the pattern.
+ *
+ * `motion` is threaded through for the same reason it is everywhere else here:
+ * prefers-reduced-motion suppresses CSS animation only, and SMIL ignores it. A
+ * still lamp is shown lit, because a lamp that never comes on says nothing.
+ */
+export function lightSignal(signal, { motion = true, width = 260, height = 90 } = {}) {
+  const total = signal.seconds;
+  const cx = width / 2, cy = 40, r = 16;
+
+  // One opacity envelope across the whole pattern: on at the start of each
+  // element, off at its end, square edges so a dit reads as a dit.
+  const times = [0];
+  const values = [0];
+  let cursor = 0;
+  for (const span of signal.pattern) {
+    const from = cursor / total, to = (cursor + span.seconds) / total;
+    if (span.type !== 'gap') {
+      times.push(from, from, to, to);
+      values.push(0, 1, 1, 0);
+    }
+    cursor += span.seconds;
+  }
+  times.push(1); values.push(0);
+
+  const anim = motion
+    ? `<animate attributeName="opacity" values="${values.join(';')}"
+         keyTimes="${times.map(t => Math.min(1, +t.toFixed(4))).join(';')}"
+         dur="${total}s" repeatCount="indefinite"/>`
+    : '';
+
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
+    class="lightsig" role="img" aria-label="${describe(signal)} shown as light">
+    <rect x="0" y="0" width="${width}" height="${height}" fill="#04070C"/>
+    <g>
+      <circle cx="${cx}" cy="${cy}" r="${r * 2.4}" fill="#FFF3D6" opacity=".13">${anim}</circle>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFF3D6">${anim}</circle>
+    </g>
+    <text x="${cx}" y="${height - 14}" text-anchor="middle" font-family="ui-monospace,monospace"
+      font-size="10" fill="#8FA8B3">${signal.code || ''}</text>
+  </svg>`;
 }
 
 /** A compact legend of what the fills mean, shown once per view rather than per card. */

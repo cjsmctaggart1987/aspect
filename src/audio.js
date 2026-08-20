@@ -135,6 +135,47 @@ function struck(at, seconds, { base, ratios, decay, strike }, nodes) {
   nodes.push(hit, hp, hg);
 }
 
+/**
+ * A Morse tone.
+ *
+ * Nothing like the whistle: a single clean sine around 600 Hz, which is where
+ * a practised ear picks a signal out of noise. What matters is the envelope.
+ * A hard-edged tone clicks at both ends, and at twelve words a minute those
+ * clicks arrive five times a second and become the thing you hear instead of
+ * the rhythm. A raised-cosine rise and fall of a few milliseconds removes them
+ * without softening the element boundaries enough to blur a dit into a dah.
+ */
+const MORSE_HZ = 600;
+const MORSE_EDGE = 0.006;
+
+function morseTone(at, seconds, nodes) {
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = MORSE_HZ;
+
+  const g = ctx.createGain();
+  const edge = Math.min(MORSE_EDGE, seconds / 3);
+  // setValueCurveAtTime gives a genuine raised cosine rather than the
+  // exponential approximation used for the whistle.
+  const steps = 16;
+  const rise = new Float32Array(steps);
+  const fall = new Float32Array(steps);
+  for (let i = 0; i < steps; i++) {
+    const c = 0.5 - 0.5 * Math.cos((Math.PI * i) / (steps - 1));
+    rise[i] = c * 0.85;
+    fall[i] = (1 - c) * 0.85;
+  }
+  g.gain.setValueAtTime(0, at);
+  g.gain.setValueCurveAtTime(rise, at, edge);
+  g.gain.setValueAtTime(0.85, at + edge);
+  g.gain.setValueCurveAtTime(fall, at + seconds - edge, edge);
+
+  osc.connect(g).connect(master);
+  osc.start(at);
+  osc.stop(at + seconds + 0.02);
+  nodes.push(osc, g);
+}
+
 const BELL = { base: 620, ratios: [[1, 0.5], [2.02, 0.3], [2.98, 0.18], [4.2, 0.1], [5.4, 0.06]], decay: 1, strike: 0.25 };
 const GONG = { base: 190, ratios: [[1, 0.5], [1.48, 0.32], [2.1, 0.22], [2.9, 0.14], [3.7, 0.09], [5.1, 0.05]], decay: 1, strike: 0.18 };
 
@@ -169,6 +210,19 @@ export async function play(signal, { lengthBand } = {}) {
     switch (span.type) {
       case 'short':
       case 'prolonged':
+        whistle(t, span.seconds, hz, nodes);
+        break;
+      case 'dit':
+      case 'dah':
+        morseTone(t, span.seconds, nodes);
+        break;
+      case 'report':
+        // A gun: a transient, not a tone. The gong body carries the boom.
+        struck(t, Math.min(2.2, span.seconds + 1.4), GONG, nodes);
+        break;
+      case 'continuous':
+        // Fog apparatus held down, which is what makes it a distress signal
+        // rather than a Rule 35 one.
         whistle(t, span.seconds, hz, nodes);
         break;
       case 'stroke':
