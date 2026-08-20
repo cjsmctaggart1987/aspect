@@ -85,6 +85,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 23(a)',
     group: 'Power-driven',
     length: 'under50',
+    hull: 'small-power',
     lights: powerSmall(),
     dayShapes: [],
     summary: 'Masthead light, sidelights, sternlight. A second masthead light is optional under 50m.',
@@ -96,6 +97,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 23(a)',
     group: 'Power-driven',
     length: '50plus',
+    hull: 'cargo',
     lights: powerLarge(),
     dayShapes: [],
     summary: 'Two masthead lights in a fore and aft line, the after one higher. Sidelights and sternlight.',
@@ -107,6 +109,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 23(c)',
     group: 'Power-driven',
     length: 'under12',
+    hull: 'small-power',
     lights: [
       allRound('white', 1, 7, 'All-round white light'),
       ...sidelights(1.5, 3, 2)
@@ -121,6 +124,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 23(c)(ii)',
     group: 'Power-driven',
     length: 'under12',
+    hull: 'small-power',
     lights: [allRound('white', 0, 5, 'All-round white light')],
     dayShapes: [],
     summary: 'All-round white light. Sidelights if practicable.',
@@ -132,6 +136,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 24(a)',
     group: 'Towing',
     length: 'under50',
+    hull: 'tug',
     lights: [
       masthead(6, 11, 'Masthead light, lower'),
       masthead(6, 15, 'Masthead light, upper'),
@@ -149,6 +154,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 24(a)(i)',
     group: 'Towing',
     length: 'under50',
+    hull: 'tug',
     lights: [
       masthead(6, 11, 'Masthead light, lower'),
       masthead(6, 15, 'Masthead light, middle'),
@@ -167,6 +173,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 24(e)',
     group: 'Towing',
     length: 'under50',
+    hull: 'barge',
     lights: [
       ...sidelights(SMALL.side[0], 4, SMALL.beam),
       stern(-9, 3)
@@ -181,6 +188,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 24(c)',
     group: 'Towing',
     length: 'under50',
+    hull: 'tug',
     lights: [
       masthead(6, 11, 'Masthead light, lower'),
       masthead(6, 15, 'Masthead light, upper'),
@@ -197,6 +205,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 25(a)',
     group: 'Sailing',
     length: 'under50',
+    hull: 'sail',
     lights: [
       ...sidelights(2, 4, 3),
       stern(-7, 3)
@@ -211,6 +220,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 25(c)',
     group: 'Sailing',
     length: 'under50',
+    hull: 'sail',
     lights: [
       ...sidelights(2, 4, 3),
       stern(-7, 3),
@@ -227,6 +237,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 25(d)',
     group: 'Sailing',
     length: 'under12',
+    hull: 'sail',
     lights: [allRound('white', 0, 3, 'White light or torch shown in time to prevent collision')],
     dayShapes: [],
     summary: 'An electric torch or lighted lantern showing a white light, exhibited in sufficient time to prevent collision.',
@@ -238,6 +249,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 25(e)',
     group: 'Sailing',
     length: 'under50',
+    hull: 'sail',
     lights: [
       masthead(4, 10),
       ...sidelights(2, 4, 3),
@@ -253,6 +265,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 26(b)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('green', 2, 15, 'All-round green, upper'),
       allRound('white', 2, 12, 'All-round white, lower'),
@@ -270,6 +283,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 26(b)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('green', 2, 15, 'All-round green, upper'),
       allRound('white', 2, 12, 'All-round white, lower')
@@ -284,6 +298,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 26(c)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('red', 2, 15, 'All-round red, upper'),
       allRound('white', 2, 12, 'All-round white, lower'),
@@ -300,6 +315,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 26(c)(ii)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('red', 2, 15, 'All-round red, upper'),
       allRound('white', 2, 12, 'All-round white, lower'),
@@ -317,6 +333,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 27(a)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 15, 'All-round red, upper'),
       allRound('red', 0, 12, 'All-round red, lower'),
@@ -333,6 +350,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 27(a)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 15, 'All-round red, upper'),
       allRound('red', 0, 12, 'All-round red, lower')
@@ -347,6 +365,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 27(b)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 18, 'All-round red, upper'),
       allRound('white', 0, 15, 'All-round white, middle'),
@@ -365,6 +384,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 27(b)(iv)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 18, 'All-round red, upper'),
       allRound('white', 0, 15, 'All-round white, middle'),
@@ -381,6 +401,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 27(d)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'dredger',
     lights: [
       allRound('red', 0, 18, 'All-round red, upper'),
       allRound('white', 0, 15, 'All-round white, middle'),
@@ -404,6 +425,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 27(f)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       masthead(6, 11),
       ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
@@ -422,6 +444,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 28',
     group: 'Restricted',
     length: '50plus',
+    hull: 'cargo',
     lights: [
       ...powerLarge(),
       allRound('red', 2, 26, 'All-round red, upper'),
@@ -438,6 +461,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 29(a)',
     group: 'Special',
     length: 'under50',
+    hull: 'pilot',
     lights: [
       allRound('white', 5, 15, 'All-round white, upper'),
       allRound('red', 5, 12, 'All-round red, lower'),
@@ -454,6 +478,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 29(a)(ii)',
     group: 'Special',
     length: 'under50',
+    hull: 'pilot',
     lights: [
       allRound('white', 5, 15, 'All-round white, upper'),
       allRound('red', 5, 12, 'All-round red, lower'),
@@ -469,6 +494,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 30(a)',
     group: 'Anchored',
     length: 'under50',
+    hull: 'small-power',
     lights: [allRound('white', 0, 9, 'All-round white anchor light')],
     dayShapes: [shape('ball', 6, 9)],
     summary: 'One all-round white light where it can best be seen. One ball forward by day.',
@@ -480,6 +506,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 30(a)',
     group: 'Anchored',
     length: '50plus',
+    hull: 'cargo',
     lights: [
       allRound('white', 20, 14, 'Forward anchor light'),
       allRound('white', -20, 7, 'After anchor light, lower')
@@ -494,6 +521,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 30(d)',
     group: 'Anchored',
     length: '50plus',
+    hull: 'cargo',
     lights: [
       allRound('white', 20, 14, 'Forward anchor light'),
       allRound('white', -20, 7, 'After anchor light, lower'),
@@ -510,6 +538,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 23(b)',
     group: 'Special',
     length: 'under50',
+    hull: 'hovercraft',
     lights: [
       ...powerSmall(),
       allRound('yellow', 4, 14, 'All-round flashing yellow', { flash: 'fast' })
@@ -524,6 +553,7 @@ export const VESSEL_STATES = [
     rule: 'Rule 23(c)',
     group: 'Special',
     length: 'under50',
+    hull: 'wig',
     lights: [
       ...powerSmall(),
       allRound('red', 4, 14, 'High intensity all-round flashing red', { flash: 'fast' })

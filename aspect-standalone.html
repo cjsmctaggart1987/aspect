@@ -2138,6 +2138,7 @@ const VESSEL_STATES = [
     rule: 'Rule 23(a)',
     group: 'Power-driven',
     length: 'under50',
+    hull: 'small-power',
     lights: powerSmall(),
     dayShapes: [],
     summary: 'Masthead light, sidelights, sternlight. A second masthead light is optional under 50m.',
@@ -2149,6 +2150,7 @@ const VESSEL_STATES = [
     rule: 'Rule 23(a)',
     group: 'Power-driven',
     length: '50plus',
+    hull: 'cargo',
     lights: powerLarge(),
     dayShapes: [],
     summary: 'Two masthead lights in a fore and aft line, the after one higher. Sidelights and sternlight.',
@@ -2160,6 +2162,7 @@ const VESSEL_STATES = [
     rule: 'Rule 23(c)',
     group: 'Power-driven',
     length: 'under12',
+    hull: 'small-power',
     lights: [
       allRound('white', 1, 7, 'All-round white light'),
       ...sidelights(1.5, 3, 2)
@@ -2174,6 +2177,7 @@ const VESSEL_STATES = [
     rule: 'Rule 23(c)(ii)',
     group: 'Power-driven',
     length: 'under12',
+    hull: 'small-power',
     lights: [allRound('white', 0, 5, 'All-round white light')],
     dayShapes: [],
     summary: 'All-round white light. Sidelights if practicable.',
@@ -2185,6 +2189,7 @@ const VESSEL_STATES = [
     rule: 'Rule 24(a)',
     group: 'Towing',
     length: 'under50',
+    hull: 'tug',
     lights: [
       masthead(6, 11, 'Masthead light, lower'),
       masthead(6, 15, 'Masthead light, upper'),
@@ -2202,6 +2207,7 @@ const VESSEL_STATES = [
     rule: 'Rule 24(a)(i)',
     group: 'Towing',
     length: 'under50',
+    hull: 'tug',
     lights: [
       masthead(6, 11, 'Masthead light, lower'),
       masthead(6, 15, 'Masthead light, middle'),
@@ -2220,6 +2226,7 @@ const VESSEL_STATES = [
     rule: 'Rule 24(e)',
     group: 'Towing',
     length: 'under50',
+    hull: 'barge',
     lights: [
       ...sidelights(SMALL.side[0], 4, SMALL.beam),
       stern(-9, 3)
@@ -2234,6 +2241,7 @@ const VESSEL_STATES = [
     rule: 'Rule 24(c)',
     group: 'Towing',
     length: 'under50',
+    hull: 'tug',
     lights: [
       masthead(6, 11, 'Masthead light, lower'),
       masthead(6, 15, 'Masthead light, upper'),
@@ -2250,6 +2258,7 @@ const VESSEL_STATES = [
     rule: 'Rule 25(a)',
     group: 'Sailing',
     length: 'under50',
+    hull: 'sail',
     lights: [
       ...sidelights(2, 4, 3),
       stern(-7, 3)
@@ -2264,6 +2273,7 @@ const VESSEL_STATES = [
     rule: 'Rule 25(c)',
     group: 'Sailing',
     length: 'under50',
+    hull: 'sail',
     lights: [
       ...sidelights(2, 4, 3),
       stern(-7, 3),
@@ -2280,6 +2290,7 @@ const VESSEL_STATES = [
     rule: 'Rule 25(d)',
     group: 'Sailing',
     length: 'under12',
+    hull: 'sail',
     lights: [allRound('white', 0, 3, 'White light or torch shown in time to prevent collision')],
     dayShapes: [],
     summary: 'An electric torch or lighted lantern showing a white light, exhibited in sufficient time to prevent collision.',
@@ -2291,6 +2302,7 @@ const VESSEL_STATES = [
     rule: 'Rule 25(e)',
     group: 'Sailing',
     length: 'under50',
+    hull: 'sail',
     lights: [
       masthead(4, 10),
       ...sidelights(2, 4, 3),
@@ -2306,6 +2318,7 @@ const VESSEL_STATES = [
     rule: 'Rule 26(b)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('green', 2, 15, 'All-round green, upper'),
       allRound('white', 2, 12, 'All-round white, lower'),
@@ -2323,6 +2336,7 @@ const VESSEL_STATES = [
     rule: 'Rule 26(b)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('green', 2, 15, 'All-round green, upper'),
       allRound('white', 2, 12, 'All-round white, lower')
@@ -2337,6 +2351,7 @@ const VESSEL_STATES = [
     rule: 'Rule 26(c)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('red', 2, 15, 'All-round red, upper'),
       allRound('white', 2, 12, 'All-round white, lower'),
@@ -2353,6 +2368,7 @@ const VESSEL_STATES = [
     rule: 'Rule 26(c)(ii)',
     group: 'Fishing',
     length: 'under50',
+    hull: 'fishing',
     lights: [
       allRound('red', 2, 15, 'All-round red, upper'),
       allRound('white', 2, 12, 'All-round white, lower'),
@@ -2370,6 +2386,7 @@ const VESSEL_STATES = [
     rule: 'Rule 27(a)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 15, 'All-round red, upper'),
       allRound('red', 0, 12, 'All-round red, lower'),
@@ -2386,6 +2403,7 @@ const VESSEL_STATES = [
     rule: 'Rule 27(a)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 15, 'All-round red, upper'),
       allRound('red', 0, 12, 'All-round red, lower')
@@ -2400,6 +2418,7 @@ const VESSEL_STATES = [
     rule: 'Rule 27(b)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 18, 'All-round red, upper'),
       allRound('white', 0, 15, 'All-round white, middle'),
@@ -2418,6 +2437,7 @@ const VESSEL_STATES = [
     rule: 'Rule 27(b)(iv)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       allRound('red', 0, 18, 'All-round red, upper'),
       allRound('white', 0, 15, 'All-round white, middle'),
@@ -2434,6 +2454,7 @@ const VESSEL_STATES = [
     rule: 'Rule 27(d)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'dredger',
     lights: [
       allRound('red', 0, 18, 'All-round red, upper'),
       allRound('white', 0, 15, 'All-round white, middle'),
@@ -2457,6 +2478,7 @@ const VESSEL_STATES = [
     rule: 'Rule 27(f)',
     group: 'Restricted',
     length: 'under50',
+    hull: 'small-power',
     lights: [
       masthead(6, 11),
       ...sidelights(SMALL.side[0], SMALL.side[1], SMALL.beam),
@@ -2475,6 +2497,7 @@ const VESSEL_STATES = [
     rule: 'Rule 28',
     group: 'Restricted',
     length: '50plus',
+    hull: 'cargo',
     lights: [
       ...powerLarge(),
       allRound('red', 2, 26, 'All-round red, upper'),
@@ -2491,6 +2514,7 @@ const VESSEL_STATES = [
     rule: 'Rule 29(a)',
     group: 'Special',
     length: 'under50',
+    hull: 'pilot',
     lights: [
       allRound('white', 5, 15, 'All-round white, upper'),
       allRound('red', 5, 12, 'All-round red, lower'),
@@ -2507,6 +2531,7 @@ const VESSEL_STATES = [
     rule: 'Rule 29(a)(ii)',
     group: 'Special',
     length: 'under50',
+    hull: 'pilot',
     lights: [
       allRound('white', 5, 15, 'All-round white, upper'),
       allRound('red', 5, 12, 'All-round red, lower'),
@@ -2522,6 +2547,7 @@ const VESSEL_STATES = [
     rule: 'Rule 30(a)',
     group: 'Anchored',
     length: 'under50',
+    hull: 'small-power',
     lights: [allRound('white', 0, 9, 'All-round white anchor light')],
     dayShapes: [shape('ball', 6, 9)],
     summary: 'One all-round white light where it can best be seen. One ball forward by day.',
@@ -2533,6 +2559,7 @@ const VESSEL_STATES = [
     rule: 'Rule 30(a)',
     group: 'Anchored',
     length: '50plus',
+    hull: 'cargo',
     lights: [
       allRound('white', 20, 14, 'Forward anchor light'),
       allRound('white', -20, 7, 'After anchor light, lower')
@@ -2547,6 +2574,7 @@ const VESSEL_STATES = [
     rule: 'Rule 30(d)',
     group: 'Anchored',
     length: '50plus',
+    hull: 'cargo',
     lights: [
       allRound('white', 20, 14, 'Forward anchor light'),
       allRound('white', -20, 7, 'After anchor light, lower'),
@@ -2563,6 +2591,7 @@ const VESSEL_STATES = [
     rule: 'Rule 23(b)',
     group: 'Special',
     length: 'under50',
+    hull: 'hovercraft',
     lights: [
       ...powerSmall(),
       allRound('yellow', 4, 14, 'All-round flashing yellow', { flash: 'fast' })
@@ -2577,6 +2606,7 @@ const VESSEL_STATES = [
     rule: 'Rule 23(c)',
     group: 'Special',
     length: 'under50',
+    hull: 'wig',
     lights: [
       ...powerSmall(),
       allRound('red', 4, 14, 'High intensity all-round flashing red', { flash: 'fast' })
@@ -3056,41 +3086,191 @@ function hullExtent(state, aspect, k) {
   return { left: Math.min(...xs), right: Math.max(...xs), deck: -d.free * k };
 }
 
-/** Hull, superstructure and masts. Drawn in both day and night. */
+/**
+ * Vessel profiles.
+ *
+ * Each hull type is a sheer style plus a handful of structures. Positions are
+ * given as `u`, a fraction of the half length, so a profile fits a 32 m ship
+ * and a 5 m one without a second table; `dy` and heights are metres.
+ *
+ * Nothing here is drawn in a fixed pose. Every structure is a box or a plate in
+ * ship coordinates, put through the same project() the lights use, so a
+ * profile foreshortens as she turns bow-on and a sail goes edge-on head-on
+ * because that is what actually happens. The silhouette can never disagree
+ * with the lights standing on it.
+ */
+const HULLS = {
+  cargo: {
+    sheer: 'box',
+    house: { u: -0.62, du: 0.16, dy: 0.85, h: 6.5 },
+    funnel: { u: -0.80, du: 0.05, dy: 0.35, h: 4.5 },
+    masts: [{ u: 0.52, h: 11 }, { u: -0.20, h: 8 }]
+  },
+  'small-power': {
+    sheer: 'work',
+    house: { u: -0.05, du: 0.22, dy: 0.7, h: 2.6 },
+    masts: [{ u: 0.0, h: 4.5 }]
+  },
+  sail: {
+    sheer: 'fine',
+    masts: [{ u: 0.10, h: 15 }],
+    sail: { u: 0.10, head: 14.5, clewU: -0.55, boom: 2.2 }
+  },
+  fishing: {
+    sheer: 'work',
+    house: { u: -0.42, du: 0.20, dy: 0.75, h: 3.4 },
+    masts: [{ u: -0.18, h: 9 }],
+    gantry: { u: -0.88, du: 0.10, h: 5.5 }
+  },
+  tug: {
+    sheer: 'work',
+    house: { u: 0.10, du: 0.22, dy: 0.8, h: 3.8 },
+    funnel: { u: -0.22, du: 0.07, dy: 0.4, h: 2.8 },
+    masts: [{ u: 0.22, h: 8 }]
+  },
+  barge: {
+    sheer: 'box'
+  },
+  pilot: {
+    sheer: 'work',
+    house: { u: 0.02, du: 0.26, dy: 0.8, h: 3.0 },
+    masts: [{ u: -0.14, h: 7 }]
+  },
+  dredger: {
+    sheer: 'box',
+    house: { u: -0.62, du: 0.16, dy: 0.8, h: 4.2 },
+    gantry: { u: 0.42, du: 0.14, h: 9 }
+  },
+  hovercraft: {
+    sheer: 'skirt',
+    house: { u: 0.05, du: 0.30, dy: 0.85, h: 3.0 },
+    fans: [{ u: -0.62, du: 0.10, h: 4.8 }]
+  },
+  wig: {
+    sheer: 'fine',
+    house: { u: 0.22, du: 0.16, dy: 0.6, h: 2.2 },
+    wing: { u: -0.10, du: 0.26, dy: 2.2, h: 2.2 },
+    tail: { u: -0.86, du: 0.07, h: 5.5 }
+  }
+};
+
+const hullOf = s => HULLS[s.hull] || HULLS['small-power'];
+
+/**
+ * Screen extent of a box in ship coordinates. All four corners go through the
+ * projection, so the box shows its length broadside and its beam head-on
+ * rather than collapsing to nothing.
+ */
+function boxSpan(aspect, k, long, u, du, dy) {
+  const xs = [];
+  for (const ux of [u - du, u + du]) {
+    for (const y of [-dy, dy]) {
+      xs.push(project({ x: ux * long, y, z: 0 }, aspect).sx * k);
+    }
+  }
+  return { a: Math.min(...xs), b: Math.max(...xs) };
+}
+
+/** Screen x of a point on the centreline at fore-aft station u. */
+const stationX = (aspect, k, long, u) => project({ x: u * long, y: 0, z: 0 }, aspect).sx * k;
+
+function hullPath(sheer, left, right, deck, fill) {
+  const w = Math.max(12, right - left);
+  const n = v => v.toFixed(1);
+  // Deck line always runs left to right at deck height; only the underbody
+  // and the ends change with the sheer style.
+  switch (sheer) {
+    case 'box':      // cargo, barge, dredger: full ends, flat bottom
+      return `<path d="M ${n(left)} ${n(deck)} L ${n(right)} ${n(deck)}
+        L ${n(right - w * 0.02)} ${n(-deck * 0.5)} L ${n(left + w * 0.02)} ${n(-deck * 0.5)} Z" fill="${fill}"/>`;
+    case 'fine':     // sail, WIG: fine ends, deep curve
+      return `<path d="M ${n(left)} ${n(deck)} L ${n(right)} ${n(deck)}
+        Q ${n(left + w / 2)} ${n(-deck * 1.15)} ${n(left)} ${n(deck)} Z" fill="${fill}"/>`;
+    case 'skirt':    // hovercraft: sits on a wide flat skirt
+      return `<path d="M ${n(left)} ${n(deck)} L ${n(right)} ${n(deck)}
+        L ${n(right)} ${n(-deck * 0.35)} L ${n(right - w * 0.06)} ${n(-deck * 0.7)}
+        L ${n(left + w * 0.06)} ${n(-deck * 0.7)} L ${n(left)} ${n(-deck * 0.35)} Z" fill="${fill}"/>`;
+    default:         // work: everything else
+      return `<path d="M ${n(left)} ${n(deck)} L ${n(right)} ${n(deck)}
+        L ${n(right - w * 0.06)} ${n(deck * 0.1)}
+        Q ${n(left + w / 2)} ${n(-deck * 0.55)} ${n(left + w * 0.06)} ${n(deck * 0.1)} Z" fill="${fill}"/>`;
+  }
+}
+
+/** Hull, structures and masts. Drawn in both day and night. */
 function silhouette(state, aspect, k, mode, lights, shapes) {
   const { left, right, deck } = hullExtent(state, aspect, k);
   const d = dims(state);
+  const h = hullOf(state);
   const fill = mode === 'day' ? '#16242C' : '#0D141C';
   const line = mode === 'day' ? '#16242C' : '#111A23';
-  const w = Math.max(12, right - left);
+  const n = v => v.toFixed(1);
+  const L = d.long;
 
-  const hull = `<path d="
-    M ${left.toFixed(1)} ${deck.toFixed(1)}
-    L ${right.toFixed(1)} ${deck.toFixed(1)}
-    L ${(right - w * 0.06).toFixed(1)} ${(deck * 0.1).toFixed(1)}
-    Q ${(left + w / 2).toFixed(1)} ${(-deck * 0.55).toFixed(1)} ${(left + w * 0.06).toFixed(1)} ${(deck * 0.1).toFixed(1)}
-    Z" fill="${fill}"/>`;
+  const hull = hullPath(h.sheer, left, right, deck, fill);
 
-  const houseW = Math.max(14, w * d.house);
-  const houseH = Math.max(9, d.free * k * 1.25);
-  const anchorX = lights.length
-    ? lights.reduce((a, l) => a + l.sx * k, 0) / lights.length
-    : (left + right) / 2;
-  const hx = Math.max(left + 2, Math.min(right - houseW - 2, anchorX - houseW / 2));
-  const house = w > 26
-    ? `<rect x="${hx.toFixed(1)}" y="${(deck - houseH).toFixed(1)}" width="${houseW.toFixed(1)}"
-         height="${houseH.toFixed(1)}" fill="${fill}"/>` : '';
+  // A box structure standing on deck, e.g. the deckhouse or a funnel.
+  const box = (f, minW = 3) => {
+    const { a, b } = boxSpan(aspect, k, L, f.u, f.du, f.dy);
+    const w = Math.max(minW, b - a);
+    const top = deck - f.h * k;
+    return `<rect x="${n(a)}" y="${n(top)}" width="${n(w)}" height="${n(deck - top)}" fill="${fill}"/>`;
+  };
 
-  // A mast under every raised light or shape, so nothing floats.
+  const parts = [];
+  if (h.house) parts.push(box(h.house, 4));
+  if (h.funnel) parts.push(box(h.funnel, 3));
+  if (h.wing) parts.push(box(h.wing, 4));
+
+  // Fixed masts belonging to the vessel, distinct from the stalks that keep
+  // lights from floating.
+  for (const m of h.masts || []) {
+    const x = stationX(aspect, k, L, m.u);
+    parts.push(`<line x1="${n(x)}" y1="${n(deck)}" x2="${n(x)}" y2="${n(deck - m.h * k)}"
+      stroke="${line}" stroke-width="1.6"/>`);
+  }
+
+  // Gantry: two legs and a head, over the working end.
+  if (h.gantry) {
+    const { a, b } = boxSpan(aspect, k, L, h.gantry.u, h.gantry.du, 0.8);
+    const top = deck - h.gantry.h * k;
+    parts.push(`<path d="M ${n(a)} ${n(deck)} L ${n(a)} ${n(top)} L ${n(b)} ${n(top)} L ${n(b)} ${n(deck)}"
+      fill="none" stroke="${line}" stroke-width="1.8"/>`);
+  }
+
+  // Hovercraft lift fans: a duct standing proud aft.
+  for (const f of h.fans || []) parts.push(box({ ...f, dy: 0.6 }, 4));
+
+  // WIG tailplane.
+  if (h.tail) {
+    const x = stationX(aspect, k, L, h.tail.u);
+    const { a, b } = boxSpan(aspect, k, L, h.tail.u, h.tail.du, 1.4);
+    const top = deck - h.tail.h * k;
+    parts.push(`<line x1="${n(x)}" y1="${n(deck)}" x2="${n(x)}" y2="${n(top)}" stroke="${line}" stroke-width="1.8"/>`);
+    parts.push(`<rect x="${n(a)}" y="${n(top)}" width="${n(Math.max(4, b - a))}" height="2.4" fill="${fill}"/>`);
+  }
+
+  // Sail: a plate in the fore and aft plane, so it goes edge-on head-on.
+  if (h.sail) {
+    const tack = stationX(aspect, k, L, h.sail.u);
+    const clew = stationX(aspect, k, L, h.sail.clewU);
+    const head = deck - h.sail.head * k;
+    const boom = deck - h.sail.boom * k;
+    parts.push(`<path d="M ${n(tack)} ${n(head)} L ${n(clew)} ${n(boom)} L ${n(tack)} ${n(boom)} Z" fill="${fill}"/>`);
+    parts.push(`<line x1="${n(tack)}" y1="${n(boom)}" x2="${n(clew)}" y2="${n(boom)}" stroke="${line}" stroke-width="1.6"/>`);
+  }
+
+  // A stalk under every raised light or shape, so nothing floats. This is a
+  // correctness property, not decoration: it must hold whatever the profile.
   const pts = [...lights, ...shapes];
   const cols = [...new Set(pts.filter(p => -p.sy * k < deck - 3).map(p => (p.sx * k).toFixed(1)))];
   const stalks = cols.map(x => {
     const top = Math.min(...pts.filter(p => (p.sx * k).toFixed(1) === x).map(p => -p.sy * k));
-    return `<line x1="${x}" y1="${(deck - houseH * 0.35).toFixed(1)}" x2="${x}" y2="${(top + 3).toFixed(1)}"
+    return `<line x1="${x}" y1="${n(deck)}" x2="${x}" y2="${n(top + 3)}"
       stroke="${line}" stroke-width="1.6"/>`;
   }).join('');
 
-  return `${stalks}${hull}${house}`;
+  return `${stalks}${hull}${parts.join('')}`;
 }
 
 /**
