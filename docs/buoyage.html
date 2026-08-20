@@ -1,0 +1,832 @@
+<!doctype html><meta charset="utf-8"><title>Buoyage</title>
+<style>
+body{font:14px/1.4 system-ui;margin:0;padding:24px;background:#E7EEF0;color:#10222C}
+h1{font-size:20px;letter-spacing:.06em;text-transform:uppercase}
+section{margin:0 0 18px;border-top:1px solid rgba(16,34,44,.2);padding-top:8px}
+h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 8px;color:#C3006B}
+h2 em{color:#4A626E;letter-spacing:0;text-transform:none}
+.row{display:grid;grid-template-columns:repeat(2,220px);gap:12px}
+figure{margin:0;border:1px solid rgba(16,34,44,.25);background:rgba(255,255,255,.55);padding:10px}
+figure.night{background:#070C13;border-color:#22323C}
+figure.night figcaption b{color:#E7EEF0}
+figure.night figcaption span{color:#93A6B1}
+figcaption{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+figcaption b{font-size:13px;font-weight:500}
+figcaption span{font:10px ui-monospace,monospace;color:#4A626E}
+svg{display:block;width:100%;height:184px}
+</style>
+<h1>Buoyage — rhythm strips, day and night</h1><section><h2>lat-port-a <em>example rhythm</em></h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Port hand mark, Region A">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#D0231C" opacity=".28"/>
+    <g opacity="1"><rect x="-11" y="-38" width="22" height="22" fill="#D0231C"/><defs><clipPath id="clip-lat-port-a"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-port-a)"><rect x="-27" y="-14" width="54" height="70" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Port hand mark, Region A</b><span>red · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Port hand mark, Region A, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#D0231C" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#D0231C"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><rect x="-11" y="-38" width="22" height="22" fill="#D0231C"/><defs><clipPath id="clip-lat-port-a"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-port-a)"><rect x="-27" y="-14" width="54" height="70" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Port hand mark, Region A</b><span>red · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure></div></section><section><h2>lat-stbd-a <em>example rhythm</em></h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Starboard hand mark, Region A">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#0E9E4F" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#0E9E4F"/><defs><clipPath id="clip-lat-stbd-a"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-stbd-a)"><rect x="-27" y="-14" width="54" height="70" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Starboard hand mark, Region A</b><span>green · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Starboard hand mark, Region A, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#0E9E4F" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#0E9E4F"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#0E9E4F"/><defs><clipPath id="clip-lat-stbd-a"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-stbd-a)"><rect x="-27" y="-14" width="54" height="70" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Starboard hand mark, Region A</b><span>green · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure></div></section><section><h2>lat-port-b <em>example rhythm</em></h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Port hand mark, Region B">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#0E9E4F" opacity=".28"/>
+    <g opacity="1"><rect x="-11" y="-38" width="22" height="22" fill="#0E9E4F"/><defs><clipPath id="clip-lat-port-b"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-port-b)"><rect x="-27" y="-14" width="54" height="70" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Port hand mark, Region B</b><span>green · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Port hand mark, Region B, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#0E9E4F" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#0E9E4F"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><rect x="-11" y="-38" width="22" height="22" fill="#0E9E4F"/><defs><clipPath id="clip-lat-port-b"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-port-b)"><rect x="-27" y="-14" width="54" height="70" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Port hand mark, Region B</b><span>green · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure></div></section><section><h2>lat-stbd-b <em>example rhythm</em></h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Starboard hand mark, Region B">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#D0231C" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#D0231C"/><defs><clipPath id="clip-lat-stbd-b"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-stbd-b)"><rect x="-27" y="-14" width="54" height="70" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Starboard hand mark, Region B</b><span>red · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Starboard hand mark, Region B, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="19.3" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#D0231C" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#D0231C"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1667;0.1667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#D0231C"/><defs><clipPath id="clip-lat-stbd-b"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-lat-stbd-b)"><rect x="-27" y="-14" width="54" height="70" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Starboard hand mark, Region B</b><span>red · Any, other than the composite group flashing (2+1)</span></figcaption>
+</figure></div></section><section><h2>pref-stbd-a</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to starboard, Region A">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#D0231C" opacity=".28"/>
+    <g opacity="1"><rect x="-11" y="-38" width="22" height="22" fill="#D0231C"/><defs><clipPath id="clip-pref-stbd-a"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-stbd-a)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to starboard, Region A</b><span>red · Fl (2+1) R</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to starboard, Region A, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#D0231C" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#D0231C"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><rect x="-11" y="-38" width="22" height="22" fill="#D0231C"/><defs><clipPath id="clip-pref-stbd-a"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-stbd-a)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to starboard, Region A</b><span>red · Fl (2+1) R</span></figcaption>
+</figure></div></section><section><h2>pref-port-a</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to port, Region A">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#0E9E4F" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#0E9E4F"/><defs><clipPath id="clip-pref-port-a"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-port-a)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to port, Region A</b><span>green · Fl (2+1) G</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to port, Region A, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#0E9E4F" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#0E9E4F"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#0E9E4F"/><defs><clipPath id="clip-pref-port-a"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-port-a)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to port, Region A</b><span>green · Fl (2+1) G</span></figcaption>
+</figure></div></section><section><h2>pref-stbd-b</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to starboard, Region B">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#0E9E4F" opacity=".28"/>
+    <g opacity="1"><rect x="-11" y="-38" width="22" height="22" fill="#0E9E4F"/><defs><clipPath id="clip-pref-stbd-b"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-stbd-b)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to starboard, Region B</b><span>green · Fl (2+1) G</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to starboard, Region B, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#0E9E4F"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#0E9E4F" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#0E9E4F"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><rect x="-11" y="-38" width="22" height="22" fill="#0E9E4F"/><defs><clipPath id="clip-pref-stbd-b"><rect x="-23" y="-10" width="46" height="62" rx="2"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-stbd-b)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#0E9E4F"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><rect x="-23" y="-10" width="46" height="62" rx="2"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to starboard, Region B</b><span>green · Fl (2+1) G</span></figcaption>
+</figure></div></section><section><h2>pref-port-b</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to port, Region B">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#D0231C" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#D0231C"/><defs><clipPath id="clip-pref-port-b"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-port-b)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to port, Region B</b><span>red · Fl (2+1) R</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Preferred channel to port, Region B, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="-34.8" y="-112" width="9.7" height="10"
+      fill="#D0231C"/><rect x="0.0" y="-112" width="9.7" height="10"
+      fill="#D0231C"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">6s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#D0231C" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#D0231C"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0833;0.0833;0.2000;0.2000;0.2833;0.2833;0.5000;0.5000;0.5833;0.5833;1.0000"
+         dur="6s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -40 L 12 -18 L -12 -18 Z" fill="#D0231C"/><defs><clipPath id="clip-pref-port-b"><path d="M 0 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-pref-port-b)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#0E9E4F"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#D0231C"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M 0 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Preferred channel to port, Region B</b><span>red · Fl (2+1) R</span></figcaption>
+</figure></div></section><section><h2>card-n</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="North cardinal mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="-38.7" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="-19.3" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="0.0" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="19.3" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="38.7" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -38 L 11 -18 L -11 -18 Z" fill="#141A1E"/>
+      <path d="M 0 -60 L 11 -40 L -11 -40 Z" fill="#141A1E"/><defs><clipPath id="clip-card-n"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-n)"><rect x="-27" y="-14" width="54" height="35" fill="#141A1E"/><rect x="-27" y="21" width="54" height="35" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>North cardinal mark</b><span>white · VQ or Q, continuous</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="North cardinal mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="-38.7" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="-19.3" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="0.0" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="19.3" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/><rect x="38.7" y="-112" width="7.7" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0667;0.0667;0.1667;0.1667;0.2333;0.2333;0.3333;0.3333;0.4000;0.4000;0.5000;0.5000;0.5667;0.5667;0.6667;0.6667;0.7333;0.7333;0.8333;0.8333;0.9000;0.9000;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0667;0.0667;0.1667;0.1667;0.2333;0.2333;0.3333;0.3333;0.4000;0.4000;0.5000;0.5000;0.5667;0.5667;0.6667;0.6667;0.7333;0.7333;0.8333;0.8333;0.9000;0.9000;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -38 L 11 -18 L -11 -18 Z" fill="#141A1E"/>
+      <path d="M 0 -60 L 11 -40 L -11 -40 Z" fill="#141A1E"/><defs><clipPath id="clip-card-n"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-n)"><rect x="-27" y="-14" width="54" height="35" fill="#141A1E"/><rect x="-27" y="21" width="54" height="35" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>North cardinal mark</b><span>white · VQ or Q, continuous</span></figcaption>
+</figure></div></section><section><h2>card-e</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="East cardinal mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="4.6" height="10"
+      fill="#F6F4EE"/><rect x="-46.4" y="-112" width="4.6" height="10"
+      fill="#F6F4EE"/><rect x="-34.8" y="-112" width="4.6" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">5s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -60 L 11 -39 L -11 -39 Z" fill="#141A1E"/>
+      <path d="M 0 -18 L 11 -39 L -11 -39 Z" fill="#141A1E"/><defs><clipPath id="clip-card-e"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-e)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#141A1E"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#F2C200"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#141A1E"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>East cardinal mark</b><span>white · VQ (3) 5s or Q (3) 10s</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="East cardinal mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="4.6" height="10"
+      fill="#F6F4EE"/><rect x="-46.4" y="-112" width="4.6" height="10"
+      fill="#F6F4EE"/><rect x="-34.8" y="-112" width="4.6" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">5s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0400;0.0400;0.1000;0.1000;0.1400;0.1400;0.2000;0.2000;0.2400;0.2400;1.0000"
+         dur="5s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0400;0.0400;0.1000;0.1000;0.1400;0.1400;0.2000;0.2000;0.2400;0.2400;1.0000"
+         dur="5s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -60 L 11 -39 L -11 -39 Z" fill="#141A1E"/>
+      <path d="M 0 -18 L 11 -39 L -11 -39 Z" fill="#141A1E"/><defs><clipPath id="clip-card-e"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-e)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#141A1E"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#F2C200"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#141A1E"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>East cardinal mark</b><span>white · VQ (3) 5s or Q (3) 10s</span></figcaption>
+</figure></div></section><section><h2>card-s</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="South cardinal mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-52.2" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-46.4" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-40.6" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-34.8" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-29.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-18.6" y="-112" width="23.2" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">10s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -18 L 11 -38 L -11 -38 Z" fill="#141A1E"/>
+      <path d="M 0 -40 L 11 -60 L -11 -60 Z" fill="#141A1E"/><defs><clipPath id="clip-card-s"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-s)"><rect x="-27" y="-14" width="54" height="35" fill="#F2C200"/><rect x="-27" y="21" width="54" height="35" fill="#141A1E"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>South cardinal mark</b><span>white · VQ (6) + LFl 10s or Q (6) + LFl 15s</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="South cardinal mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-52.2" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-46.4" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-40.6" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-34.8" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-29.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-18.6" y="-112" width="23.2" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">10s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0200;0.0200;0.0500;0.0500;0.0700;0.0700;0.1000;0.1000;0.1200;0.1200;0.1500;0.1500;0.1700;0.1700;0.2000;0.2000;0.2200;0.2200;0.2500;0.2500;0.2700;0.2700;0.3400;0.3400;0.5400;0.5400;1.0000"
+         dur="10s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0200;0.0200;0.0500;0.0500;0.0700;0.0700;0.1000;0.1000;0.1200;0.1200;0.1500;0.1500;0.1700;0.1700;0.2000;0.2000;0.2200;0.2200;0.2500;0.2500;0.2700;0.2700;0.3400;0.3400;0.5400;0.5400;1.0000"
+         dur="10s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -18 L 11 -38 L -11 -38 Z" fill="#141A1E"/>
+      <path d="M 0 -40 L 11 -60 L -11 -60 Z" fill="#141A1E"/><defs><clipPath id="clip-card-s"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-s)"><rect x="-27" y="-14" width="54" height="35" fill="#F2C200"/><rect x="-27" y="21" width="54" height="35" fill="#141A1E"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>South cardinal mark</b><span>white · VQ (6) + LFl 10s or Q (6) + LFl 15s</span></figcaption>
+</figure></div></section><section><h2>card-w</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="West cardinal mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-52.2" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-46.4" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-40.6" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-34.8" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-29.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-23.2" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-17.4" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-11.6" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">10s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><path d="M 0 -39 L 11 -60 L -11 -60 Z" fill="#141A1E"/>
+      <path d="M 0 -39 L 11 -18 L -11 -18 Z" fill="#141A1E"/><defs><clipPath id="clip-card-w"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-w)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#F2C200"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#141A1E"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>West cardinal mark</b><span>white · VQ (9) 10s or Q (9) 15s</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="West cardinal mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-52.2" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-46.4" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-40.6" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-34.8" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-29.0" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-23.2" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-17.4" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/><rect x="-11.6" y="-112" width="2.3" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">10s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0200;0.0200;0.0500;0.0500;0.0700;0.0700;0.1000;0.1000;0.1200;0.1200;0.1500;0.1500;0.1700;0.1700;0.2000;0.2000;0.2200;0.2200;0.2500;0.2500;0.2700;0.2700;0.3000;0.3000;0.3200;0.3200;0.3500;0.3500;0.3700;0.3700;0.4000;0.4000;0.4200;0.4200;1.0000"
+         dur="10s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.0200;0.0200;0.0500;0.0500;0.0700;0.0700;0.1000;0.1000;0.1200;0.1200;0.1500;0.1500;0.1700;0.1700;0.2000;0.2000;0.2200;0.2200;0.2500;0.2500;0.2700;0.2700;0.3000;0.3000;0.3200;0.3200;0.3500;0.3500;0.3700;0.3700;0.4000;0.4000;0.4200;0.4200;1.0000"
+         dur="10s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M 0 -39 L 11 -60 L -11 -60 Z" fill="#141A1E"/>
+      <path d="M 0 -39 L 11 -18 L -11 -18 Z" fill="#141A1E"/><defs><clipPath id="clip-card-w"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-card-w)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#F2C200"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#141A1E"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>West cardinal mark</b><span>white · VQ (9) 10s or Q (9) 15s</span></figcaption>
+</figure></div></section><section><h2>isolated</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Isolated danger mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="11.6" height="10"
+      fill="#F6F4EE"/><rect x="-30.2" y="-112" width="11.6" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">5s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><circle cx="0" cy="-28" r="9" fill="#141A1E"/>
+      <circle cx="0" cy="-48" r="9" fill="#141A1E"/><defs><clipPath id="clip-isolated"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-isolated)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#141A1E"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#141A1E"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Isolated danger mark</b><span>white · Fl (2)</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Isolated danger mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="11.6" height="10"
+      fill="#F6F4EE"/><rect x="-30.2" y="-112" width="11.6" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">5s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1000;0.1000;0.2400;0.2400;0.3400;0.3400;1.0000"
+         dur="5s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1000;0.1000;0.2400;0.2400;0.3400;0.3400;1.0000"
+         dur="5s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><circle cx="0" cy="-28" r="9" fill="#141A1E"/>
+      <circle cx="0" cy="-48" r="9" fill="#141A1E"/><defs><clipPath id="clip-isolated"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-isolated)"><rect x="-27" y="-14" width="54" height="23.333333333333332" fill="#141A1E"/><rect x="-27" y="9.333333333333332" width="54" height="23.333333333333332" fill="#D0231C"/><rect x="-27" y="32.666666666666664" width="54" height="23.333333333333332" fill="#141A1E"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Isolated danger mark</b><span>white · Fl (2)</span></figcaption>
+</figure></div></section><section><h2>safe-water</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Safe water mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="58.0" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">4s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><circle cx="0" cy="-29" r="12" fill="#D0231C"/><defs><clipPath id="clip-safe-water"><circle cx="0" cy="21" r="25"/></clipPath></defs>
+    <g clip-path="url(#clip-safe-water)"><rect x="-27" y="-14" width="9" height="70" fill="#D0231C"/><rect x="-18" y="-14" width="9" height="70" fill="#F6F4EE"/><rect x="-9" y="-14" width="9" height="70" fill="#D0231C"/><rect x="0" y="-14" width="9" height="70" fill="#F6F4EE"/><rect x="9" y="-14" width="9" height="70" fill="#D0231C"/><rect x="18" y="-14" width="9" height="70" fill="#F6F4EE"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><circle cx="0" cy="21" r="25"/></g></g>
+  </svg>
+  <figcaption><b>Safe water mark</b><span>white · Iso, Occ, LFl 10s or Mo (A)</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Safe water mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="58.0" height="10"
+      fill="#F6F4EE"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">4s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.5000;0.5000;1.0000"
+         dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.5000;0.5000;1.0000"
+         dur="4s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><circle cx="0" cy="-29" r="12" fill="#D0231C"/><defs><clipPath id="clip-safe-water"><circle cx="0" cy="21" r="25"/></clipPath></defs>
+    <g clip-path="url(#clip-safe-water)"><rect x="-27" y="-14" width="9" height="70" fill="#D0231C"/><rect x="-18" y="-14" width="9" height="70" fill="#F6F4EE"/><rect x="-9" y="-14" width="9" height="70" fill="#D0231C"/><rect x="0" y="-14" width="9" height="70" fill="#F6F4EE"/><rect x="9" y="-14" width="9" height="70" fill="#D0231C"/><rect x="18" y="-14" width="9" height="70" fill="#F6F4EE"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><circle cx="0" cy="21" r="25"/></g></g>
+  </svg>
+  <figcaption><b>Safe water mark</b><span>white · Iso, Occ, LFl 10s or Mo (A)</span></figcaption>
+</figure></div></section><section><h2>special <em>example rhythm</em></h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Special mark">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="14.5" height="10"
+      fill="#F2C200"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 4s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F2C200" opacity=".28"/>
+    <g opacity="1"><path d="M -12 -42 L 0 -31 L 12 -42 L 5 -30
+      L 12 -18 L 0 -29 L -12 -18 L -5 -30 Z" fill="#F2C200"/><defs><clipPath id="clip-special"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-special)"><rect x="-27" y="-14" width="54" height="70" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Special mark</b><span>yellow · Any rhythm not used for white lights</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Special mark, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="14.5" height="10"
+      fill="#F2C200"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">example · 4s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F2C200" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1250;0.1250;1.0000"
+         dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F2C200"><animate attributeName="opacity" values="0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.1250;0.1250;1.0000"
+         dur="4s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M -12 -42 L 0 -31 L 12 -42 L 5 -30
+      L 12 -18 L 0 -29 L -12 -18 L -5 -30 Z" fill="#F2C200"/><defs><clipPath id="clip-special"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-special)"><rect x="-27" y="-14" width="54" height="70" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Special mark</b><span>yellow · Any rhythm not used for white lights</span></figcaption>
+</figure></div></section><section><h2>ewmb</h2>
+   <div class="row"><figure class="day">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Emergency wreck marking buoy">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="54.1" height="10"
+      fill="#1B5FBF"/><rect x="0.0" y="-112" width="54.1" height="10"
+      fill="#F2C200"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
+    <circle cx="0" cy="-74" r="3" fill="#F6F4EE" opacity=".28"/>
+    <g opacity="1"><path d="M -12 -42 L 0 -31 L 12 -42 L 5 -30
+      L 12 -18 L 0 -29 L -12 -18 L -5 -30 Z" fill="#F2C200"/><defs><clipPath id="clip-ewmb"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-ewmb)"><rect x="-27" y="-14" width="9" height="70" fill="#1B5FBF"/><rect x="-18" y="-14" width="9" height="70" fill="#F2C200"/><rect x="-9" y="-14" width="9" height="70" fill="#1B5FBF"/><rect x="0" y="-14" width="9" height="70" fill="#F2C200"/><rect x="9" y="-14" width="9" height="70" fill="#1B5FBF"/><rect x="18" y="-14" width="9" height="70" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Emergency wreck marking buoy</b><span>blue and yellow · Al Oc Bu Y 3s</span></figcaption>
+</figure><figure class="night">
+  <svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Emergency wreck marking buoy, as seen at night">
+    <g>
+    <rect x="-58" y="-112" width="116" height="10" fill="#0B1116" opacity=".10"/>
+    <rect x="-58.0" y="-112" width="54.1" height="10"
+      fill="#1B5FBF"/><rect x="0.0" y="-112" width="54.1" height="10"
+      fill="#F2C200"/>
+    <rect x="-58" y="-112" width="116" height="10" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="58" y="-116" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">3s</text>
+  </g>
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="#101922" stroke-width="1.5"/>
+    <g>
+    <circle cx="0" cy="-74" r="13" fill="#F6F4EE" opacity=".16"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.4667;0.4667;0.5000;0.5000;0.9667;0.9667;1.0000"
+         dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="0" cy="-74" r="4" fill="#F6F4EE"><animate attributeName="opacity" values="0;0;1;1;0;0;1;1;0;0"
+         keyTimes="0.0000;0.0000;0.0000;0.4667;0.4667;0.5000;0.5000;0.9667;0.9667;1.0000"
+         dur="3s" repeatCount="indefinite"/><animate attributeName="fill" values="#1B5FBF;#F2C200;#1B5FBF"
+         keyTimes="0.0000;0.5000;1"
+         dur="3s" repeatCount="indefinite"/></circle>
+  </g>
+    <g opacity="0.14"><path d="M -12 -42 L 0 -31 L 12 -42 L 5 -30
+      L 12 -18 L 0 -29 L -12 -18 L -5 -30 Z" fill="#F2C200"/><defs><clipPath id="clip-ewmb"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></clipPath></defs>
+    <g clip-path="url(#clip-ewmb)"><rect x="-27" y="-14" width="9" height="70" fill="#1B5FBF"/><rect x="-18" y="-14" width="9" height="70" fill="#F2C200"/><rect x="-9" y="-14" width="9" height="70" fill="#1B5FBF"/><rect x="0" y="-14" width="9" height="70" fill="#F2C200"/><rect x="9" y="-14" width="9" height="70" fill="#1B5FBF"/><rect x="18" y="-14" width="9" height="70" fill="#F2C200"/></g>
+    <g fill="none" stroke="#0B1116" stroke-width="1.4" opacity=".6"><path d="M -15 -10 L 15 -10 L 23 52 L -23 52 Z"/></g></g>
+  </svg>
+  <figcaption><b>Emergency wreck marking buoy</b><span>blue and yellow · Al Oc Bu Y 3s</span></figcaption>
+</figure></div></section>
