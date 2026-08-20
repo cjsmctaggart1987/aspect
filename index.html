@@ -300,6 +300,8 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink
 .para .head{font-weight:500;margin-left:7px}
 .para .body3{margin-top:3px;color:var(--ink-soft)}
 .para.d1{margin-left:16px}.para.d2{margin-left:32px}
+.headon{font-family:var(--note);font-style:italic;font-size:13px;color:var(--ink-soft);
+  margin:8px 0 0;padding-left:11px;border-left:2px solid var(--magenta)}
 .pending{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:12.5px}
 .caveats{margin:8px 0 10px;padding-left:18px;font-size:13px}
 .caveats li{margin-bottom:5px}
@@ -403,6 +405,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
     <div>
       <div class="scene" id="scene"></div>
       <div class="legend" id="legend"></div>
+      <p class="headon hidden" id="headOnNote"></p>
       <div class="meta">
         <div class="rule" id="mRule"></div>
         <h3 id="mName"></h3>
@@ -714,7 +717,7 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 </div>
 
 <script type="module">
-import { VESSEL_STATES, ASPECT_BANDS } from './data/vessel-states.js';
+import { VESSEL_STATES, ASPECT_BANDS, ARC } from './data/vessel-states.js';
 import { MARKS } from './data/buoyage.js';
 import { visibleLights, questionSpace, norm, distractors, shuffle } from './src/engine.js';
 import { renderScene, renderDial, LIGHT_HEX, SHAPE_NAMES } from './src/render-lights.js';
@@ -813,6 +816,21 @@ function draw() {
       : '<span class="none">Rules 21 to 31 prescribe no day signal for this vessel. She is identified by her hull and her behaviour alone.</span>';
   }
   $('legend').innerHTML = legend;
+
+  // Both sidelights at once is not a curiosity, it is the definition in
+  // Rule 14(b). Naming it when it appears is the whole reason the practical
+  // cut-off is modelled at all.
+  const bothSides = mode !== 'day' &&
+    seen.filter(l => l.arc === ARC.STBD || l.arc === ARC.PORT).length === 2;
+  $('headOnNote').classList.toggle('hidden', !bothSides);
+  if (bothSides) {
+    $('headOnNote').innerHTML = linkCitations(
+      'Both sidelights at once, red and green together. That is the head-on picture: '
+      + 'Rule 14(b) deems the situation to exist when you see her masthead lights in line '
+      + 'or nearly in line and/or both sidelights. Real sidelights carry a degree or so '
+      + 'across the bow, which Annex I calls the practical cut-off; on a perfect screen '
+      + 'the two arcs would meet at a point and you would never see this.');
+  }
 
   if (!drill) {
     $('mRule').innerHTML = linkCitations(current.rule);

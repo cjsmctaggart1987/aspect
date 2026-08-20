@@ -19,8 +19,66 @@ export const signed = d => {
   return n > 180 ? n - 360 : n;
 };
 
+/**
+ * The practical cut-off, in degrees outside each prescribed sector.
+ *
+ * Rule 21 gives the sectors as hard numbers, and a screen cannot honour them
+ * exactly, so Annex I 9(a) says what a real light does at the edge. Forward,
+ * sidelight intensity "shall be reduced to reach practical cut-off between 1
+ * degree and 3 degrees outside the prescribed sectors"; at the other edges —
+ * sternlights, masthead lights, and sidelights 22.5 abaft the beam — it must
+ * reach cut-off "at not more than 5 degrees outside".
+ *
+ * WHY THIS IS MODELLED AT ALL
+ *
+ * Without it the two sidelights meet at a point rather than overlapping, so
+ * both are visible only at an aspect of exactly 0.000 degrees. The dial sets
+ * the aspect from atan2 and is continuous, which made that unreachable in
+ * practice — and it left the app unable to show the thing Rule 14(b) defines a
+ * head-on situation by: "she could see the masthead lights in line or nearly in
+ * line and/or both sidelights".
+ *
+ * WHY 1 DEGREE AND NOT 3 OR 5
+ *
+ * Those are the Annex's maxima, and they describe a light fading out, not a
+ * light burning at full intensity. Taking the smallest value keeps the
+ * prescribed sector overwhelmingly dominant: it opens a two degree band at each
+ * edge where a fading light is still seen, and it does not let a sternlight
+ * bleed five degrees into a sidelight sector, which would teach something
+ * false. Every drill aspect is a multiple of 45 degrees and none falls in a
+ * band, so no drill answer moves.
+ */
+export const PRACTICAL_CUTOFF = 1;
+
 /** Is a light with this arc visible to an observer at this aspect? */
 export function lightVisible(light, aspect) {
+  const a = signed(aspect);
+  const c = PRACTICAL_CUTOFF;
+  switch (light.arc) {
+    case ARC.ALLROUND:
+      return true;
+    case ARC.MASTHEAD:
+    case ARC.SPECIAL_FLASH:
+      return Math.abs(a) <= 112.5 + c;
+    case ARC.STBD:
+      return a >= -c && a <= 112.5 + c;
+    case ARC.PORT:
+      return a <= c && a >= -(112.5 + c);
+    case ARC.STERN:
+    case ARC.TOWING:
+      return Math.abs(a) > 112.5 - c;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Is the light inside its prescribed sector, ignoring the practical cut-off?
+ *
+ * The sector is what Rule 21 says and what a reader is examined on; the cut-off
+ * is what the glass does. Anything teaching or testing the rule wants this one.
+ */
+export function inPrescribedSector(light, aspect) {
   const a = signed(aspect);
   switch (light.arc) {
     case ARC.ALLROUND:

@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 55 commits.
+- **State:** working tree clean, 57 commits.
 
 ---
 
@@ -75,6 +75,24 @@ fudge it needed at 36px.
 measurement is `calc(var(--mk) * n / 72)`, the ratio from `aspect-lockup.svg` written as
 arithmetic rather than as the answer. Resize the mark and nothing is left behind at the
 old size. A test fails if any of the five becomes a constant.
+
+**Two arc models, and they are not interchangeable.** `inPrescribedSector()` is Rule 21 —
+the sectors as written, hard edges, what a reader is examined on. `lightVisible()` is
+those sectors plus Annex I 9(a)'s practical cut-off, one degree outside each edge: what
+the glass actually does. Anything teaching or testing the rule wants the first; anything
+drawing what a mariner would see wants the second.
+
+Without the cut-off the two sidelight arcs met at a point instead of overlapping, so both
+were visible only at an aspect of exactly 0.000 degrees. The dial sets the aspect from
+`atan2` and is continuous, so head-on was unreachable by dragging — and the app could not
+show the picture Rule 14(b) defines a head-on situation by, in the same build that quotes
+Rule 14(b) verbatim.
+
+**The cut-off is 1 degree, the smallest the Annex allows** — it permits up to 3 forward and
+up to 5 elsewhere, but those are maxima describing a light fading out, not burning. One
+degree opens a two degree band at each sector edge and keeps the prescribed sector
+dominant. Widening it would let a sternlight bleed into a sidelight sector and teach
+something false. Every drill aspect is a multiple of 45 degrees, so no drill answer moves.
 
 **The mark is 112.5 + 112.5 + 135, and that totals exactly 360.** The logo is a vessel's
 light pattern seen from above: the two sidelight arcs and the sternlight arc, closing a
@@ -196,7 +214,7 @@ To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 55, all pushed
+## Commits — 57, all pushed
 
 | | |
 |---|---|
@@ -358,12 +376,18 @@ the repo root. Currently green:
   three favicon levels, no asset invents a colour outside the palette, every path in the
   header lockup is a path from the generated mark, and the built bundle loads no image
   from anywhere — confirmed to fail when a relative icon href is put back
+- **The bundle suite checks that it is reading the bundle.** It extracts the app's script
+  block by searching for the first module banner, not by taking the first `<script>` on
+  the page. Taking the first one was correct until the head gained a four line script that
+  sets the theme before first paint; from that commit until the fix, every check in that
+  suite was parsing and running those four lines and passing. A suite that goes vacuous
+  passes louder than one that fails
 - **The built bundle is parsed as a classic script** — with `vm.Script`, because
   `node --check` accepts ESM and once passed a bundle containing a bare `import` — then
   started behind a DOM stub to prove the app actually comes up, and no two of its
   twenty-eight parts declare the same top-level name
 
-Run them with `npm test`. 429 checks. The suite reports the offending state and aspect
+Run them with `npm test`. 443 checks. The suite reports the offending state and aspect
 rather than a bare boolean, two checks guard the matchers themselves, and it has been
 confirmed to fail and exit 1 when a real regression is introduced.
 

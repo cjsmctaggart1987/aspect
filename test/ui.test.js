@@ -103,6 +103,27 @@ export default function run(t) {
   t.ok('the intro that moved is now inside the lights section',
     /Drag the observer round the\s+dial/.test(sectionOf('lights')));
 
+  t.section('the head-on picture names itself');
+  // Both sidelights at once is the condition Rule 14(b) defines a head-on
+  // situation by. It is now reachable on the dial, and worth nothing if the
+  // reader has to work out for themselves what they are looking at.
+  t.ok('there is a note for it, hidden until it applies',
+    page.includes('id="headOnNote"') && /id="headOnNote"[^>]*class="[^"]*hidden|class="[^"]*hidden[^"]*" id="headOnNote"/
+      .test(page.replace(/<p class="headon hidden" id="headOnNote">/, '<p id="headOnNote" class="hidden">')));
+  t.ok('it fires on seeing two sidelights, not on an aspect reading',
+    /l\.arc === ARC\.STBD \|\| l\.arc === ARC\.PORT\)\.length === 2/.test(app),
+    'the picture is the trigger, not a number');
+  const noteBody = (app.match(/\$\('headOnNote'\)\.innerHTML = ([\s\S]*?)\);\n/) || [, ''])[1];
+  t.ok('it cites Rule 14(b) and says why both sidelights are visible',
+    /Rule 14\(b\)/.test(noteBody) && /practical cut-off/.test(noteBody) &&
+    /Annex I/.test(noteBody),
+    'the rule, and the Annex that makes the picture possible');
+  t.ok('and the citation goes through the link layer',
+    noteBody.trim().startsWith('linkCitations('),
+    'so Rule 14(b) opens the rule text at that paragraph');
+  t.ok('it does not appear in daylight, where there are no lights at all',
+    /const bothSides = mode !== 'day' &&/.test(app));
+
   t.section('every section surfaces its own data');
   const surfaces = [
     ['vessel states', VESSEL_STATES.length, /VESSEL_STATES\.forEach/.test(app)],

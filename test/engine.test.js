@@ -7,7 +7,7 @@
  */
 import { VESSEL_STATES } from '../data/vessel-states.js';
 import { MARKS } from '../data/buoyage.js';
-import { visibleLights } from '../src/engine.js';
+import { visibleLights, inPrescribedSector, PRACTICAL_CUTOFF } from '../src/engine.js';
 import { renderScene } from '../src/render-lights.js';
 import { renderBuoy } from '../src/render-buoy.js';
 
@@ -20,9 +20,42 @@ export default function run(t) {
   const at = a => visibleLights(pd, a, true).map(l => `${l.color} ${l.name}`);
   t.ok('135 shows exactly one white sternlight',
     at(135).length === 1 && at(135)[0] === 'white Sternlight', JSON.stringify(at(135)));
-  t.ok('112 still shows the masthead and sidelight set', at(112).length === 3, `${at(112).length} lights`);
-  t.ok('113 has flipped to the sternlight alone',
-    at(113).length === 1 && at(113)[0] === 'white Sternlight');
+  // The prescribed sector is Rule 21's and it has not moved. What is new is
+  // that lightVisible also models Annex I 9(a)'s practical cut-off, so a fading
+  // light is still seen for a degree outside its sector.
+  const sector = a => pd.lights.filter(l => inPrescribedSector(l, a)).map(l => `${l.color} ${l.name}`);
+  t.ok('the prescribed sector still flips between 112 and 113',
+    sector(112).length === 3 && sector(113).length === 1 &&
+    sector(113)[0] === 'white Sternlight',
+    `${sector(112).length} lights then ${sector(113).length}`);
+  t.ok('112 still shows the masthead and sidelight set',
+    at(112).filter(l => !/Sternlight/.test(l)).length === 3, `${at(112).length} lights in all`);
+  t.ok('the cut-off opens a two degree overlap at the edge and no wider',
+    at(112).length === 4 && at(113.5).length === 4 && at(114).length === 1,
+    `overlap 111.5 to 113.5, then ${at(114).join(', ')}`);
+  t.ok('114 is the sternlight alone',
+    at(114).length === 1 && at(114)[0] === 'white Sternlight');
+
+  t.section('both sidelights near head-on, which is what Rule 14(b) turns on');
+  // The sidelight arcs used to meet at a point rather than overlap, so both
+  // were visible only at exactly 0.000 degrees. The dial sets the aspect from
+  // atan2 and is continuous, so dragging to head-on essentially never produced
+  // the one picture Rule 14(b) defines a head-on situation by.
+  const sides = a => at(a).filter(l => /sidelight/i.test(l)).length;
+  t.ok('both sidelights show right ahead', sides(0) === 2, at(0).join(', '));
+  t.ok('and both still show a degree either side',
+    sides(1) === 2 && sides(359) === 2 && sides(0.4) === 2,
+    'a continuous dial can now reach a head-on picture');
+  t.ok('two degrees off it is one sidelight again',
+    sides(2) === 1 && sides(358) === 1,
+    'a narrow band, not a blurred bow');
+  t.ok('the prescribed sectors still meet at a point, as Rule 21 states',
+    pd.lights.filter(l => inPrescribedSector(l, 1) && /sidelight/i.test(l.name)).length === 1 &&
+    pd.lights.filter(l => inPrescribedSector(l, 0) && /sidelight/i.test(l.name)).length === 2,
+    'the rule is unchanged; only the glass is modelled');
+  t.ok('the cut-off is the smallest Annex I allows, not the widest',
+    PRACTICAL_CUTOFF === 1,
+    'the Annex permits up to 3 forward and 5 elsewhere, describing a light fading out');
 
   t.section('no visible light falls outside the hull, 30 states x 360 aspects');
   const over = [];
