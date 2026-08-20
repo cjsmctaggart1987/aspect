@@ -85,7 +85,7 @@ npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
 
 ---
 
-## Committed — 9 commits, all pushed, main in sync
+## Commits — all pushed, main in sync
 
 | | |
 |---|---|
@@ -98,6 +98,10 @@ npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
 | `5cf7bc3` | Add README |
 | `c1cfd1b` | Schedule the drill with FSRS |
 | `096d0f1` | Migrate the fishing-gear-150 cone pair to cones-apex |
+| `3da7a41` | Add docs: project state and rendering review sheets |
+| `003388d` | Declare the package as ESM, move Node scripts to .cjs |
+| `3e0dbd8` | Draw a distinct silhouette for each type of vessel |
+| next | Buoyage rhythm strips and night mode |
 
 **Spaced repetition** (`src/scheduler.js`): card key `stateId:aspect:questionType`,
 480 cards, created lazily on first exposure. Most-overdue-first selection, falling back
@@ -117,11 +121,12 @@ coincident. Used by all four fishing states at 13.5 m.
 
 ---
 
-## UNCOMMITTED — two features awaiting visual review
+## Rendering work — committed, but not yet reviewed by eye
 
-716 insertions across 6 files. Both verified geometrically; **neither has been seen
-rendered**. Held back deliberately because recognisability and proportion are judgement
-calls that geometry cannot settle.
+Both are verified geometrically. **Neither has been seen rendered.** Recognisability and
+proportion are judgement calls geometry cannot settle, so the numbers below say only that
+the shapes are where they were asked to be, not that they look right. Contact sheets for
+review are at `docs/silhouettes.html` and `docs/buoyage.html`.
 
 ### 1. Vessel silhouettes
 
@@ -166,8 +171,8 @@ vessel lights — outstanding.**
 
 ## Verification
 
-All checks are geometric, run in Node against the real modules by copying `data/` and
-`src/` into a scratch dir with `{"type":"module"}` (the repo is `type: commonjs`).
+All checks are geometric, run in Node against the real modules, imported directly from
+the repo root.
 
 Currently green:
 
@@ -190,7 +195,7 @@ can-shaped block of colour. Now `clip-<mark.id>`.
 
 ## Open items
 
-1. **Visual review of both uncommitted features**, then commit.
+1. **Visual review of the silhouettes and the rhythm strips.**
 2. `SHAPE_D_M = 1.5` — assumption, not a rule value.
 3. `HULLS` proportions — invented.
 4. Retrofit the reduced-motion fix to the vessel lights.
@@ -204,4 +209,4 @@ can-shaped block of colour. Now `clip-<mark.id>`.
 - The browser automation available in this setup connects to a Chrome instance that
   **cannot reach `localhost`** (`ERR_CONNECTION_REFUSED` while `curl` gets 200 on the same
   machine). All visual verification has therefore been done by the human, or not at all.
-- The repo is `type: commonjs`, so Node cannot import the app's ES modules directly.
+- `src/scheduler.js` needs a browser for localStorage, so it cannot be imported in Node.

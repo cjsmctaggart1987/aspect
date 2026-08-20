@@ -16,6 +16,30 @@
 export const REGION_A = 'A';
 export const REGION_B = 'B';
 
+/**
+ * Light characteristics, as timings rather than prose.
+ *
+ * `rhythm` above stays the authoritative human-readable form; this is what the
+ * strip is drawn from. Times are seconds within one period, each entry a span
+ * the light is lit, optionally with its own colour where a mark alternates.
+ *
+ * Rates are the standard ones described at 33 CFR Part 62: very quick is 100 to
+ * 120 flashes a minute, quick is 50 to 60. The fast end of each is used here so
+ * the count stays legible in a short strip.
+ *
+ * example: true marks a rhythm the rule does not prescribe. The lateral marks
+ * and the special mark may use almost any rhythm, so the strip shows one
+ * plausible character and the card says so.
+ */
+const VQ = 0.5;                       // very quick, 120 a minute
+const LONG = 2.0;                     // a long flash is two seconds or more
+
+/** n flashes at one every `rate` seconds, lit for a short part of each cycle. */
+const group = (n, rate = VQ, t0 = 0) =>
+  Array.from({ length: n }, (_, i) => [+(t0 + i * rate).toFixed(2), +(t0 + i * rate + rate * 0.4).toFixed(2)]);
+
+const flashes = (period, on, extra = {}) => ({ period, on, ...extra });
+
 export const MARKS = [
   {
     id: 'lat-port-a',
@@ -27,6 +51,7 @@ export const MARKS = [
     topmark: { form: 'can', color: 'red', count: 1 },
     lightColor: 'red',
     rhythm: 'Any, other than the composite group flashing (2+1)',
+    pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
     memory: 'Red can, port hand, going upstream in Region A.'
   },
@@ -40,6 +65,7 @@ export const MARKS = [
     topmark: { form: 'cone-up', color: 'green', count: 1 },
     lightColor: 'green',
     rhythm: 'Any, other than the composite group flashing (2+1)',
+    pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
     memory: 'Green cone, starboard hand.'
   },
@@ -53,6 +79,7 @@ export const MARKS = [
     topmark: { form: 'can', color: 'green', count: 1 },
     lightColor: 'green',
     rhythm: 'Any, other than the composite group flashing (2+1)',
+    pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to port when proceeding in the conventional direction of buoyage.',
     memory: 'Region B inverts the lateral colours. Red right returning.'
   },
@@ -66,6 +93,7 @@ export const MARKS = [
     topmark: { form: 'cone-up', color: 'red', count: 1 },
     lightColor: 'red',
     rhythm: 'Any, other than the composite group flashing (2+1)',
+    pattern: flashes(3, [[0, 0.5]], { example: true }),
     meaning: 'Leave to starboard when proceeding in the conventional direction of buoyage.',
     memory: 'Red right returning. Cayman, the Americas and Japan are Region B.'
   },
@@ -79,6 +107,7 @@ export const MARKS = [
     topmark: { form: 'can', color: 'red', count: 1 },
     lightColor: 'red',
     rhythm: 'Fl (2+1) R',
+    pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A port hand mark with a green band. The main channel lies to starboard of the mark.',
     memory: 'The body colour tells you which lateral mark it primarily is. The band tells you the secondary channel.'
   },
@@ -92,6 +121,7 @@ export const MARKS = [
     topmark: { form: 'cone-up', color: 'green', count: 1 },
     lightColor: 'green',
     rhythm: 'Fl (2+1) G',
+    pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A starboard hand mark with a red band. The main channel lies to port of the mark.',
     memory: 'Composite group flashing (2+1) always means a channel divides here.'
   },
@@ -105,6 +135,7 @@ export const MARKS = [
     topmark: { form: 'can', color: 'green', count: 1 },
     lightColor: 'green',
     rhythm: 'Fl (2+1) G',
+    pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A port hand mark with a red band. The main channel lies to starboard of the mark.',
     memory: 'Same logic as Region A with the lateral colours swapped.'
   },
@@ -118,6 +149,7 @@ export const MARKS = [
     topmark: { form: 'cone-up', color: 'red', count: 1 },
     lightColor: 'red',
     rhythm: 'Fl (2+1) R',
+    pattern: flashes(6, [[0, 0.5], [1.2, 1.7], [3, 3.5]]),
     meaning: 'A starboard hand mark with a green band. The main channel lies to port of the mark.',
     memory: 'Body colour first, band second.'
   },
@@ -131,6 +163,7 @@ export const MARKS = [
     topmark: { form: 'cones-up', color: 'black', count: 2 },
     lightColor: 'white',
     rhythm: 'VQ or Q, continuous',
+    pattern: flashes(3, group(6)),
     meaning: 'Safe water lies to the north of the mark.',
     memory: 'Both cones point up, and the black band is up. Continuous quick flashing, like twelve o clock.'
   },
@@ -144,6 +177,7 @@ export const MARKS = [
     topmark: { form: 'cones-base', color: 'black', count: 2 },
     lightColor: 'white',
     rhythm: 'VQ (3) 5s or Q (3) 10s',
+    pattern: flashes(5, group(3)),
     meaning: 'Safe water lies to the east of the mark.',
     memory: 'Topmark is egg shaped. Three flashes, like three o clock.'
   },
@@ -157,6 +191,7 @@ export const MARKS = [
     topmark: { form: 'cones-down', color: 'black', count: 2 },
     lightColor: 'white',
     rhythm: 'VQ (6) + LFl 10s or Q (6) + LFl 15s',
+    pattern: flashes(10, [...group(6), [3.4, 3.4 + LONG]]),
     meaning: 'Safe water lies to the south of the mark.',
     memory: 'Both cones point down, black band down. Six flashes, like six o clock, and the long flash confirms you counted six not nine.'
   },
@@ -170,6 +205,7 @@ export const MARKS = [
     topmark: { form: 'cones-point', color: 'black', count: 2 },
     lightColor: 'white',
     rhythm: 'VQ (9) 10s or Q (9) 15s',
+    pattern: flashes(10, group(9)),
     meaning: 'Safe water lies to the west of the mark.',
     memory: 'Topmark is wine glass shaped. West is a wine glass. Nine flashes, like nine o clock.'
   },
@@ -183,6 +219,7 @@ export const MARKS = [
     topmark: { form: 'spheres', color: 'black', count: 2 },
     lightColor: 'white',
     rhythm: 'Fl (2)',
+    pattern: flashes(5, [[0, 0.5], [1.2, 1.7]]),
     meaning: 'Stationed on or moored above an isolated danger with navigable water all round it.',
     memory: 'Two black balls, two white flashes.'
   },
@@ -196,6 +233,7 @@ export const MARKS = [
     topmark: { form: 'sphere', color: 'red', count: 1 },
     lightColor: 'white',
     rhythm: 'Iso, Occ, LFl 10s or Mo (A)',
+    pattern: flashes(4, [[0, 2]]),
     meaning: 'Navigable water all round the mark. Often a landfall or mid-channel mark.',
     memory: 'Red and white vertical stripes. The only mark with a single red sphere topmark.'
   },
@@ -209,6 +247,7 @@ export const MARKS = [
     topmark: { form: 'cross', color: 'yellow', count: 1 },
     lightColor: 'yellow',
     rhythm: 'Any rhythm not used for white lights',
+    pattern: flashes(4, [[0, 0.5]], { example: true }),
     meaning: 'Indicates a special area or feature. Not primarily a navigational mark.',
     memory: 'All yellow, yellow X, yellow light. Spoil grounds, cables, recreation zones.'
   },
@@ -222,6 +261,7 @@ export const MARKS = [
     topmark: { form: 'cross', color: 'yellow', count: 1 },
     lightColor: 'blue and yellow',
     rhythm: 'Al Oc Bu Y 3s',
+    pattern: flashes(3, [[0, 1.4, 'blue'], [1.5, 2.9, 'yellow']]),
     meaning: 'Marks a new danger, normally a wreck, until the danger is charted and permanently marked.',
     memory: 'Blue and yellow vertical stripes, alternating blue and yellow light. Nothing else looks like it.'
   }

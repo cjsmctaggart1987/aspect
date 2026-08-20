@@ -54,10 +54,87 @@ function topmark(tm) {
   }
 }
 
-export function renderBuoy(mark) {
-  return `<svg viewBox="-70 -90 140 180" xmlns="http://www.w3.org/2000/svg"
-    role="img" aria-label="${mark.name}">
-    <line x1="-56" y1="52" x2="56" y2="52" stroke="#8FA8B3" stroke-width="1.5"/>
-    <g>${topmark(mark.topmark)}${body(mark)}</g>
+/** The colour a mark's light actually shows. */
+const lightHex = mark => HEX[mark.lightColor] || HEX.white;
+
+/**
+ * The light character as a strip: one period left to right, lit spans filled.
+ *
+ * Drawn at every hour of the day because the whole point is comparison. Two
+ * cardinals side by side differ only in how many marks are in the strip, which
+ * is exactly the thing that is hard to hold in your head from the prose.
+ */
+function rhythmStrip(mark) {
+  const p = mark.pattern;
+  if (!p) return '';
+  const x0 = -58, w = 116, y = -112, h = 10;
+  const at = t => x0 + (t / p.period) * w;
+
+  const lit = p.on.map(([a, b, colour]) => {
+    const x = at(a), sw = Math.max(1.4, at(b) - at(a));
+    return `<rect x="${x.toFixed(1)}" y="${y}" width="${sw.toFixed(1)}" height="${h}"
+      fill="${colour ? HEX[colour] : lightHex(mark)}"/>`;
+  }).join('');
+
+  return `<g>
+    <rect x="${x0}" y="${y}" width="${w}" height="${h}" fill="#0B1116" opacity=".10"/>
+    ${lit}
+    <rect x="${x0}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#0B1116"
+      stroke-width="1" opacity=".45"/>
+    <text x="${x0 + w}" y="${y - 4}" text-anchor="end" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">${p.example ? 'example · ' : ''}${p.period}s</text>
+  </g>`;
+}
+
+/**
+ * The light itself, above the topmark.
+ *
+ * By night it keeps the mark's real rhythm through one SMIL cycle per period.
+ * `motion` is threaded in rather than assumed: a reduced-motion reader gets the
+ * light lit and steady, because a light that never comes on reads as no light
+ * at all, which would be worse than no animation.
+ */
+function lamp(mark, mode, motion) {
+  const p = mark.pattern;
+  const y = -74, colour = lightHex(mark);
+  if (mode !== 'night') {
+    return `<circle cx="0" cy="${y}" r="3" fill="${colour}" opacity=".28"/>`;
+  }
+  // Build the on/off envelope for one period.
+  let times = [0], vals = [0];
+  for (const [a, b] of p.on) {
+    times.push(a / p.period, a / p.period, b / p.period, b / p.period);
+    vals.push(0, 1, 1, 0);
+  }
+  times.push(1); vals.push(0);
+  const anim = motion
+    ? `<animate attributeName="opacity" values="${vals.join(';')}"
+         keyTimes="${times.map(t => t.toFixed(4)).join(';')}"
+         dur="${p.period}s" repeatCount="indefinite"/>`
+    : '';
+  // Alternating marks change colour as well as blinking.
+  const alt = p.on.filter(o => o[2]);
+  const colourAnim = motion && alt.length
+    ? `<animate attributeName="fill" values="${p.on.map(o => HEX[o[2]]).join(';')};${HEX[alt[0][2]]}"
+         keyTimes="${p.on.map(o => (o[0] / p.period).toFixed(4)).join(';')};1"
+         dur="${p.period}s" repeatCount="indefinite"/>`
+    : '';
+  return `<g>
+    <circle cx="0" cy="${y}" r="13" fill="${colour}" opacity=".16">${motion ? anim : ''}</circle>
+    <circle cx="0" cy="${y}" r="4" fill="${colour}">${anim}${colourAnim}</circle>
+  </g>`;
+}
+
+export function renderBuoy(mark, mode = 'day', motion = true) {
+  const night = mode === 'night';
+  // At night the paint is gone: the rhythm is what identifies her.
+  const bodyOpacity = night ? 0.14 : 1;
+  const water = night ? '#101922' : '#8FA8B3';
+  return `<svg viewBox="-70 -124 140 214" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="${mark.name}${night ? ', as seen at night' : ''}">
+    ${rhythmStrip(mark)}
+    <line x1="-56" y1="52" x2="56" y2="52" stroke="${water}" stroke-width="1.5"/>
+    ${lamp(mark, mode, motion)}
+    <g opacity="${bodyOpacity}">${topmark(mark.topmark)}${body(mark)}</g>
   </svg>`;
 }
