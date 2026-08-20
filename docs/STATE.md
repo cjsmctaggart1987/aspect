@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 21 commits.
+- **State:** working tree clean, 27 commits.
 
 ---
 
@@ -59,12 +59,16 @@ vendor/ts-fsrs.js       vendored FSRS lib, generated               60 KB
 data/vessel-states.js   30 vessel states                           576
 data/buoyage.js         16 buoyage marks                           270
 data/sound-signals.js   18 sound signals, Rules 32 to 35            305
+data/morse.js           A-Z, 0-9, SOS prosign, timing               112
+data/distress-signals.js 13 distress signals, Annex IV              190
 src/engine.js           arcs, projection, question generation      146
 src/render-lights.js    scene and aspect dial renderers            393
 src/render-buoy.js      buoy renderer                              140
 src/render-signal.js    blast timelines                            135
 src/audio.js            synthesised whistle, bell and gong         200
+src/render-distress.js  code flags, square and ball, arm signal     150
 src/sound-questions.js  sound drill questions                      146
+src/distress-questions.js distress and Morse questions             130
 src/scheduler.js        spaced repetition (FSRS)                   171
 build.cjs               regenerates the single-file bundle          85
 vendor.cjs              refreshes vendor/ts-fsrs.js                 41
@@ -98,14 +102,14 @@ npm install
 npm run dev      # serve on :5173 — the module version needs HTTP, not file://
 npm run build    # regenerate aspect-standalone.html
 npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
-npm test         # 78 checks against the real modules
+npm test         # 121 checks against the real modules
 ```
 
 To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 21, all pushed
+## Commits — 27, all pushed
 
 | | |
 |---|---|
@@ -132,6 +136,12 @@ To just look at it: double-click `aspect-standalone.html`.
 | `5fafb72` | Sound signal drill questions |
 | `aa2f329` | The sound signals tab |
 | `1d48694` | Bundle the sound modules, and test what the bundle can express |
+| `66e2baf` | State snapshot for the sound section |
+| `6c674d2` | Distress signal data, Annex IV |
+| `11a6858` | Draw the visual distress signals |
+| `57da773` | Morse: code, timing, a tone voice and a lamp |
+| `cd5fc31` | Distress and Morse drill questions |
+| `<build>` | Bundle the distress and Morse modules |
 
 ### Spaced repetition — `src/scheduler.js`
 
@@ -183,6 +193,31 @@ needed no change. Distractors are chosen by edit distance over the blast sequenc
 as signals of intent answered by agreement rather than statements of action already
 taken. That is a fork, not a field to fill in.
 
+### Distress and Morse — `data/distress-signals.js`, `data/morse.js`
+
+Thirteen Annex IV signals tagged by modality — three sound, six visual, three
+radio, one physical — because modality decides whether you will ever meet the
+signal. Annex IV(2) is recorded as data: the list is not a menu of
+attention-getting devices, and using anything that could be confused with these
+is prohibited too.
+
+Morse is defined by one number. A dit is the unit; dah 3, gap 1, character gap 3,
+word gap 7. PARIS is 50 units, so the dit is 1.2/wpm seconds and 12 wpm gives
+100 ms. **SOS is stored as one prosign, `...---...`, never assembled from three
+letters** — the three-unit gap that would separate S from O is exactly what would
+stop it being SOS. Tests assert every gap inside it is one unit.
+
+Morse plays as a 600 Hz tone with a raised-cosine envelope, and renders as a
+flashing lamp on the same timing, because at sea it is as often an Aldis lamp as
+a whistle.
+
+Flag N, flag C, the square and ball, and the arm signal are all generated. A
+traced flag is a picture of one flag; a generated chequer is the description, so
+a wrong description looks wrong.
+
+**Not yet wired into the UI.** The modules are built and bundled but no tab
+surfaces them.
+
 ### Buoyage rhythms — `data/buoyage.js`, `src/render-buoy.js`
 
 A `pattern` field on all 16 marks: lit spans in seconds within a period, worked from
@@ -214,7 +249,9 @@ the repo root. Currently green:
 - Flashing lights emit no SMIL at all when reduced motion is set, and stay lit
 - Sound patterns sum to their declared totals, no blast runs into another, equipment
   matches the pattern, all 51 card keys unique
-- **The built bundle is parsed as a classic script**, and no two of its twelve parts
+- Morse ratios exact, SOS carries no character gap, all 100 distress and Morse
+  card keys unique, every Annex IV signal attributable
+- **The built bundle is parsed as a classic script**, and no two of its sixteen parts
   declare the same top-level name
 
 Run them with `npm test`. 38 checks. The suite reports the offending state and aspect
@@ -231,10 +268,13 @@ a can-shaped block of colour. Now `clip-<mark.id>`.
 
 ## Open
 
-1. **Nothing has been reviewed by eye, or by ear.** The sound signals have never been
+1. **The distress and Morse sections have no UI.** The data, rendering, audio and
+   questions all exist and are bundled, but nothing surfaces them. This was not in
+   the brief for that round; it is the obvious next step.
+2. **Nothing has been reviewed by eye, or by ear.** The sound signals have never been
    listened to: the synthesis is unheard, and whether a whistle sounds like a whistle
    rather than a buzz is not something a test can answer.
-2. **Nothing visual has been reviewed by eye.** The silhouettes and rhythm strips are verified
+3. **Nothing visual has been reviewed by eye.** The silhouettes and rhythm strips are verified
    geometrically only. No assertion can settle whether a cargo ship reads as a cargo
    ship. Contact sheets: `docs/silhouettes.html`, `docs/buoyage.html`.
 

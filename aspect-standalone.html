@@ -3269,6 +3269,303 @@ const UNPRESCRIBED = ['r35-under12'];
 const SIGNAL_GROUPS = [...new Set(SOUND_SIGNALS.map(s => s.group))];
 
 
+/* ===== data/morse.js ===== */
+/**
+ * Morse code, and its timing.
+ *
+ * The whole of Morse timing is one number. A dit is the unit; everything else
+ * is a multiple of it:
+ *
+ *   dit                       1
+ *   dah                       3
+ *   gap inside a character    1
+ *   gap between characters    3
+ *   gap between words         7
+ *
+ * So speed is a single parameter. The standard word PARIS is exactly 50 units,
+ * which is where words per minute comes from: at w words a minute the dit is
+ * 60 / (50 w) seconds, or 1.2 / w. Twelve words a minute gives a dit of 100 ms,
+ * which is about as slow as Morse is ever sent and roughly where a learner can
+ * still hear the difference between a dit and a dah.
+ *
+ * SOS is a prosign, not three letters. It is sent as one run-together group
+ * with only intra-character gaps throughout, because the three-unit gap that
+ * would separate S from O is exactly what would stop it being SOS. It is
+ * stored that way here rather than assembled from letters, so it cannot be
+ * accidentally spaced by code that does not know the difference.
+ */
+
+const MORSE_UNIT = { dit: 1, dah: 3, gap: 1, charGap: 3, wordGap: 7 };
+
+/** Dit length in seconds for a given words per minute. PARIS is 50 units. */
+const ditSeconds = (wpm = 12) => +(1.2 / wpm).toFixed(4);
+
+const DEFAULT_WPM = 12;
+
+const MORSE_ALPHABET = {
+  A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.',
+  H: '....', I: '..', J: '.---', K: '-.-', L: '.-..', M: '--', N: '-.',
+  O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-', U: '..-',
+  V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..',
+  0: '-----', 1: '.----', 2: '..---', 3: '...--', 4: '....-',
+  5: '.....', 6: '-....', 7: '--...', 8: '---..', 9: '----.'
+};
+
+/**
+ * Prosigns: sent as one character, with no gap where the letter break would be.
+ * SOS is the one that matters here, and it is on the Annex IV list.
+ */
+const MORSE_PROSIGNS = {
+  SOS: '...---...'
+};
+
+/**
+ * Single letters the rest of the app already leans on, so a learner meeting
+ * "Morse C" in the sound signals or "Mo (A)" in the buoyage can hear what that
+ * actually is rather than taking it on trust.
+ */
+const MORSE_IN_USE = [
+  { char: 'A', where: 'Buoyage: safe water marks may show Mo (A).' },
+  { char: 'C', where: 'Rule 34(c)(ii): the answer agreeing to be overtaken.' },
+  { char: 'R', where: 'Rule 35(g): the optional whistle warning from a vessel at anchor.' }
+];
+
+const morseFor = char => {
+  const key = String(char).toUpperCase();
+  return MORSE_PROSIGNS[key] || MORSE_ALPHABET[key] || null;
+};
+
+/** Everything drillable: the alphabet, the digits, and the prosigns. */
+const MORSE_CHARACTERS = [
+  ...Object.keys(MORSE_ALPHABET).map(c => ({ id: c, char: c, code: MORSE_ALPHABET[c], prosign: false })),
+  ...Object.keys(MORSE_PROSIGNS).map(c => ({ id: c, char: c, code: MORSE_PROSIGNS[c], prosign: true }))
+];
+
+/**
+ * A code string laid out in time, in the same span shape the strip renderer
+ * and the audio engine already understand.
+ *
+ * `spaced` is what separates a prosign from a run of letters: with it false,
+ * every gap inside the group is one unit, which is what makes ...---... a
+ * single character rather than S O S.
+ */
+function morsePattern(code, { wpm = DEFAULT_WPM, spaced = false, chars = null } = {}) {
+  const u = ditSeconds(wpm);
+  const spans = [];
+  const groups = spaced && chars ? chars : [code];
+
+  groups.forEach((group, gi) => {
+    if (gi > 0) spans.push({ type: 'gap', seconds: +(MORSE_UNIT.charGap * u).toFixed(4) });
+    [...group].forEach((mark, i) => {
+      if (i > 0) spans.push({ type: 'gap', seconds: +(MORSE_UNIT.gap * u).toFixed(4) });
+      spans.push({
+        type: mark === '-' ? 'dah' : 'dit',
+        seconds: +((mark === '-' ? MORSE_UNIT.dah : MORSE_UNIT.dit) * u).toFixed(4)
+      });
+    });
+  });
+  return spans;
+}
+
+/** A character as a signal object, so signalStrip and play() take it unchanged. */
+function morseSignal(char, { wpm = DEFAULT_WPM } = {}) {
+  const code = morseFor(char);
+  if (!code) return null;
+  const pattern = morsePattern(code, { wpm });
+  return {
+    id: `morse-${char}`,
+    name: `${char}  ${code}`,
+    code,
+    prosign: !!MORSE_PROSIGNS[String(char).toUpperCase()],
+    pattern,
+    seconds: +pattern.reduce((a, s) => a + s.seconds, 0).toFixed(4),
+    repeat: null,
+    equipment: ['whistle']
+  };
+}
+
+
+/* ===== data/distress-signals.js ===== */
+/**
+ * Distress signals, Annex IV. International.
+ *
+ * Annex IV is a list of things that mean one thing only: this vessel is in
+ * distress and needs assistance. It is not a set of rules about giving way, so
+ * these entries carry no aspect and no arcs. What they carry is recognition —
+ * you either know a square flag with a ball above it or you do not.
+ *
+ * `modality` is how the signal reaches you, because that determines whether you
+ * will ever see it: a radio alert is invisible from the bridge wing and a hand
+ * flare is inaudible.
+ *
+ * Audible signals carry a pattern in the same shape as the sound signals, so
+ * the same strip renderer draws them. SOS is the exception: it carries a morse
+ * field instead and its pattern is generated from data/morse.js, because the
+ * timing belongs to Morse rather than to Annex IV, and duplicating it here
+ * would let the two drift apart.
+ *
+ * Source of truth: 33 CFR Subchapter E, a US Government work.
+ */
+
+const DISTRESS_MODALITIES = ['sound', 'visual', 'radio', 'physical'];
+
+// Audible primitives. A gun is a report, not a blast; fog apparatus sounded
+// continuously is one unbroken span rather than a pattern.
+const REPORT = 0.7;
+const CONTINUOUS = 8;
+
+const distressTotal = p => (p ? +p.reduce((a, s) => a + s.seconds, 0).toFixed(2) : null);
+
+const entry = d => ({ ...d, seconds: distressTotal(d.pattern) });
+
+const DISTRESS_SIGNALS = [
+  entry({
+    id: 'gun',
+    rule: 'Annex IV(1)(a)',
+    modality: 'sound',
+    name: 'A gun or other explosive signal at intervals of about a minute',
+    pattern: [{ type: 'report', seconds: REPORT }],
+    repeat: 60,
+    description: 'A single report, repeated at intervals of about one minute.',
+    memory: 'The interval is the signal. A single bang is an accident; one a minute is a distress signal.'
+  }),
+  entry({
+    id: 'fog-continuous',
+    rule: 'Annex IV(1)(b)',
+    modality: 'sound',
+    name: 'Continuous sounding of any fog-signalling apparatus',
+    pattern: [{ type: 'continuous', seconds: CONTINUOUS }],
+    repeat: null,
+    description: 'Any fog-signalling apparatus sounded continuously, rather than in the pattern of Rule 35.',
+    memory: 'Rule 35 fog signals are short groups with long silences. Distress is the whistle simply held down.'
+  }),
+  entry({
+    id: 'red-stars',
+    rule: 'Annex IV(1)(c)',
+    modality: 'visual',
+    name: 'Rockets or shells throwing red stars, fired one at a time at short intervals',
+    pattern: null,
+    repeat: null,
+    description: 'Rockets or shells throwing red stars, fired one at a time at short intervals.',
+    memory: 'One at a time and repeated. A single red star could be almost anything; a succession of them cannot.'
+  }),
+  entry({
+    id: 'sos',
+    rule: 'Annex IV(1)(d)',
+    modality: 'sound',
+    morse: 'SOS',
+    name: 'SOS in Morse code, by any signalling method',
+    pattern: null,                 // generated from data/morse.js
+    repeat: null,
+    description: 'The group ...---... made by radiotelegraphy or by any other signalling method: sound, light, or anything else that can be interrupted.',
+    memory: 'Sent as one run-together group, never as three spaced letters. The gap that would separate S from O is exactly what would stop it being SOS.'
+  }),
+  entry({
+    id: 'mayday',
+    rule: 'Annex IV(1)(e)',
+    modality: 'radio',
+    name: 'The spoken word Mayday',
+    pattern: null,
+    repeat: null,
+    description: 'A signal sent by radiotelephony consisting of the spoken word "Mayday".',
+    memory: 'From the French m\'aidez. Spoken three times at the start of the call, and reserved absolutely for grave and imminent danger.'
+  }),
+  entry({
+    id: 'flag-nc',
+    rule: 'Annex IV(1)(f)',
+    modality: 'visual',
+    name: 'The code flag signal NC',
+    pattern: null,
+    repeat: null,
+    description: 'The International Code signal of distress, flag N hoisted above flag C.',
+    memory: 'N over C, in that order and no other. Two flags that mean nothing apart and distress together.'
+  }),
+  entry({
+    id: 'square-ball',
+    rule: 'Annex IV(1)(g)',
+    modality: 'visual',
+    name: 'A square flag with a ball above or below it',
+    pattern: null,
+    repeat: null,
+    description: 'A signal consisting of a square flag having above or below it a ball, or anything resembling a ball.',
+    memory: 'Anything resembling a ball. The rule is deliberately loose because it is meant to be improvised from whatever is aboard.'
+  }),
+  entry({
+    id: 'flames',
+    rule: 'Annex IV(1)(h)',
+    modality: 'visual',
+    name: 'Flames on the vessel',
+    pattern: null,
+    repeat: null,
+    description: 'Flames on the vessel, as from a burning tar barrel or oil barrel.',
+    memory: 'Deliberate fire, not accidental. It is on the list because it is what you can do with no equipment at all.'
+  }),
+  entry({
+    id: 'red-flare',
+    rule: 'Annex IV(1)(i)',
+    modality: 'visual',
+    name: 'A rocket parachute flare or a hand flare showing a red light',
+    pattern: null,
+    repeat: null,
+    description: 'A rocket parachute flare or a hand flare showing a red light.',
+    memory: 'Red means distress. A white flare is a warning that you are standing into danger, and means the opposite thing about who needs help.'
+  }),
+  entry({
+    id: 'orange-smoke',
+    rule: 'Annex IV(1)(j)',
+    modality: 'visual',
+    name: 'A smoke signal giving off orange-coloured smoke',
+    pattern: null,
+    repeat: null,
+    description: 'A smoke signal giving off orange-coloured smoke.',
+    memory: 'A daylight signal. Orange smoke is visible against sea and sky in a way a flare in sunlight is not.'
+  }),
+  entry({
+    id: 'arms',
+    rule: 'Annex IV(1)(k)',
+    modality: 'physical',
+    name: 'Arms outstretched to each side, raised and lowered slowly and repeatedly',
+    pattern: null,
+    repeat: null,
+    description: 'Slowly and repeatedly raising and lowering arms outstretched to each side.',
+    memory: 'Slowly and repeatedly. Waving one arm is greeting; both arms rising and falling together is not.'
+  }),
+  entry({
+    id: 'epirb',
+    rule: 'Annex IV(1)(n)',
+    modality: 'radio',
+    name: 'Signals transmitted by an emergency position-indicating radio beacon',
+    pattern: null,
+    repeat: null,
+    description: 'Signals transmitted by emergency position-indicating radio beacons (EPIRB).',
+    memory: 'It carries your identity and position to a satellite whether or not anyone is left aboard to send it.'
+  }),
+  entry({
+    id: 'radio-alert',
+    rule: 'Annex IV(1)(l), (m) and (o)',
+    modality: 'radio',
+    name: 'Approved radiocommunication distress alerts',
+    pattern: null,
+    repeat: null,
+    description: 'A distress alert by digital selective calling on VHF channel 70 or MF/HF, a ship-to-shore alert by satellite, and other approved signals transmitted by radiocommunication systems including survival craft radar transponders.',
+    memory: 'The three that reach beyond the horizon. Nobody on watch sees any of them; they arrive on somebody\'s screen.'
+  })
+];
+
+/**
+ * Annex IV(2). Worth carrying as data rather than prose in a card, because it
+ * is the half of the annex people forget: the list is not a menu of attention-
+ * getting devices.
+ */
+const ANNEX_IV_PROHIBITION = {
+  rule: 'Annex IV(2)',
+  text: 'The use or exhibition of any of these signals except to indicate distress and need of assistance is prohibited, as is the use of any signal that may be confused with them.',
+  memory: 'Both halves matter. Not only must you not fire a red flare for fun, you must not invent a signal that looks like one.'
+};
+
+const DISTRESS_BY_MODALITY = modality => DISTRESS_SIGNALS.filter(s => s.modality === modality);
+
+
 /* ===== src/engine.js ===== */
 /**
  * Engine: arc visibility, aspect projection, question generation.
@@ -3987,6 +4284,10 @@ const SOFT = '#4A626E';
 
 /** A blast is filled, a gap is not. Bell and gong are hatched to read as struck. */
 const FILL = {
+  dit: '#10222C',
+  dah: '#10222C',
+  report: '#C3006B',
+  continuous: '#10222C',
   short: '#10222C',
   prolonged: '#10222C',
   stroke: '#C3006B',
@@ -3996,6 +4297,10 @@ const FILL = {
 
 // Read as a mariner would say it: "two prolonged blasts", not "two prolongeds".
 const LABEL = {
+  dit: ['dit', 'dits'],
+  dah: ['dah', 'dahs'],
+  report: ['report', 'reports'],
+  continuous: ['continuous sounding', 'continuous sounding'],
   short: ['short blast', 'short blasts'],
   prolonged: ['prolonged blast', 'prolonged blasts'],
   stroke: ['stroke', 'strokes'],
@@ -4003,7 +4308,7 @@ const LABEL = {
   gong: ['rapid sounding of the gong', 'rapid sounding of the gong']
 };
 
-const COUNTED = new Set(['short', 'prolonged', 'stroke']);
+const COUNTED = new Set(['short', 'prolonged', 'stroke', 'dit', 'dah', 'report']);
 
 /**
  * The whole signal as one strip.
@@ -4076,6 +4381,54 @@ function describe(signal) {
   }).join(', ');
 }
 
+/**
+ * A signal shown as light rather than sound.
+ *
+ * Morse at sea is as often an Aldis lamp as a whistle, and a learner who only
+ * ever hears it will not read it off a bridge wing. The lamp flashes the same
+ * spans on the same timing, driven by one SMIL cycle built from the pattern.
+ *
+ * `motion` is threaded through for the same reason it is everywhere else here:
+ * prefers-reduced-motion suppresses CSS animation only, and SMIL ignores it. A
+ * still lamp is shown lit, because a lamp that never comes on says nothing.
+ */
+function lightSignal(signal, { motion = true, width = 260, height = 90 } = {}) {
+  const total = signal.seconds;
+  const cx = width / 2, cy = 40, r = 16;
+
+  // One opacity envelope across the whole pattern: on at the start of each
+  // element, off at its end, square edges so a dit reads as a dit.
+  const times = [0];
+  const values = [0];
+  let cursor = 0;
+  for (const span of signal.pattern) {
+    const from = cursor / total, to = (cursor + span.seconds) / total;
+    if (span.type !== 'gap') {
+      times.push(from, from, to, to);
+      values.push(0, 1, 1, 0);
+    }
+    cursor += span.seconds;
+  }
+  times.push(1); values.push(0);
+
+  const anim = motion
+    ? `<animate attributeName="opacity" values="${values.join(';')}"
+         keyTimes="${times.map(t => Math.min(1, +t.toFixed(4))).join(';')}"
+         dur="${total}s" repeatCount="indefinite"/>`
+    : '';
+
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
+    class="lightsig" role="img" aria-label="${describe(signal)} shown as light">
+    <rect x="0" y="0" width="${width}" height="${height}" fill="#04070C"/>
+    <g>
+      <circle cx="${cx}" cy="${cy}" r="${r * 2.4}" fill="#FFF3D6" opacity=".13">${anim}</circle>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFF3D6">${anim}</circle>
+    </g>
+    <text x="${cx}" y="${height - 14}" text-anchor="middle" font-family="ui-monospace,monospace"
+      font-size="10" fill="#8FA8B3">${signal.code || ''}</text>
+  </svg>`;
+}
+
 /** A compact legend of what the fills mean, shown once per view rather than per card. */
 function stripKey() {
   return `<svg viewBox="0 0 300 14" xmlns="http://www.w3.org/2000/svg" class="sigkey" role="img"
@@ -4091,6 +4444,151 @@ function stripKey() {
     <text x="256" y="11" font-family="ui-monospace,monospace" font-size="9" fill="${SOFT}">bell/gong</text>
   </svg>`;
 }
+
+
+/* ===== src/render-distress.js ===== */
+/**
+ * Distress signals, drawn.
+ *
+ * Same discipline as the buoys: every mark here is generated from a
+ * description, nothing is traced from a publication. Flag N is a four by four
+ * chequer and flag C is five horizontal bands, so both are loops rather than
+ * artwork, and the square-and-ball signal is a rectangle and a circle.
+ *
+ * That is not only a copyright position. A traced flag is a picture of one
+ * flag; a generated one is the rule, and if the description is wrong the
+ * drawing is visibly wrong rather than quietly right.
+ */
+
+const CODE_HEX = {
+  blue: '#0B4EA2',
+  white: '#F6F4EE',
+  red: '#D0231C',
+  black: '#141A1E',
+  orange: '#E8631A'
+};
+
+const OUTLINE = '#0B1116';
+
+/**
+ * Flag N: four by four chequer, blue and white, blue in the top left.
+ * Sixteen squares, generated. Getting the parity wrong would be obvious.
+ */
+function flagN(x, y, w, h) {
+  const n = 4, cw = w / n, ch = h / n;
+  const squares = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      squares.push(`<rect x="${(x + c * cw).toFixed(2)}" y="${(y + r * ch).toFixed(2)}"
+        width="${cw.toFixed(2)}" height="${ch.toFixed(2)}"
+        fill="${(r + c) % 2 === 0 ? CODE_HEX.blue : CODE_HEX.white}"/>`);
+    }
+  }
+  return squares.join('');
+}
+
+/** Flag C: five horizontal bands, blue white red white blue, top to bottom. */
+function flagC(x, y, w, h) {
+  const bands = ['blue', 'white', 'red', 'white', 'blue'];
+  const bh = h / bands.length;
+  return bands.map((b, i) =>
+    `<rect x="${x}" y="${(y + i * bh).toFixed(2)}" width="${w}" height="${bh.toFixed(2)}"
+      fill="${CODE_HEX[b]}"/>`).join('');
+}
+
+/**
+ * The code signal NC: N hoisted above C, in that order.
+ *
+ * Drawn on a halyard because the order is the whole signal. C over N is not a
+ * distress signal, and a picture of two flags side by side would not say so.
+ */
+function renderFlagNC({ width = 200, height = 170 } = {}) {
+  const fw = 92, fh = 62, x = 62, mast = 46;
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Code flag N above code flag C, the International Code signal of distress">
+    <line x1="${mast}" y1="8" x2="${mast}" y2="${height - 8}" stroke="${OUTLINE}" stroke-width="2.5"/>
+    <g>
+      ${flagN(x, 14, fw, fh)}
+      <rect x="${x}" y="14" width="${fw}" height="${fh}" fill="none" stroke="${OUTLINE}" stroke-width="1.2"/>
+      <text x="${x + fw + 6}" y="${14 + fh / 2 + 4}" font-family="ui-monospace,monospace"
+        font-size="13" fill="${OUTLINE}">N</text>
+    </g>
+    <g>
+      ${flagC(x, 90, fw, fh)}
+      <rect x="${x}" y="90" width="${fw}" height="${fh}" fill="none" stroke="${OUTLINE}" stroke-width="1.2"/>
+      <text x="${x + fw + 6}" y="${90 + fh / 2 + 4}" font-family="ui-monospace,monospace"
+        font-size="13" fill="${OUTLINE}">C</text>
+    </g>
+  </svg>`;
+}
+
+/**
+ * A square flag with a ball above or below it.
+ *
+ * Drawn with the ball above, and the alternative shown faintly below, because
+ * the annex allows either and a learner shown only one arrangement will not
+ * recognise the other. "Anything resembling a ball" is the actual wording: it
+ * is meant to be improvised.
+ */
+function renderSquareAndBall({ width = 200, height = 170 } = {}) {
+  const mast = 60, fw = 78, fh = 66, x = 76;
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="A square flag with a ball above it, and the permitted alternative with the ball below">
+    <line x1="${mast}" y1="8" x2="${mast}" y2="${height - 8}" stroke="${OUTLINE}" stroke-width="2.5"/>
+    <circle cx="${x + fw / 2}" cy="26" r="15" fill="${OUTLINE}"/>
+    <rect x="${x}" y="52" width="${fw}" height="${fh}" fill="${CODE_HEX.white}"
+      stroke="${OUTLINE}" stroke-width="1.4"/>
+    <g opacity=".28">
+      <circle cx="${x + fw / 2}" cy="${52 + fh + 20}" r="15" fill="${OUTLINE}"/>
+      <text x="${x + fw + 10}" y="${52 + fh + 24}" font-family="ui-monospace,monospace"
+        font-size="9" fill="${OUTLINE}">or below</text>
+    </g>
+  </svg>`;
+}
+
+/**
+ * Arms outstretched to each side, raised and lowered slowly and repeatedly.
+ *
+ * Two positions side by side rather than an animation: the signal is the
+ * repetition between them, and a still figure with arms out is not the signal
+ * at all. An arrow between the two carries the movement.
+ */
+function renderArmSignal({ width = 200, height = 170 } = {}) {
+  const figure = (cx, armY, label) => `
+    <g stroke="${OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round">
+      <circle cx="${cx}" cy="52" r="9" fill="${OUTLINE}" stroke="none"/>
+      <line x1="${cx}" y1="61" x2="${cx}" y2="108"/>
+      <line x1="${cx}" y1="108" x2="${cx - 13}" y2="134"/>
+      <line x1="${cx}" y1="108" x2="${cx + 13}" y2="134"/>
+      <line x1="${cx}" y1="72" x2="${cx - 30}" y2="${armY}"/>
+      <line x1="${cx}" y1="72" x2="${cx + 30}" y2="${armY}"/>
+    </g>
+    <text x="${cx}" y="152" text-anchor="middle" font-family="ui-monospace,monospace"
+      font-size="9" fill="#4A626E">${label}</text>`;
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="A figure raising and lowering both arms outstretched to each side, slowly and repeatedly">
+    ${figure(56, 44, 'raised')}
+    ${figure(144, 96, 'lowered')}
+    <g stroke="#C3006B" stroke-width="1.4" fill="none">
+      <path d="M 90 74 Q 100 62 110 74"/>
+      <path d="M 110 74 l -5 -1 l 3 5" stroke-linejoin="round"/>
+      <path d="M 110 86 Q 100 98 90 86"/>
+      <path d="M 90 86 l 5 1 l -3 -5" stroke-linejoin="round"/>
+    </g>
+  </svg>`;
+}
+
+/** Which drawing, if any, belongs to a given distress signal. */
+function renderDistress(id, opts) {
+  switch (id) {
+    case 'flag-nc': return renderFlagNC(opts);
+    case 'square-ball': return renderSquareAndBall(opts);
+    case 'arms': return renderArmSignal(opts);
+    default: return '';
+  }
+}
+
+const DRAWN_DISTRESS = ['flag-nc', 'square-ball', 'arms'];
 
 
 /* ===== src/audio.js ===== */
@@ -4231,6 +4729,47 @@ function struck(at, seconds, { base, ratios, decay, strike }, nodes) {
   nodes.push(hit, hp, hg);
 }
 
+/**
+ * A Morse tone.
+ *
+ * Nothing like the whistle: a single clean sine around 600 Hz, which is where
+ * a practised ear picks a signal out of noise. What matters is the envelope.
+ * A hard-edged tone clicks at both ends, and at twelve words a minute those
+ * clicks arrive five times a second and become the thing you hear instead of
+ * the rhythm. A raised-cosine rise and fall of a few milliseconds removes them
+ * without softening the element boundaries enough to blur a dit into a dah.
+ */
+const MORSE_HZ = 600;
+const MORSE_EDGE = 0.006;
+
+function morseTone(at, seconds, nodes) {
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = MORSE_HZ;
+
+  const g = ctx.createGain();
+  const edge = Math.min(MORSE_EDGE, seconds / 3);
+  // setValueCurveAtTime gives a genuine raised cosine rather than the
+  // exponential approximation used for the whistle.
+  const steps = 16;
+  const rise = new Float32Array(steps);
+  const fall = new Float32Array(steps);
+  for (let i = 0; i < steps; i++) {
+    const c = 0.5 - 0.5 * Math.cos((Math.PI * i) / (steps - 1));
+    rise[i] = c * 0.85;
+    fall[i] = (1 - c) * 0.85;
+  }
+  g.gain.setValueAtTime(0, at);
+  g.gain.setValueCurveAtTime(rise, at, edge);
+  g.gain.setValueAtTime(0.85, at + edge);
+  g.gain.setValueCurveAtTime(fall, at + seconds - edge, edge);
+
+  osc.connect(g).connect(master);
+  osc.start(at);
+  osc.stop(at + seconds + 0.02);
+  nodes.push(osc, g);
+}
+
 const BELL = { base: 620, ratios: [[1, 0.5], [2.02, 0.3], [2.98, 0.18], [4.2, 0.1], [5.4, 0.06]], decay: 1, strike: 0.25 };
 const GONG = { base: 190, ratios: [[1, 0.5], [1.48, 0.32], [2.1, 0.22], [2.9, 0.14], [3.7, 0.09], [5.1, 0.05]], decay: 1, strike: 0.18 };
 
@@ -4265,6 +4804,19 @@ async function play(signal, { lengthBand } = {}) {
     switch (span.type) {
       case 'short':
       case 'prolonged':
+        whistle(t, span.seconds, hz, nodes);
+        break;
+      case 'dit':
+      case 'dah':
+        morseTone(t, span.seconds, nodes);
+        break;
+      case 'report':
+        // A gun: a transient, not a tone. The gong body carries the boom.
+        struck(t, Math.min(2.2, span.seconds + 1.4), GONG, nodes);
+        break;
+      case 'continuous':
+        // Fog apparatus held down, which is what makes it a distress signal
+        // rather than a Rule 35 one.
         whistle(t, span.seconds, hz, nodes);
         break;
       case 'stroke':
@@ -4457,6 +5009,138 @@ const soundSpace = () => ({
   signals: SOUND_SIGNALS.length,
   cards: soundUniverse().length,
   bands: WHISTLE_BANDS.length
+});
+
+
+/* ===== src/distress-questions.js ===== */
+/**
+ * Drill questions about distress signals and Morse.
+ *
+ * Card keys keep the three-part shape scheduler.js stores, with 'na' in the
+ * aspect slot, exactly as the sound signals do. Nothing in the scheduler
+ * changes.
+ *
+ * Morse distractors are chosen by element distance, so a character one dit
+ * away is the wrong answer offered. E and I, or A and W, are the confusions a
+ * learner actually makes, and offering Q against E teaches nothing.
+ */
+
+
+
+
+const DISTRESS_QUESTION_TYPES = ['distress-identify', 'distress-select'];
+const MORSE_QUESTION_TYPES = ['morse-hear', 'morse-see'];
+
+const NA = 'na';
+
+const anyOf = arr => arr[Math.floor(Math.random() * arr.length)];
+const mixed = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+
+/**
+ * Distance between two Morse characters, counted in elements.
+ *
+ * Levenshtein over the dot-dash string. One substitution, insertion or deletion
+ * is one step, which matches how the mistakes actually happen: hearing a dit as
+ * a dah, or losing the last element of a longer character.
+ */
+function morseDistance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+  }
+  return d[a.length][b.length];
+}
+
+function morseDistractors(char, n = 3) {
+  const code = morseFor(char);
+  return MORSE_CHARACTERS
+    .filter(c => c.char !== char)
+    .map(c => ({ c, d: morseDistance(code, c.code) + Math.random() * 0.5 }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, n)
+    .map(x => x.c);
+}
+
+/** Distress distractors: same modality first, since that is the real confusion. */
+function distressDistractors(signal, n = 3) {
+  return DISTRESS_SIGNALS
+    .filter(s => s.id !== signal.id)
+    .map(s => ({ s, score: (s.modality === signal.modality ? 2 : 0) + Math.random() }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map(x => x.s);
+}
+
+/** The full card space for both sections, in the shape selectCard expects. */
+const distressUniverse = () => [
+  ...DISTRESS_SIGNALS.flatMap(s =>
+    DISTRESS_QUESTION_TYPES.map(t => ({ stateId: s.id, aspect: NA, questionType: t }))),
+  ...MORSE_CHARACTERS.flatMap(c =>
+    MORSE_QUESTION_TYPES.map(t => ({ stateId: `morse-${c.id}`, aspect: NA, questionType: t })))
+];
+
+function distressQuestionFor({ stateId, questionType }) {
+  if (questionType === 'morse-hear' || questionType === 'morse-see') {
+    const char = stateId.replace(/^morse-/, '');
+    const entry = MORSE_CHARACTERS.find(c => c.id === char);
+    if (!entry) return null;
+    const wrong = morseDistractors(char, 3);
+    return {
+      type: questionType,
+      signal: morseSignal(char),
+      char,
+      asLight: questionType === 'morse-see',
+      prompt: questionType === 'morse-see'
+        ? 'A lamp is flashing this. What character is it?'
+        : 'Listen. What character is this?',
+      options: mixed([entry, ...wrong]).map(c => ({ id: c.id, text: c.char })),
+      answerId: char,
+      explain: `${char} is ${entry.code}.` + (entry.prosign
+        ? ' Sent as one run-together group, never as three spaced letters.'
+        : '')
+    };
+  }
+
+  const signal = DISTRESS_SIGNALS.find(s => s.id === stateId);
+  if (!signal) return null;
+
+  if (questionType === 'distress-select') {
+    // The wrong answers here are other genuine distress signals, so the
+    // question is "which of these fits this situation", not "spot the fake".
+    const wrong = distressDistractors(signal, 3);
+    return {
+      type: 'distress-select',
+      signal,
+      prompt: `${signal.description} Which Annex IV signal is this?`,
+      options: mixed([signal, ...wrong]).map(s => ({ id: s.id, text: s.name })),
+      answerId: signal.id,
+      explain: `${signal.rule}. ${signal.memory}`
+    };
+  }
+
+  const wrong = distressDistractors(signal, 3);
+  return {
+    type: 'distress-identify',
+    signal,
+    prompt: `${signal.name}. What does it mean, and how does it reach you?`,
+    options: mixed([signal, ...wrong]).map(s => ({
+      id: s.id,
+      text: `Distress — ${s.modality}: ${s.description}`
+    })),
+    answerId: signal.id,
+    explain: `${signal.rule}. ${signal.memory}`
+  };
+}
+
+const distressSpace = () => ({
+  distress: DISTRESS_SIGNALS.length,
+  morse: MORSE_CHARACTERS.length,
+  cards: distressUniverse().length,
+  modalities: DISTRESS_MODALITIES.length
 });
 
 

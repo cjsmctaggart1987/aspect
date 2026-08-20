@@ -28,12 +28,16 @@ const MODULES = [
   'data/vessel-states.js',
   'data/buoyage.js',
   'data/sound-signals.js',
+  'data/morse.js',
+  'data/distress-signals.js',
   'src/engine.js',
   'src/render-lights.js',
   'src/render-buoy.js',
-  'src/render-signal.js',
+  'src/render-signal.js',      // draws sound, Morse and audible distress patterns
+  'src/render-distress.js',
   'src/audio.js',              // reads the Annex III bands from data/sound-signals.js
   'src/sound-questions.js',    // needs the data, and describe() from render-signal.js
+  'src/distress-questions.js', // needs data/distress-signals.js and data/morse.js
   'src/scheduler.js'
 ];
 
