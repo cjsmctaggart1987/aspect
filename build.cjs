@@ -93,6 +93,36 @@ function debundle(source) {
 
 const section = (name, source) => `/* ===== ${name} ===== */\n${debundle(source)}`;
 
+/**
+ * Cuts the bundle's last ties to the filesystem.
+ *
+ * The standalone file runs from file://, where a relative href resolves against
+ * whatever folder the user dropped it in — so brand/aspect-favicon.svg is not a
+ * missing icon, it is a broken reference to a folder that is not there. Three
+ * kinds of link get three different answers:
+ *
+ *   the favicons   inlined as data URIs, because a tab icon is worth 800 bytes
+ *   the PNG icons  dropped: they exist for a home screen and a manifest, and
+ *                  neither means anything to a file:// page
+ *   the manifest   dropped, for the same reason
+ *
+ * The Open Graph and canonical URLs stay. They are absolute https, they are
+ * metadata for a crawler rather than anything the page loads, and stripping
+ * them would leave the served copy without a preview card.
+ */
+function selfContain(html) {
+  const dataUri = file =>
+    'data:image/svg+xml;base64,' + fs.readFileSync(path.join(ROOT, file)).toString('base64');
+
+  return html
+    .replace(/<link rel="icon" href="(brand\/[^"]+\.svg)"([^>]*)>/g,
+      (_, file, rest) => `<link rel="icon" href="${dataUri(file)}"${rest}>`)
+    .replace(/<link rel="icon" href="brand\/[^"]+\.png"[^>]*>\n?/g, '')
+    .replace(/<link rel="apple-touch-icon"[^>]*>\n?/g, '')
+    .replace(/<link rel="manifest"[^>]*>\n?/g,
+      '<!-- manifest and PNG icons dropped: a file:// page has no home screen -->\n');
+}
+
 function build() {
   const html = read('index.html');
 
@@ -111,7 +141,7 @@ function build() {
   ];
 
   const bundle =
-    html.slice(0, open) +
+    selfContain(html.slice(0, open)) +
     '<script>\n\n' +
     sections.join('\n\n\n') +
     '\n' +

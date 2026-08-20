@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "serve --listen 5173 .",
+    "brand": "node brand/make-brand.cjs && node brand/make-icons.cjs",
     "build": "node build.cjs",
     "vendor": "node vendor.cjs",
     "test": "node test/run.js"

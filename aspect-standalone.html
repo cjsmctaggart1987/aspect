@@ -3,7 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aspect — COLREGs and IALA drill</title>
+<title>Aspect — Rules of the Road</title>
+<meta name="description" content="A free drill tool for COLREGs lights, shapes, signals and IALA buoyage. Every diagram is generated from the rules.">
+<link rel="canonical" href="https://cjsmctaggart1987.github.io/aspect/">
+
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFzcGVjdCI+CiAgPHRpdGxlPkFzcGVjdDwvdGl0bGU+CjxwYXRoIGQ9Ik0gOTIuNTAgNjcuNjAgQSA0NiA0NiAwIDAgMSA3LjUwIDY3LjYwIEwgMzEuNTIgNTcuNjUgQSAyMCAyMCAwIDAgMCA2OC40OCA1Ny42NSBaIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMwRTFGMjgiIHN0cm9rZS13aWR0aD0iMi40IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPHBhdGggZD0iTSA1MC4wMCA0LjAwIEEgNDYgNDYgMCAwIDEgOTIuNTAgNjcuNjAgTCA2OC40OCA1Ny42NSBBIDIwIDIwIDAgMCAwIDUwLjAwIDMwLjAwIFoiIGZpbGw9IiMwMEE4NjIiIHN0cm9rZT0iIzBFMUYyOCIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8cGF0aCBkPSJNIDcuNTAgNjcuNjAgQSA0NiA0NiAwIDAgMSA1MC4wMCA0LjAwIEwgNTAuMDAgMzAuMDAgQSAyMCAyMCAwIDAgMCAzMS41MiA1Ny42NSBaIiBmaWxsPSIjQ0UyMDE5IiBzdHJva2U9IiMwRTFGMjgiIHN0cm9rZS13aWR0aD0iMi40IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=" sizes="16x16" type="image/svg+xml">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFzcGVjdCI+CiAgPHRpdGxlPkFzcGVjdDwvdGl0bGU+CjxwYXRoIGQ9Ik0gNTAuMDAgMi4wMCBMIDU0LjY0IDkuMjYgTCA0NS4zNiA5LjI2IFoiIGZpbGw9IiMwRTFGMjgiLz4KICA8cGF0aCBkPSJNIDk4LjAwIDUwLjAwIEwgOTAuNzQgNTQuNjQgTCA5MC43NCA0NS4zNiBaIiBmaWxsPSIjMEUxRjI4Ii8+CiAgPHBhdGggZD0iTSA1MC4wMCA5OC4wMCBMIDQ1LjM2IDkwLjc0IEwgNTQuNjQgOTAuNzQgWiIgZmlsbD0iIzBFMUYyOCIvPgogIDxwYXRoIGQ9Ik0gMi4wMCA1MC4wMCBMIDkuMjYgNDUuMzYgTCA5LjI2IDU0LjY0IFoiIGZpbGw9IiMwRTFGMjgiLz4KICA8cGF0aCBkPSJNIDgxLjgyIDE4LjE4IEwgODEuMTggMjMuMzcgTCA3Ni42MyAxOC44MiBaIiBmaWxsPSIjMEUxRjI4Ii8+CiAgPHBhdGggZD0iTSA4MS44MiA4MS44MiBMIDc2LjYzIDgxLjE4IEwgODEuMTggNzYuNjMgWiIgZmlsbD0iIzBFMUYyOCIvPgogIDxwYXRoIGQ9Ik0gMTguMTggODEuODIgTCAxOC44MiA3Ni42MyBMIDIzLjM3IDgxLjE4IFoiIGZpbGw9IiMwRTFGMjgiLz4KICA8cGF0aCBkPSJNIDE4LjE4IDE4LjE4IEwgMjMuMzcgMTguODIgTCAxOC44MiAyMy4zNyBaIiBmaWxsPSIjMEUxRjI4Ii8+CiAgPHBhdGggZD0iTSA4NS4xMSA2NC41NCBBIDM4IDM4IDAgMCAxIDE0Ljg5IDY0LjU0IEwgMjkuNjcgNTguNDIgQSAyMiAyMiAwIDAgMCA3MC4zMyA1OC40MiBaIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMwRTFGMjgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0gNTAuMDAgMTIuMDAgQSAzOCAzOCAwIDAgMSA4NS4xMSA2NC41NCBMIDcwLjMzIDU4LjQyIEEgMjIgMjIgMCAwIDAgNTAuMDAgMjguMDAgWiIgZmlsbD0iIzAwQTg2MiIgc3Ryb2tlPSIjMEUxRjI4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8cGF0aCBkPSJNIDE0Ljg5IDY0LjU0IEEgMzggMzggMCAwIDEgNTAuMDAgMTIuMDAgTCA1MC4wMCAyOC4wMCBBIDIyIDIyIDAgMCAwIDI5LjY3IDU4LjQyIFoiIGZpbGw9IiNDRTIwMTkiIHN0cm9rZT0iIzBFMUYyOCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=" sizes="any" type="image/svg+xml">
+<!-- manifest and PNG icons dropped: a file:// page has no home screen -->
+<meta name="theme-color" content="#0E1F28">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Aspect">
+<meta property="og:title" content="Aspect — Rules of the Road">
+<meta property="og:description" content="A free drill tool for COLREGs lights, shapes, signals and IALA buoyage. Every diagram is generated from the rules.">
+<meta property="og:url" content="https://cjsmctaggart1987.github.io/aspect/">
+<meta property="og:image" content="https://cjsmctaggart1987.github.io/aspect/brand/aspect-social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Aspect mark: three light arcs closing a compass ring.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Aspect — Rules of the Road">
+<meta name="twitter:description" content="A free drill tool for COLREGs lights, shapes, signals and IALA buoyage. Every diagram is generated from the rules.">
+<meta name="twitter:image" content="https://cjsmctaggart1987.github.io/aspect/brand/aspect-social.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
@@ -25,7 +46,23 @@ body{
 .wrap{max-width:1140px;margin:0 auto;padding:26px 20px 72px}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
   border-bottom:1.5px solid var(--ink);padding-bottom:12px;margin-bottom:22px}
-h1{font-size:34px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;margin:0}
+.lockup{display:flex;align-items:center}
+.lockup-mark{width:36px;height:36px;flex:none;
+  --mk-green:#00A862; --mk-red:#CE2019; --mk-white:#FFFFFF; --mk-ink:#0E1F28}
+/* The night mark from brand/aspect-mark-night.svg, same geometry, brighter
+   lights and a paper-coloured edge. Applied by adding .night to the lockup. */
+.lockup.night .lockup-mark{
+  --mk-green:#00B86E; --mk-red:#E02B22; --mk-white:#FFFFFF; --mk-ink:#E7EEF0}
+.lockup-rule{width:1px;height:24px;background:var(--ink);opacity:.2;margin:0 11px 0 10px;flex:none}
+.lockup.night .lockup-rule{background:#2A3A45;opacity:1}
+.lockup-words{display:flex;flex-direction:column;gap:2px}
+h1{font-size:19px;font-weight:600;letter-spacing:.1289em;text-transform:uppercase;margin:0;line-height:1}
+.lockup.night h1{color:#E7EEF0}
+/* 9px, not the 6.25px the lockup's ratio gives at a 36px mark: below about 8px
+   the tracking closes up and it reads as a smear rather than as words. */
+.lockup-sub{font-size:9px;font-weight:400;letter-spacing:.256em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0;line-height:1}
+.lockup.night .lockup-sub{color:#8BA1AD}
 .sub{font-family:var(--note);font-style:italic;color:var(--ink-soft);font-size:15px;max-width:44ch}
 .tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--ink);width:max-content}
 .tabs button{font-family:var(--label);font-size:13px;letter-spacing:.14em;text-transform:uppercase;
@@ -239,7 +276,40 @@ footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-si
 <div class="wrap">
 <header>
   <div>
-    <h1>Aspect</h1>
+    <div class="lockup" id="lockup">
+      <svg class="lockup-mark" viewBox="0 0 100 100" role="img" aria-label="Aspect">
+        <title>Aspect</title>
+        <path d="M 50.00 2.00 L 54.64 9.26 L 45.36 9.26 Z" fill="var(--mk-ink)"/>
+        <path d="M 98.00 50.00 L 90.74 54.64 L 90.74 45.36 Z" fill="var(--mk-ink)"/>
+        <path d="M 50.00 98.00 L 45.36 90.74 L 54.64 90.74 Z" fill="var(--mk-ink)"/>
+        <path d="M 2.00 50.00 L 9.26 45.36 L 9.26 54.64 Z" fill="var(--mk-ink)"/>
+        <path d="M 81.82 18.18 L 81.18 23.37 L 76.63 18.82 Z" fill="var(--mk-ink)"/>
+        <path d="M 81.82 81.82 L 76.63 81.18 L 81.18 76.63 Z" fill="var(--mk-ink)"/>
+        <path d="M 18.18 81.82 L 18.82 76.63 L 23.37 81.18 Z" fill="var(--mk-ink)"/>
+        <path d="M 18.18 18.18 L 23.37 18.82 L 18.82 23.37 Z" fill="var(--mk-ink)"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--mk-ink)" stroke-width="2"/>
+        <line x1="50.00" y1="10.00" x2="50.00" y2="16.50" stroke="var(--mk-ink)" stroke-width="2.6"/>
+        <line x1="70.00" y1="15.36" x2="68.00" y2="18.82" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="84.64" y1="30.00" x2="81.18" y2="32.00" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="90.00" y1="50.00" x2="83.50" y2="50.00" stroke="var(--mk-ink)" stroke-width="2.6"/>
+        <line x1="84.64" y1="70.00" x2="81.18" y2="68.00" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="70.00" y1="84.64" x2="68.00" y2="81.18" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="50.00" y1="90.00" x2="50.00" y2="83.50" stroke="var(--mk-ink)" stroke-width="2.6"/>
+        <line x1="30.00" y1="84.64" x2="32.00" y2="81.18" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="15.36" y1="70.00" x2="18.82" y2="68.00" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="10.00" y1="50.00" x2="16.50" y2="50.00" stroke="var(--mk-ink)" stroke-width="2.6"/>
+        <line x1="15.36" y1="30.00" x2="18.82" y2="32.00" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <line x1="30.00" y1="15.36" x2="32.00" y2="18.82" stroke="var(--mk-ink)" stroke-width="1.7"/>
+        <path d="M 80.49 62.63 A 33 33 0 0 1 19.51 62.63 L 30.60 58.04 A 21 21 0 0 0 69.40 58.04 Z" fill="var(--mk-white)" stroke="var(--mk-ink)" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M 50.00 17.00 A 33 33 0 0 1 80.49 62.63 L 69.40 58.04 A 21 21 0 0 0 50.00 29.00 Z" fill="var(--mk-green)" stroke="var(--mk-ink)" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M 19.51 62.63 A 33 33 0 0 1 50.00 17.00 L 50.00 29.00 A 21 21 0 0 0 30.60 58.04 Z" fill="var(--mk-red)" stroke="var(--mk-ink)" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span class="lockup-rule" aria-hidden="true"></span>
+      <div class="lockup-words">
+        <h1>Aspect</h1>
+        <p class="lockup-sub">Rules of the Road</p>
+      </div>
+    </div>
     <p class="sub">Every picture below is generated from the rule, not drawn. Drag the observer round the dial and watch the arcs do the work.</p>
   </div>
   <div class="readout" style="min-width:180px"><span>Question space</span><b id="space">—</b></div>
