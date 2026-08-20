@@ -17,9 +17,27 @@ import vm from 'node:vm';
 
 const HTML = () => readFileSync('aspect-standalone.html', 'utf8');
 
+/**
+ * The app's script block, found by what is in it rather than by position.
+ *
+ * "The first <script> in the file" was true until the head gained a four line
+ * script that sets the theme before first paint. From that commit until this
+ * one, every check below was reading those four lines instead of the app —
+ * parsing them, running them, finding no module syntax in them, and passing.
+ * A whole suite went quietly vacuous, which is the exact failure it exists to
+ * prevent.
+ *
+ * So it now searches for the block carrying the first module banner, and
+ * bundleSanity() below refuses to let a wrong or empty extraction pass as a
+ * green run.
+ */
+const BANNER = '/* ===== vendor/ts-fsrs.js ===== */';
+
 function bundleScript() {
   const html = HTML();
-  const open = html.indexOf('<script>\n') + '<script>\n'.length;
+  const at = html.lastIndexOf('<script>', html.indexOf(BANNER));
+  if (at < 0) return '';
+  const open = at + '<script>'.length;
   return html.slice(open, html.indexOf('\n</script>', open));
 }
 
@@ -55,6 +73,17 @@ function stubDocument(declaredIds, missing) {
 export default function run(t) {
   const html = HTML();
   const code = bundleScript();
+
+  t.section('the suite is looking at the app');
+  // Every check below is worthless if the wrong block was extracted, and a
+  // wrong block passes them all cheerfully. This is the check on the checks.
+  t.ok('the extracted block is the bundle, not another script on the page',
+    code.includes(BANNER) && code.includes("/* ===== app ===== */"),
+    `${Math.round(code.length / 1024)} KB extracted from ` +
+    `${(html.match(/<script[ >]/g) || []).length} script tags`);
+  t.ok('and it is the whole of it', code.length > 200_000 &&
+    code.includes('/* ===== src/scheduler.js ===== */'),
+    `${code.split('\n').length} lines`);
 
   t.section('no module syntax survives into a classic script');
   const stray = code.split('\n')
