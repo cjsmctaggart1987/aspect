@@ -9,7 +9,7 @@ viewing angle. There are no stored diagrams.
 
 - **Remote:** https://github.com/cjsmctaggart1987/aspect — public, no licence file (all rights reserved)
 - **Stack:** plain ES modules, no bundler, no framework. `serve` for dev, two Node scripts.
-- **State:** working tree clean, 35 commits.
+- **State:** working tree clean, 32 commits.
 
 ---
 
@@ -68,7 +68,6 @@ src/render-signal.js    blast timelines                            135
 src/audio.js            synthesised whistle, bell and gong         200
 src/render-distress.js  code flags, square and ball, arm signal     150
 src/buoyage-questions.js buoyage drill questions                   120
-src/reveal.js           the one revealed state                      95
 src/sound-questions.js  sound drill questions                      146
 src/distress-questions.js distress and Morse questions             130
 src/scheduler.js        spaced repetition (FSRS)                   171
@@ -104,14 +103,14 @@ npm install
 npm run dev      # serve on :5173 — the module version needs HTTP, not file://
 npm run build    # regenerate aspect-standalone.html
 npm run vendor   # refresh vendor/ts-fsrs.js from node_modules
-npm test         # 179 checks against the real modules
+npm test         # 159 checks against the real modules
 ```
 
 To just look at it: double-click `aspect-standalone.html`.
 
 ---
 
-## Commits — 35, all pushed
+## Commits — 32, all pushed
 
 | | |
 |---|---|
@@ -148,8 +147,6 @@ To just look at it: double-click `aspect-standalone.html`.
 | `17a0709` | State snapshot for the two new tabs |
 | `31c9354` | Rebuild the gun signal as a report rather than a gong |
 | `8f93e16` | Make buoyage drillable |
-| `08a221c` | State snapshot: buoyage drillable, gun rebuilt |
-| `ac5e507` | Stop drills showing their own answers |
 
 ### Spaced repetition — `src/scheduler.js`
 
@@ -344,32 +341,6 @@ one, because a gong is inharmonic partials ringing and a report has no pitch at 
 It is now a noise crack through a falling lowpass, a sine body dropping 110 to 30 Hz,
 and a tail — with a `distance` parameter, at 0.35. Nothing in the audio engine should
 ring unless it is a bell or a gong.
-
-## The revealed state — do not unpick this
-
-A drill must not show its own answer, and the failure is easy to reintroduce
-because every display element naturally wants to show what it knows.
-
-**There is one flag.** `src/reveal.js` holds it and the app hands answer-bearing
-values to `show()` rather than writing them to the DOM. Unrevealed is the safe
-default, so a panel added later is masked without anyone remembering it. Do not
-"simplify" this back to clearing fields one at a time — that is the bug.
-
-Three things that are less obvious than they look:
-
-- **The renderers leaked too.** The scene named the vessel and gave her aspect in
-  its `aria-label`, the dial stated the degrees, the buoy named the mark, and the
-  Morse lamp printed the code beneath it. A screen reader got every answer. They
-  take an `anonymous` option now, default off.
-- **Question stems can leak.** `sound-select` used the whole meaning, and Rule
-  34(e)'s meaning literally says "answered by one prolonged blast". `distress-select`
-  used the description, which for several entries is the name verbatim.
-- **Short answers cannot be substring-matched.** A Morse answer is one letter, so
-  "A lamp is flashing this" contains an A and "Listen." contains E's full stop.
-  Both the leak check and `answerStrings` skip anything under four characters.
-
-On reveal the panel is *fuller* than explore — legend, rule, summary and duty hint
-— because that is the teaching moment.
 
 ## Environment notes
 

@@ -54,7 +54,7 @@ const COUNTED = new Set(['short', 'prolonged', 'stroke', 'dit', 'dah', 'report']
  * strips not sharing a common scale. The seconds are labelled so the trade is
  * visible rather than misleading.
  */
-export function signalStrip(signal, { width = 260, height = 26, anonymous = false } = {}) {
+export function signalStrip(signal, { width = 260, height = 26 } = {}) {
   const total = signal.seconds;
   const at = t => (t / total) * width;
 
@@ -77,7 +77,7 @@ export function signalStrip(signal, { width = 260, height = 26, anonymous = fals
   }
 
   return `<svg viewBox="0 -14 ${width} ${height + 20}" xmlns="http://www.w3.org/2000/svg"
-    class="sigstrip" role="img" aria-label="${anonymous ? 'A signal pattern' : describe(signal)}">
+    class="sigstrip" role="img" aria-label="${describe(signal)}">
     <defs>
       <pattern id="ring" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <rect width="4" height="4" fill="#10222C" opacity=".18"/>
@@ -127,7 +127,7 @@ export function describe(signal) {
  * prefers-reduced-motion suppresses CSS animation only, and SMIL ignores it. A
  * still lamp is shown lit, because a lamp that never comes on says nothing.
  */
-export function lightSignal(signal, { motion = true, width = 260, height = 90, anonymous = false } = {}) {
+export function lightSignal(signal, { motion = true, width = 260, height = 90 } = {}) {
   const total = signal.seconds;
   const cx = width / 2, cy = 40, r = 16;
 
@@ -153,14 +153,14 @@ export function lightSignal(signal, { motion = true, width = 260, height = 90, a
     : '';
 
   return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"
-    class="lightsig" role="img" aria-label="${anonymous ? 'A character shown as light' : `${describe(signal)} shown as light`}">
+    class="lightsig" role="img" aria-label="${describe(signal)} shown as light">
     <rect x="0" y="0" width="${width}" height="${height}" fill="#04070C"/>
     <g>
       <circle cx="${cx}" cy="${cy}" r="${r * 2.4}" fill="#FFF3D6" opacity=".13">${anim}</circle>
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFF3D6">${anim}</circle>
     </g>
     <text x="${cx}" y="${height - 14}" text-anchor="middle" font-family="ui-monospace,monospace"
-      font-size="10" fill="#8FA8B3">${anonymous ? '' : (signal.code || '')}</text>
+      font-size="10" fill="#8FA8B3">${signal.code || ''}</text>
   </svg>`;
 }
 
